@@ -48,8 +48,8 @@
     </div>
 
     <div class="card-body">
-      <div v-if="loading" class="text-center py-4">
-        <div class="spinner-border"></div>
+      <div v-if="loading" class="spinner-wrapper">
+        <div class="spinner"></div>
       </div>
 
       <div v-else class="card inner-card">
@@ -59,11 +59,12 @@
               <tr>
                 <th>#</th>
                 <th>تاريح استلام المعاملة</th>
-                <th>اسم الجريح</th>
-                <th>موضوع الوارد</th>
+                <th>رقم الوارد</th>
+                <th>تاريخ الوارد</th>
                 <th>هامش مدير القسم</th>
+                <th>هامش مسوؤل شعبة</th>
                 <th>تاريخ الكتاب</th>
-                <th>ملف الأصل</th>
+                <!-- <th>ملف الأصل</th> -->
                 <th>الإجراءات</th>
               </tr>
             </thead>
@@ -72,12 +73,9 @@
               <tr v-for="(m, i) in list" :key="m.id">
                 <td>{{ (page - 1) * pageSize + i + 1 }}</td>
                 <td>{{ formatDate(m.createdAt) }}</td>
-                <td>
+                <!-- <td>
                   <div>
-                    <!-- عرض أول اسم فقط -->
                     <div>{{ m.injuredNames?.[0] }}</div>
-
-                    <!-- إذا يوجد أكثر من اسم -->
                     <div
                       v-if="m.injuredNames && m.injuredNames.length > 1"
                       class="show-more"
@@ -86,17 +84,19 @@
                       عرض الكل ({{ m.injuredNames.length }})
                     </div>
                   </div>
-                </td>
+                </td> -->
 
-                <td>{{ m.incomingSubject }}</td>
+                <td>{{ m.incomingBookNumber }}</td>
+                <td>{{formatDate( m.incomingDate) }}</td>
                 <td>{{ m.managerNote }}</td>
+                <td>{{ m.managerNoteDivision || "—" }}</td>  
                 <td>{{ formatDate(m.createdAt) }}</td>
-                <td>
+                <!-- <td>
                   <span v-if="m.hasOriginalFile" class="badge bg-success"
                     >نعم</span
                   >
                   <span v-else class="badge bg-secondary">لا</span>
-                </td>
+                </td> -->
 
                 <td>
                   <div class="d-flex justify-content-center gap-2">
@@ -219,7 +219,7 @@
                 />
               </div>
 
-              <div class="col-md-6">
+              <!-- <div class="col-md-6">
                 <label class="form-label">هل يوجد ملف أصل؟</label>
 
                 <div class="custom-vue-select-container">
@@ -235,7 +235,7 @@
                     placeholder="اختر الحالة..."
                   />
                 </div>
-              </div>
+              </div> -->
 
               <div class="col-md-6">
                 <label class="form-label">إرسال إلى الوحدة:</label>
@@ -652,7 +652,6 @@ const formatDate = (d) => {
   const day = String(dt.getDate()).padStart(2, "0");
   return `${year}/${month}/${day}`;
 };
-
 
 //  Modal عرض جميع أسماء الجرحى
 const allNames = ref([]);

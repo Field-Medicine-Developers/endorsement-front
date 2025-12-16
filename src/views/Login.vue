@@ -24,7 +24,13 @@
           required
         />
 
-        <input class="login-button" type="submit" value="دخول" />
+        <button class="login-button" type="submit" :disabled="loading">
+          <span
+            v-if="loading"
+            class="spinner-border spinner-border-sm me-2"
+          ></span>
+          <span>{{ loading ? "جاري الدخول..." : "دخول" }}</span>
+        </button>
       </form>
 
       <p v-if="errorMsg" class="text-danger text-center mt-3">{{ errorMsg }}</p>
@@ -59,7 +65,7 @@ const handleLogin = async () => {
       password: form.value.password,
     });
 
-    // ====== قراءة الاستجابة الصحيحة ======
+    // قراءة الاستجابة الصحيحة 
     const response = res.data;
 
     if (!response.success || !response.data || !response.data.token) {
@@ -98,7 +104,6 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-/* الخلفية */
 .login-page {
   width: 100vw;
   height: 100vh;
@@ -117,7 +122,6 @@ const handleLogin = async () => {
   overflow: hidden;
 }
 
-/* العنوان */
 .system-title {
   position: relative;
   font-size: 26px;
@@ -133,7 +137,6 @@ const handleLogin = async () => {
   animation: fadeInDown 1s ease;
 }
 
-/* الحركة */
 @keyframes fadeInDown {
   from {
     opacity: 0;
@@ -145,7 +148,6 @@ const handleLogin = async () => {
   }
 }
 
-/* الكارد */
 .card-box {
   max-width: 550px;
   width: 100%;
@@ -164,7 +166,6 @@ const handleLogin = async () => {
   margin-bottom: 3rem;
 }
 
-/* المدخلات */
 .form .input {
   width: 100%;
   background: #fdfefeae;
@@ -183,7 +184,6 @@ const handleLogin = async () => {
   box-shadow: 0 0 0 4px rgba(18, 177, 209, 0.2);
 }
 
-/* زر الدخول */
 .form .login-button {
   width: 100%;
   font-weight: bold;
@@ -205,4 +205,14 @@ const handleLogin = async () => {
   color: #ff4949;
   font-size: 14px;
 }
+
+.login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.spinner-border {
+  color: white !important;
+}
+
 </style>

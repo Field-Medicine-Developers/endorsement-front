@@ -1,17 +1,35 @@
 <template>
-  <div class="card shadow-sm p-3">
-    <h5 class="fw-bold mb-3">مراسلات الهامش</h5>
 
-    <div v-if="loading" class="text-center py-3">
-      <div class="spinner-border"></div>
+    <!-- App Bar -->
+    <div
+    class="appbar rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center"
+  >
+    <div class="d-flex align-items-center gap-2">
+      <span
+        class="appbar-icon d-inline-flex align-items-center justify-content-center"
+      >
+        <i class="bi bi-receipt"></i>
+      </span>
+      <div>
+        <h2 class="h5 fw-bold m-2">مراسلات الهامش</h2>
+        <small class="text-muted">تغيير حالة المعاملة: قبول أو رفض</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm p-3">
+    <div v-if="loading" class="spinner-wrapper">
+      <div class="spinner"></div>
     </div>
 
     <table v-else class="table table-bordered text-center align-middle">
       <thead>
         <tr>
           <th>#</th>
-          <th>اسم الجريح</th>
-          <th>موضوع الوارد</th>
+          <!-- <th>اسم الجريح</th> -->
+          <!-- <th>موضوع الوارد</th> -->
+          <th>رقم الوارد</th>
+          <th>تاريخ الوارد</th>
           <th>الحالة</th>
           <th>سبب الرفض</th>
           <th>الإجراءات</th>
@@ -21,7 +39,7 @@
       <tbody>
         <tr v-for="(item, i) in list" :key="item.id">
           <td>{{ i + 1 }}</td>
-          <td>
+          <!-- <td>
             <div>
               <div>{{ item.injuredNames?.[0] }}</div>
 
@@ -33,9 +51,11 @@
                 عرض الكل ({{ item.injuredNames.length }})
               </div>
             </div>
-          </td>
+          </td> -->
 
-          <td>{{ item.incomingSubject }}</td>
+          <!-- <td>{{ item.incomingSubject }}</td> -->
+          <td>{{ item.incomingBookNumber }}</td>
+          <td>{{formatDate( item.incomingDate) }}</td>
 
           <td>
             <span v-if="item.status === 0" class="badge bg-secondary">
@@ -103,7 +123,7 @@
 
     <!-- Reject Modal -->
     <div class="modal fade" tabindex="-1" ref="rejectModalEl">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <form @submit.prevent="submitReject">
             <div class="modal-header">
@@ -246,6 +266,19 @@ const openNamesModal = (names) => {
 const closeNamesModal = () => {
   namesModal.hide();
 };
+
+const formatDate = (value) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (isNaN(date)) return "—";
+
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+
+  return `${y}/${m}/${d}`;
+};
+
 
 onMounted(() => {
   rejectModal = new Modal(rejectModalEl.value);

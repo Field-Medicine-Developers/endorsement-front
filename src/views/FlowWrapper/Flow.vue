@@ -47,8 +47,8 @@
     </div>
 
     <div class="card-body">
-      <div v-if="loading" class="text-center py-4">
-        <div class="spinner-border"></div>
+      <div v-if="loading" class="spinner-wrapper">
+        <div class="spinner"></div>
       </div>
 
       <div v-else class="card inner-card">
@@ -57,10 +57,10 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>اسم الجريح</th>
-                <th>موضوع الوارد</th>
-                <th>رقم الكتاب</th>
+                <!-- <th>اسم الجريح</th> -->
+                <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
+                <!-- <th>رقم الكتاب</th> -->
                 <th>استلام المعاملة</th>
                 <th>تسليم المعاملة</th>
                 <th>استلام الطبيب العسكري</th>
@@ -80,10 +80,10 @@
             <tbody>
               <tr v-for="(item, idx) in list" :key="item.id">
                 <td>{{ idx + 1 }}</td>
-                <td>{{ item.injuredName || "-" }}</td>
-                <td>{{ item.incomingSubject || "-" }}</td>
+                <!-- <td>{{ item.injuredName || "-" }}</td> -->
                 <td>{{ item.incomingBookNumber || "-" }}</td>
                 <td>{{ formatDate(item.incomingDate) }}</td>
+                <!-- <td>{{ item.incomingBookNumber || "-" }}</td> -->
                 <td>{{ formatDate(item.transactionReceiveDate) }}</td>
                 <td>{{ formatDate(item.transactionDeliveryDate) }}</td>
                 <td>{{ formatDate(item.militaryDoctorReceive) }}</td>
@@ -91,16 +91,9 @@
                 <td>{{ formatDate(item.verificationReceive) }}</td>
                 <td>{{ formatDate(item.verificationSendDate) }}</td>
                 <td>
-                  <div v-if="item.situations?.length">
-                    <span
-                      v-for="(s, i) in item.situations"
-                      :key="i"
-                      class="badge bg-info mx-1"
-                    >
-                      {{ s.situationNumber }} - {{ s.situationName }}
-                    </span>
-                  </div>
-                  <span v-else class="text-muted">-</span>
+                  <button class="btn btn-search" @click="openSituations(item)">
+                    عرض المواقف ({{ item.situations?.length || 0 }})
+                  </button>
                 </td>
 
                 <td class="text-truncate" style="max-width: 180px">
@@ -266,8 +259,10 @@
                       ><i class="bi bi-person-fill"></i
                     ></span>
                     <div class="info-text">
-                      <span class="label">اسم الجريح</span>
-                      <span class="value">{{ form.injuredName || "-" }}</span>
+                      <span class="label">رقم الوارد</span>
+                      <span class="value">{{
+                        form.incomingBookNumber || "-"
+                      }}</span>
                     </div>
                   </div>
                 </div>
@@ -345,6 +340,36 @@
                   v-model="form.verificationDelivery"
                   class="form-control"
                 />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">حالة التدقيق</label>
+
+                <div class="custom-vue-select-container">
+                  <VueSelect
+                    v-model="form.verificationStatus"
+                    :options="verificationStatusOptions"
+                    label="label"
+                    :reduce="(opt) => opt.value"
+                    placeholder="اختر حالة التدقيق"
+                    searchable
+                  />
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">الحالة النهائية</label>
+
+                <div class="custom-vue-select-container">
+                  <VueSelect
+                    v-model="form.finalStatus"
+                    :options="finalStatusOptions"
+                    label="label"
+                    :reduce="(opt) => opt.value"
+                    placeholder="اختر الحالة النهائية"
+                    searchable
+                  />
+                </div>
               </div>
 
               <div class="col-md-12">
@@ -427,22 +452,20 @@
           <div class="modal-body">
             <div class="row g-3">
               <div class="col-md-12">
-                <label class="form-label">القسم</label>
-                <select
-                  v-model="transferForm.departmentId"
-                  class="form-select"
-                  required
-                >
-                  <option value="">اختر القسم</option>
-                  <option
-                    v-for="dept in departments"
-                    :key="dept.id"
-                    :value="dept.id"
-                  >
-                    {{ dept.name }}
-                  </option>
-                </select>
-              </div>
+  <label class="form-label">القسم</label>
+
+  <div class="custom-vue-select-container">
+    <VueSelect
+      v-model="transferForm.departmentId"
+      :options="departmentsSelect"
+      label="label"
+      :reduce="opt => opt.value"
+      placeholder="اختر القسم"
+      searchable
+    />
+  </div>
+</div>
+
 
               <div class="col-md-12">
                 <label class="form-label">ملاحظات</label>
@@ -670,12 +693,52 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal: Situations -->
+  <div class="modal fade" ref="situationsModalEl">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-3">
+        <div class="modal-header">
+          <h5 class="modal-title">المواقف المسجلة</h5>
+        </div>
+
+        <div class="modal-body">
+          <div v-if="selectedSituations.length">
+            <div
+              v-for="(s, i) in selectedSituations"
+              :key="i"
+              class="situation-item"
+            >
+              <div class="s-number">
+                {{ s.situationNumber }}
+              </div>
+
+              <div class="s-content">
+                <label>اسم الموقف:</label>
+                <p>{{ s.situationName }}</p>
+              </div>
+            </div>
+          </div>
+
+          <p v-else class="text-muted text-center">لا توجد مواقف</p>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeSituations()">
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, computed } from "vue";
 import { Modal } from "bootstrap";
 import { useRoute } from "vue-router";
+import VueSelect from "vue3-select";
+import "vue3-select/dist/vue3-select.css";
 
 import {
   getAuditingAndData,
@@ -705,6 +768,32 @@ const filters = reactive({
   pageNumber: 1,
   pageSize: 10,
 });
+/* ---------------- ENUMS ---------------- */
+
+/* FinalStatusType enum */
+const FinalStatusType = {
+  Completed: 0,
+  Apology: 1,
+  NotCompleted: 2,
+};
+
+/* VerificationStatus enum */
+const VerificationStatus = {
+  Verified: 0,
+  NotVerified: 1,
+};
+
+/* Select */
+const finalStatusOptions = [
+  { value: FinalStatusType.Completed, label: "منجز" },
+  { value: FinalStatusType.Apology, label: "اعتذار" },
+  { value: FinalStatusType.NotCompleted, label: "غير منجز" },
+];
+
+const verificationStatusOptions = [
+  { value: VerificationStatus.Verified, label: "مدقق" },
+  { value: VerificationStatus.NotVerified, label: "غير مدقق" },
+];
 
 // ===== Pagination =====
 const page = ref(1);
@@ -726,10 +815,8 @@ const visiblePages = computed(() => {
   return pages;
 });
 
-// ===== الأقسام للتحويل =====
 const departments = ref([]);
-
-// ===== مودالات =====
+const departmentsSelect = ref([]);
 const modalEl = ref(null);
 const transferModalEl = ref(null);
 const viewModalEl = ref(null);
@@ -738,10 +825,9 @@ let transferModal = null;
 let viewModal = null;
 const editMode = ref(false);
 
-// ===== فورم الإضافة/التعديل =====
 const form = reactive({
   id: "",
-  incomingId: incomingIdFromRoute, // لو الصفحة افتحت من مسار وارد معين
+  incomingId: incomingIdFromRoute,
   transactionReceiveDate: "",
   transactionDeliveryDate: "",
   militaryDoctorReceive: "",
@@ -749,6 +835,8 @@ const form = reactive({
   verificationReceive: "",
   verificationDelivery: "",
   notes: "",
+  finalStatus: 0,
+  verificationStatus: 0,
   situations: [
     {
       situationNumber: "1",
@@ -757,7 +845,6 @@ const form = reactive({
   ],
 });
 
-// ===== فورم التحويل =====
 const transferForm = reactive({
   auditingAndDataId: "",
   departmentId: "",
@@ -769,17 +856,14 @@ const transferLoading = ref(false);
 // ===== Selected for view =====
 const selected = ref(null);
 
-// ===== تحميل البيانات =====
 const load = async () => {
   loading.value = true;
   try {
-    // الأساسيات
     const params = {
       pageNumber: page.value,
       pageSize,
     };
 
-    // إضافة الفلاتر فقط إذا لها قيمة
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== "" && value !== null && value !== undefined) {
         params[key] = value;
@@ -809,24 +893,28 @@ const resetFilters = () => {
   load();
 };
 
-// ===== تحميل الأقسام للتحويل =====
 const loadDepartments = async () => {
   try {
     const res = await getDepartments({ pageNumber: 1, pageSize: 100 });
-    departments.value = res.data.data;
+    departments.value = res.data.data ?? [];
+
+    departmentsSelect.value = departments.value.map(d => ({
+      label: d.name,
+      value: d.id
+    }));
   } catch (error) {
     console.error("Error loading departments:", error);
   }
 };
 
-// ===== إضافة =====
+
 const openAdd = (row) => {
   editMode.value = false;
 
   Object.assign(form, {
     id: "",
     incomingId: row?.incomingId || incomingIdFromRoute || null,
-    injuredName: row?.injuredName || "",
+    incomingBookNumber: row?.incomingBookNumber || "",
     incomingSubject: row?.incomingSubject || "",
 
     transactionReceiveDate: "",
@@ -835,6 +923,8 @@ const openAdd = (row) => {
     militaryDoctorDelivery: "",
     verificationReceive: "",
     verificationDelivery: "",
+    verificationStatus: 0,
+    finalStatus: 0,
     notes: "",
     situations: [{ situationNumber: "1", situationName: "" }],
   });
@@ -842,7 +932,6 @@ const openAdd = (row) => {
   modal.show();
 };
 
-// ===== تعديل =====
 const openEdit = (row) => {
   editMode.value = true;
 
@@ -850,7 +939,7 @@ const openEdit = (row) => {
     id: row.id,
     incomingId: row.incomingId || incomingIdFromRoute || null,
 
-    injuredName: row.injuredName || "",
+    incomingBookNumber: row.incomingBookNumber || "",
     incomingSubject: row.incomingSubject || "",
 
     transactionReceiveDate: row.transactionReceiveDate
@@ -871,6 +960,8 @@ const openEdit = (row) => {
     verificationDelivery: row.verificationDelivery
       ? row.verificationDelivery.slice(0, 16)
       : "",
+    verificationStatus: row.verificationStatus ?? 0,
+    finalStatus: row.finalStatus ?? 0,
 
     notes: row.notes || "",
     situations: row.situations?.map((s, i) => ({
@@ -882,7 +973,6 @@ const openEdit = (row) => {
   modal.show();
 };
 
-// إدارة أسطر الموقف
 const addSituationRow = () => {
   form.situations.push({
     situationNumber: String(form.situations.length + 1),
@@ -895,7 +985,6 @@ const removeSituationRow = (index) => {
   form.situations.splice(index, 1);
 };
 
-// ===== حفظ (إضافة/تعديل) =====
 const save = async () => {
   const data = {
     incomingId: form.incomingId,
@@ -906,6 +995,8 @@ const save = async () => {
     verificationReceive: form.verificationReceive || null,
     verificationDelivery: form.verificationDelivery || null,
     notes: form.notes || null,
+    verificationStatus: form.verificationStatus,
+    finalStatus: form.finalStatus,
     situations: form.situations
       .filter((s) => s.situationName || s.situationNumber)
       .map((s) => ({
@@ -931,7 +1022,6 @@ const save = async () => {
   }
 };
 
-// ===== حذف =====
 const remove = async (id) => {
   const result = await confirmDelete();
   if (result.isConfirmed) {
@@ -947,7 +1037,6 @@ const remove = async (id) => {
 
 const close = () => modal.hide();
 
-// ===== فتح مودال التحويل =====
 const openTransfer = (row) => {
   transferForm.auditingAndDataId = row.id;
   transferForm.departmentId = "";
@@ -955,7 +1044,6 @@ const openTransfer = (row) => {
   transferModal.show();
 };
 
-// ===== تنفيذ التحويل =====
 const transfer = async () => {
   transferLoading.value = true;
   try {
@@ -1001,7 +1089,7 @@ const openAdvanced = () => {
 };
 
 const applyAdvanced = () => {
-  page.value = 1; // نرجع لأول صفحة عند البحث
+  page.value = 1;
   load();
   closeAdvanced();
 };
@@ -1010,7 +1098,6 @@ const closeAdvanced = () => {
   modalAdvancedInstance?.hide();
 };
 
-// ===== التاريخ =====
 const formatDate = (d) => {
   if (!d) return "-";
   const dt = new Date(d);
@@ -1021,10 +1108,23 @@ const formatDate = (d) => {
   return `${year}/${month}/${day}`;
 };
 
-// ===== تغيير الصفحة =====
 const changePage = (p) => {
   page.value = p;
   load();
+};
+
+const situationsModalEl = ref(null);
+let situationsModal = null;
+
+const selectedSituations = ref([]);
+
+const openSituations = (row) => {
+  selectedSituations.value = row.situations || [];
+  situationsModal.show();
+};
+
+const closeSituations = () => {
+  situationsModal.hide();
 };
 
 // ===== INIT =====
@@ -1032,6 +1132,7 @@ onMounted(() => {
   modal = new Modal(modalEl.value);
   transferModal = new Modal(transferModalEl.value);
   viewModal = new Modal(viewModalEl.value);
+  situationsModal = new Modal(situationsModalEl.value);
   load();
   loadDepartments();
 });
@@ -1154,5 +1255,50 @@ onMounted(() => {
   font-size: 13px;
   padding: 6px 10px;
   border-radius: 20px;
+}
+
+.situation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  background: #f8fcff;
+  border: 1px solid #d7ecf3;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 12px;
+  transition: 0.2s;
+}
+
+.situation-item:hover {
+  background: #eefaff;
+  border-color: #12b1d1;
+}
+
+.s-number {
+  min-width: 40px;
+  height: 40px;
+  background: #12b1d1;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  box-shadow: 0 3px 8px rgba(18, 177, 209, 0.25);
+}
+
+.s-content label {
+  font-weight: 600;
+  color: #0f6c88;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.s-content p {
+  margin: 0;
+  color: #333;
+  line-height: 1.6;
+  word-break: break-word;
 }
 </style>

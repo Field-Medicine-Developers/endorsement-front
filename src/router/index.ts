@@ -1,26 +1,35 @@
 import { createRouter, createWebHistory } from "vue-router";
 
-const baseUrl = import.meta.env.VITE_BUILD_ADDRESS;
+const baseUrl = import.meta.env.VITE_BUILD_ADDRESS || "";
 
 export const routes = [
   // صفحة تسجيل الدخول
   {
     path: `${baseUrl}/login`,
-    component: () => import("../layouts/Auth.vue"), //  هذا الملف اللي أنشأناه
+    component: () => import("../layouts/Auth.vue"),
+    meta: { hideFromNav: true },
     children: [
       {
         path: "",
-        // name: "تسجيل الدخول",
         component: () => import("@/views/Login.vue"),
+        meta: { hideFromNav: true },
       },
     ],
   },
+  
+  {
+    path: `${baseUrl}/injury-support-view/:id`,
+    name: "InjurySupportView",
+    component: () => import("@/views/injuries/InjurySupportView.vue"),
+    meta: { public: true, hideFromNav: true },
+  },
+  
 
   {
     path: `${baseUrl}/about`,
     component: () => import("@/layouts/Page.vue"),
     children: [
-      { path: "", name: "لوحة ", component: () => import("@/views/About.vue") },
+      { path: "", name: "لوحة ", component: () => import("@/views/Dashboard/About.vue") },
     ],
   },
 
@@ -49,6 +58,18 @@ export const routes = [
   },
 
   {
+    path: `${baseUrl}/division-flow`,
+    component: () => import("@/layouts/Page.vue"),
+    children: [
+      {
+        path: "",
+        name: " الإداري",
+        component: () => import("@/views/Divisionfolder/DivisionTabs.vue")
+      },
+    ],
+  },
+
+  {
     path: `${baseUrl}/data-management`,
     component: () => import("@/layouts/Page.vue"),
     children: [
@@ -60,7 +81,6 @@ export const routes = [
       },
     ],
   },
-
   {
     path: `${baseUrl}/flow`,
     component: () => import("@/layouts/Page.vue"),
@@ -91,7 +111,7 @@ export const routes = [
       {
         path: "",
         name: "تأييد الإصابة",
-        component: () => import("@/views/InjurySupports.vue"),
+        component: () => import("@/views/injuries/InjurySupports.vue"),
       },
     ],
   },
@@ -106,18 +126,7 @@ export const routes = [
       },
     ],
   },
-
-  // {
-  //   path: `${baseUrl}/return-transactions`,
-  //   component: () => import("@/layouts/Page.vue"),
-  //   children: [
-  //     {
-  //       path: "",
-  //       name: " الاسترجاع",
-  //       component: () => import("@/views/ReturnTransactions.vue"),
-  //     },
-  //   ],
-  // },
+  
 
   // {
   //   path: `${baseUrl}/departments`,
@@ -148,6 +157,11 @@ export const routes = [
   // },
 
   // أي مسار غير معروف → login
+  // {
+  //   path: `${baseUrl}/:pathMatch(.*)*`,
+  //   component: () => import("@/views/errors/NotFound404.vue"),
+  //   meta: { public: true },
+  // },
   {
     path: `${baseUrl}/:pathMatch(.*)*`,
     redirect: `${baseUrl}/login`,
@@ -161,10 +175,16 @@ export const router = createRouter({
 
 //  حماية الصفحات (اختياري)
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = localStorage.getItem("token"); // أو تحقق من API
-  if (!isAuthenticated && to.path !== `${baseUrl}/login`) {
-    next(`${baseUrl}/login`);
-  } else {
-    next();
+  const isAuthenticated = localStorage.getItem("token");
+
+  if (to.meta.public) {
+    return next();
   }
+
+  if (!isAuthenticated && to.path !== `${baseUrl}/login`) {
+    return next(`${baseUrl}/login`);
+  }
+
+  next();
 });
+

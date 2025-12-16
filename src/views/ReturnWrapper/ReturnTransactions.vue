@@ -15,7 +15,9 @@
       </div>
     </div>
 
-    <button class="btn btn-primary" @click="openAdd">إضافة معاملة الاسترجاع</button>
+    <button class="btn btn-primary" @click="openAdd">
+      إضافة معاملة الاسترجاع
+    </button>
   </div>
 
   <!-- Search -->
@@ -53,8 +55,8 @@
     </div>
 
     <div class="card-body">
-      <div v-if="loading" class="text-center py-4">
-        <div class="spinner-border"></div>
+      <div v-if="loading" class="spinner-wrapper">
+        <div class="spinner"></div>
       </div>
 
       <div v-else class="card inner-card">
@@ -107,7 +109,9 @@
               </tr>
 
               <tr v-if="list.length === 0">
-                <td colspan="7" class="py-5 text-muted">لا توجد بيانات</td>
+                <td colspan="7" class="py-5 text-muted">
+                  <i class="bi bi-inboxes fs-1 d-block mb-2"></i>
+                  لا توجد بيانات</td>
               </tr>
             </tbody>
           </table>
@@ -239,69 +243,75 @@
               </div>
 
               <div class="col-md-12">
-  <label class="form-label">المرفقات</label>
+                <label class="form-label">المرفقات</label>
 
-  <!-- اختيار الملفات -->
-  <input
-    type="file"
-    @change="handleFileUpload"
-    class="form-control"
-    multiple
-  />
+                <!-- اختيار الملفات -->
+                <input
+                  type="file"
+                  @change="handleFileUpload"
+                  class="form-control"
+                  multiple
+                />
 
-  <!-- الملفات الجديدة -->
-  <div class="attachments-box mt-3" v-if="form.files.length > 0">
-    <div class="attachments-title">الملفات المحددة ({{ form.files.length }})</div>
+                <!-- الملفات الجديدة -->
+                <div class="attachments-box mt-3" v-if="form.files.length > 0">
+                  <div class="attachments-title">
+                    الملفات المحددة ({{ form.files.length }})
+                  </div>
 
-    <div
-      v-for="(file, index) in form.files"
-      :key="index"
-      class="attachment-item"
-    >
-      <span class="file-name">{{ file.name }}</span>
+                  <div
+                    v-for="(file, index) in form.files"
+                    :key="index"
+                    class="attachment-item"
+                  >
+                    <span class="file-name">{{ file.name }}</span>
 
-      <button
-        class="remove-file-btn"
-        type="button"
-        @click="removeSelectedFile(index)"
-      >
-        حذف
-      </button>
-    </div>
-  </div>
+                    <button
+                      class="remove-file-btn"
+                      type="button"
+                      @click="removeSelectedFile(index)"
+                    >
+                      حذف
+                    </button>
+                  </div>
+                </div>
 
-  <!-- الملفات الحالية (في وضع التعديل) -->
-  <div
-    class="attachments-box mt-3"
-    v-if="editMode && form.existingFiles.length > 0"
-  >
-    <div class="attachments-title">
-      الملفات الحالية ({{ form.existingFiles.length }})
-    </div>
+                <!-- الملفات الحالية (في وضع التعديل) -->
+                <div
+                  class="attachments-box mt-3"
+                  v-if="editMode && form.existingFiles.length > 0"
+                >
+                  <div class="attachments-title">
+                    الملفات الحالية ({{ form.existingFiles.length }})
+                  </div>
 
-    <div
-      v-for="(file, index) in form.existingFiles"
-      :key="index"
-      class="attachment-item"
-    >
-      <span class="file-name">{{ getFileName(file) }}</span>
+                  <div
+                    v-for="(file, index) in form.existingFiles"
+                    :key="index"
+                    class="attachment-item"
+                  >
+                    <span class="file-name">{{ getFileName(file) }}</span>
 
-      <button
-        class="remove-file-btn"
-        type="button"
-        @click="removeExistingFile(index)"
-      >
-        حذف
-      </button>
-    </div>
-  </div>
-</div>
-
+                    <button
+                      class="remove-file-btn"
+                      type="button"
+                      @click="removeExistingFile(index)"
+                    >
+                      حذف
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-light" @click="close" :disabled="saving">
+            <button
+              type="button"
+              class="btn btn-light"
+              @click="close"
+              :disabled="saving"
+            >
               إلغاء
             </button>
             <button class="btn btn-add" :disabled="saving">
@@ -470,7 +480,9 @@
           </div>
         </div>
         <div class="modal-footer bg-light">
-          <button type="button" class="btn btn-light" @click="closeFilesModal">إلغاء</button>
+          <button type="button" class="btn btn-light" @click="closeFilesModal">
+            إلغاء
+          </button>
         </div>
       </div>
     </div>
@@ -770,7 +782,6 @@ const formatDateTimeForInput = (d) => {
 const removeSelectedFile = (index) => {
   form.files.splice(index, 1);
 };
-
 
 onMounted(() => {
   modal = new Modal(modalEl.value);

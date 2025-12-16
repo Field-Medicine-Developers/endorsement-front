@@ -5,7 +5,7 @@
         :to="routes[0].path"
         class="navbar-brand fw-bold d-flex align-items-center gap-2 text-decoration-none me-3 fs-4"
       >
-        <span style="color: #12b1d1">نظام التأييدات</span>
+        <span class="brand-title" style="color: #12b1d1">نظام التأييدات</span>
       </router-link>
 
       <button
@@ -26,7 +26,7 @@
         <ul class="navbar-nav gap-1">
           <li
             class="nav-item text-uppercase fw-semibold"
-            v-for="route in routes"
+            v-for="route in visibleRoutes"
             :key="route.path"
           >
             <router-link
@@ -70,10 +70,10 @@
                 <span class="value">{{ user.departmentName }}</span>
               </div>
 
-              <div class="info-row">
+              <!-- <div class="info-row">
                 <span class="label">الدور:</span>
                 <span class="value">{{ getRoleName(user.role) }}</span>
-              </div>
+              </div> -->
             </div>
 
             <button class="logout-btn-new" @click="logout">
@@ -91,6 +91,16 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { routes } from "@/router";
+
+const visibleRoutes = computed(() => {
+  return routes.filter(
+    (r) =>
+      !r.meta?.hideFromNav && // إخفاء الصفحات الخاصة
+      r.children && // فقط الصفحات الرئيسية
+      r.children.length > 0 &&
+      r.children[0].name // التي لها اسم ظاهر
+  );
+});
 
 const siteUrl = import.meta.env.VITE_BUILD_ADDRESS;
 const router = useRouter();
@@ -169,7 +179,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .navbar {
   border-bottom: 2px solid #12b1d1;
-  border-radius: 0% !important;
+  border-radius: 6% !important;
   background-color: #12b1d10a !important;
   position: relative;
 }
@@ -499,5 +509,20 @@ onUnmounted(() => {
     width: 38px;
     height: 38px;
   }
+}
+.brand-title {
+  font-family: "Cairo", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 900;
+  background: linear-gradient(90deg, #0fa7c9, #12b1d1, #0fa7c9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px rgba(18, 177, 209, 0.25);
+  color: #12b1d1;
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 6px rgba(18, 177, 209, 0.3);
 }
 </style>

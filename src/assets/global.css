@@ -916,6 +916,58 @@ btn-confirmReject:active {
 }
 
 
+/* زر المرفقات */
+.button-archive {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: #147940; 
+  border: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.164);
+  cursor: pointer;
+  transition-duration: .3s;
+  overflow: hidden;
+  position: relative;
+}
+
+.button-archive .svgIcon {
+  width: 26px;
+  transition-duration: .3s;
+}
+
+.button-archive .svgIcon path {
+  fill: white;
+}
+
+.button-archive:hover {
+  border-radius: 50px;
+}
+
+.button-archive:hover .svgIcon {
+  width: 50px;
+  transform: translateY(60%);
+}
+
+.button-archive::before {
+  position: absolute;
+  top: -25px;
+  content: "مرفقات";
+  color: white;
+  transition-duration: .3s;
+  font-size: 2px;
+}
+
+.button-archive:hover::before {
+  font-size: 13px;
+  opacity: 1;
+  transform: translateY(30px);
+}
+
+
 /* -------------------------------------------------------------
 pagination
 ------------------------------------------------------------- */
@@ -2120,3 +2172,54 @@ pagination
   font-size: 1rem;
 }
 
+
+/* ================================
+   🔵 سبنر أربع نقاط مع دوران 
+   اللون: #12b1d1d6
+   ================================ */
+   .spinner {
+    width: 56px;
+    height: 56px;
+    display: grid;
+    margin: auto; /* مهم لوضعه بالمنتصف */
+  }
+  
+  .spinner::before,
+  .spinner::after {
+    content: "";
+    grid-area: 1/1;
+    background: var(--c) 50% 0,
+                var(--c) 50% 100%,
+                var(--c) 100% 50%,
+                var(--c) 0 50%;
+    background-size: 13.4px 13.4px;
+    background-repeat: no-repeat;
+    animation: spinner-rotate 1s infinite linear;
+  }
+  
+  /* تغيير اللون */
+  .spinner::before {
+    --c: radial-gradient(farthest-side, #12b1d1d6 92%, #0000);
+    margin: 4.5px;
+    background-size: 9px 9px;
+  }
+  
+  .spinner::after {
+    --c: radial-gradient(farthest-side, #12b1d1d6 92%, #0000);
+  }
+  
+  /* الحركة */
+  @keyframes spinner-rotate {
+    100% {
+      transform: rotate(0.5turn);
+    }
+  }
+  
+  /* وضع السبنر في منتصف الكارد أو الصفحة */
+  .spinner-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 0;
+  }
+  

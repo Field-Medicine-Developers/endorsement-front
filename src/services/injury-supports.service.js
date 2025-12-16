@@ -15,3 +15,15 @@ export const updateInjurySupport = (id, body) => {
 export const deleteInjurySupport = (id) => {
   return api.delete(`/InjurySupports/${id}`);
 };
+
+
+export const getIncomings = () =>
+  api.get("/Incomings");
+
+
+export const getFormations = () =>
+  api.get("/Formations");
+
+export const getInjurySupportByPerson = (injuredPersonId) => {
+  return api.get(`/InjurySupports/by-injured-person/${injuredPersonId}`);
+};

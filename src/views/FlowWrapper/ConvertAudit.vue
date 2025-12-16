@@ -11,7 +11,7 @@
       </span>
       <div>
         <h2 class="h5 fw-bold m-2">المراسلات</h2>
-        <small class="text-muted">إدارة معاملات التدقيق</small>
+        تغيير حالة المعاملة: قبول أو رفض
       </div>
     </div>
   </div>
@@ -23,8 +23,8 @@
     </div>
 
     <div class="card-body">
-      <div v-if="loading" class="text-center py-4">
-        <div class="spinner-border"></div>
+      <div v-if="loading" class="spinner-wrapper">
+        <div class="spinner"></div>
       </div>
 
       <div v-else class="card inner-card">
@@ -33,7 +33,9 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>اسم الجريح</th>
+                <!-- <th>اسم الجريح</th> -->
+                <th>رقم الوارد</th>
+                <th>تاريخ الوارد</th>
                 <th>موضوع الوارد</th>
                 <th>أضيف بواسطة</th>
                 <th>تاريخ الإضافة</th>
@@ -48,7 +50,9 @@
             <tbody>
               <tr v-for="(item, idx) in list" :key="item.id">
                 <td>{{ idx + 1 }}</td>
-                <td>{{ item.injuredName || "-" }}</td>
+                <!-- <td>{{ item.injuredName || "-" }}</td> -->
+                <td>{{ item.incomingBookNumber || "-" }}</td>
+                <td>{{ formatDate(item.incomingDate) }}</td>
                 <td>{{ item.incomingSubject || "-" }}</td>
                 <td>{{ item.createdByUserName }}</td>
                 <td>{{ formatDate(item.createdAt) }}</td>
@@ -118,7 +122,9 @@
               </tr>
 
               <tr v-if="list.length === 0">
-                <td colspan="10" class="py-4 text-muted">لا توجد بيانات</td>
+                <td colspan="10" class="py-4 text-muted">
+                  <i class="bi bi-inboxes fs-1 d-block mb-2"></i>لا توجد بيانات
+                </td>
               </tr>
             </tbody>
           </table>

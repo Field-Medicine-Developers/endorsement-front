@@ -23,54 +23,59 @@
     </div>
 
     <div class="card-body">
-      <div v-if="loading" class="text-center py-4">
-        <div class="spinner-border"></div>
-      </div>
 
-      <!-- Table -->
-      <div class="card inner-card">
-        <div class="table-responsive">
-        <table class="table custom-table text-center align-middle">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>اسم الجريح</th>
-              <th>موضوع الكتاب</th>
-              <th>من قسم</th>
-              <th>تاريخ الورود</th>
-              <th>إضافة إرجاع</th>
-            </tr>
-          </thead>
+<!-- Spinner -->
+<div v-if="loading" class="spinner-wrapper">
+  <div class="spinner"></div>
+</div>
 
-          <tbody>
-            <tr v-for="(item, i) in list" :key="item.id">
-              <td>{{ i + 1 }}</td>
-              <td>{{ item.injuredName }}</td>
-              <td>{{ item.incomingSubject }}</td>
-              <td>{{ item.departmentName }}</td>
-              <td>{{ formatDate(item.createdAt) }}</td>
+<!-- Table -->
+<div v-else class="card inner-card">
+  <div class="table-responsive">
+    <table class="table custom-table text-center align-middle">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>عدد الوارد</th>
+          <th>تاريخ الوارد</th>
+          <th>موضوع الكتاب</th>
+          <th>من قسم</th>
+          <th>الإجراءات</th>
+        </tr>
+      </thead>
 
-              <td>
-                <div class="d-flex gap-2 justify-content-center">
-                  <button class="button-add" @click="openAdd(item)">
-                    <svg class="svgIcon" viewBox="0 0 448 512">
-                      <path
-                        d="M432 256c0 17.7-14.3 32-32 32h-128v128c0 17.7-14.3 32-32 
+            <tbody>
+              <tr v-for="(item, i) in list" :key="item.id">
+                <td>{{ i + 1 }}</td>
+                <td>{{ item.incomingBookNumber }}</td>
+                <td>{{ formatDate(item.incomingDate) }}</td>
+                <td>{{ item.incomingSubject }}</td>
+                <td>{{ item.departmentName }}</td>
+
+                <td>
+                  <div class="d-flex gap-2 justify-content-center">
+                    <button class="button-add" @click="openAdd(item)">
+                      <svg class="svgIcon" viewBox="0 0 448 512">
+                        <path
+                          d="M432 256c0 17.7-14.3 32-32 32h-128v128c0 17.7-14.3 32-32 
                           32s-32-14.3-32-32V288H80c-17.7 0-32-14.3-32-32s14.3-32 
                           32-32h128V96c0-17.7 14.3-32 32-32s32 14.3 
                           32 32v128h128c17.7 0 32 14.3 32 32z"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
 
-            <tr v-if="list.length === 0">
-              <td colspan="6" class="text-muted py-4">لا توجد مراسلات واردة</td>
-            </tr>
-          </tbody>
-        </table>
+              <tr v-if="list.length === 0">
+                <td colspan="6" class="text-muted py-4">
+                  <i class="bi bi-inboxes fs-1 d-block mb-2"></i>
+                  لا توجد مراسلات واردة
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

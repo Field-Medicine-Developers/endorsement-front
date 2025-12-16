@@ -30,7 +30,7 @@
           v-model="filters.injuredName"
           class="form-control"
           placeholder="بحث بالاسم..."
-           @keyup.enter="load"
+          @keyup.enter="load"
         />
       </div>
 
@@ -51,8 +51,8 @@
     </div>
 
     <div class="card-body">
-      <div v-if="loading" class="text-center py-4">
-        <div class="spinner-border"></div>
+      <div v-if="loading" class="spinner-wrapper">
+        <div class="spinner"></div>
       </div>
 
       <div v-else class="card inner-card">
@@ -66,6 +66,7 @@
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
                 <th>هامش مدير القسم</th>
+                <th>هامش مسوؤل الشعبة</th>
                 <th>الإجراءات</th>
               </tr>
             </thead>
@@ -96,8 +97,8 @@
                 <td>{{ inc.formationName }}</td>
                 <td>{{ inc.incomingBookNumber }}</td>
                 <td>{{ formatDate(inc.incomingDate) }}</td>
-                <td>{{ inc.marginNote?.managerNote || "—" }}</td>
-
+                <td>{{ inc.managerNote || "—" }}</td>  
+                <td>{{ inc.managerNoteDivision || "—" }}</td>  
                 <td>
                   <div class="d-flex justify-content-center gap-2">
                     <!-- تعديل -->
@@ -160,6 +161,34 @@
                         />
                       </svg>
                     </button>
+                    <!-- عرض المرفقات -->
+                    <button
+                      class="button-archive"
+                      title="عرض المرفقات"
+                      @click="openArchive(inc)"
+                    >
+                      <svg class="svgIcon" viewBox="0 0 512 512">
+                        <path
+                          d="M424.4 214.7L253.1 386c-35.2 35.2-92.3 35.2-127.5 0
+                             s-35.2-92.3 0-127.5L300.3 83.9c23.4-23.4 61.4-23.4
+                             84.9 0s23.4 61.4 0 84.9L224.6 329.4c-11.7 11.7-30.7
+                             11.7-42.4 0s-11.7-30.7 0-42.4L318.1 151c6.2-6.2
+                             6.2-16.4 0-22.6s-16.4-6.2-22.6 0L159.6 264.3
+                             c-23.4 23.4-23.4 61.4 0 84.9s61.4 23.4 84.9 0
+                             l160.6-160.6c35.2-35.2 35.2-92.3 0-127.5
+                             s-92.3-35.2-127.5 0L106.3 232.4"
+                        />
+                      </svg>
+                    </button>
+
+                    <!-- إضافة مرفقات -->
+                    <!-- <button
+                      class="button-archive-add"
+                      title="إضافة مرفقات"
+                      @click="openArchiveUpload(inc)"
+                    >
+                      <i class="bi bi-cloud-upload"></i>
+                    </button> -->
                   </div>
                 </td>
               </tr>
@@ -561,6 +590,120 @@
       </div>
     </div>
   </div>
+
+  <!-- Archive Modal -->
+  <div class="modal fade" ref="archiveModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-folder2-open me-1"></i>
+            مرفقات الوارد
+          </h5>
+        </div>
+
+        <div class="modal-body">
+          <!-- لا توجد مرفقات -->
+          <div
+            v-if="archiveFiles.length === 0"
+            class="text-muted text-center py-4"
+          >
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            لا توجد مرفقات
+          </div>
+
+          <!-- قائمة المرفقات -->
+          <div v-else class="list-group">
+            <button
+              v-for="(file, i) in archiveFiles"
+              :key="i"
+              class="list-group-item list-group-item-action d-flex align-items-center gap-2"
+              @click="openFile(file.fileFullUrl)"
+            >
+              <i class="bi bi-file-earmark-pdf text-danger fs-5"></i>
+              <span class="flex-grow-1">
+                {{ file.fileName }}
+              </span>
+              <i class="bi bi-box-arrow-up-right text-muted"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeArchive()">إغلاق</button>
+          <button
+              class="btn btn-primary"
+              @click="openArchiveUploadFromView"
+            >
+              <i class="bi bi-cloud-upload me-1"></i>
+              إضافة مرفقات
+            </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Archive Upload Modal -->
+  <div class="modal fade" ref="archiveUploadModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <!-- Header -->
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-cloud-upload me-1"></i>
+            إضافة مرفقات
+          </h5>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body">
+          <div
+            v-for="(item, index) in archiveInputs"
+            :key="index"
+            class="d-flex gap-2 align-items-center mb-2"
+          >
+            <!-- Input -->
+            <input
+              type="file"
+              accept=".pdf,image/*"
+              multiple
+              class="form-control"
+              @change="onArchiveFilesSelected($event, index)"
+            />
+
+            <!-- حذف -->
+            <button
+              v-if="archiveInputs.length > 1"
+              class="btn btn-outline-danger"
+              @click="removeArchiveInput(index)"
+              title="حذف"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+
+          <!-- إضافة حقل -->
+          <button
+            class="btn btn-search w-100 mt-3"
+            @click="addArchiveInput"
+          >
+            <i class="bi bi-plus-lg me-1"></i>
+            إضافة مرفق آخر
+          </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeArchiveUpload">
+            إلغاء
+          </button>
+          <button class="btn btn-primary" @click="submitArchiveUpload">
+            رفع
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -579,6 +722,7 @@ import {
   deleteIncoming,
   transferIncoming,
 } from "@/services/incoming.service.js";
+import { uploadIncomingArchive } from "@/services/incoming-archive.service.js";
 
 const router = useRouter();
 /* Pagination */
@@ -915,12 +1059,104 @@ const closeNamesModal = () => {
   namesModalInstance.hide();
 };
 
+const archiveModal = ref(null);
+const archiveUploadModal = ref(null);
+
+let modalArchive = null;
+let modalArchiveUpload = null;
+
+const archiveFiles = ref([]);
+const currentIncomingId = ref("");
+const selectedArchiveFiles = ref([]);
+
+/* فتح عرض المرفقات */
+const openArchive = (inc) => {
+  document.activeElement?.blur();
+  currentIncomingId.value = inc.id;
+  archiveFiles.value = inc.archiveIncoming || [];
+  modalArchive.show();
+};
+
+const openArchiveUploadFromView = () => {
+  modalArchive.hide();
+  modalArchiveUpload.show();
+};
+
+const archiveInputRef = ref(null);
+const archiveInputs = ref([{ files: [] }]);
+const closeArchive = () => modalArchive.hide();
+
+/* فتح رفع مرفقات */
+const openArchiveUpload = (inc) => {
+  document.activeElement?.blur();
+  currentIncomingId.value = inc.id;
+  selectedArchiveFiles.value = [];
+  modalArchiveUpload.show();
+};
+
+const openArchiveDirect = (inc) => {
+  if (!inc.archiveIncoming || inc.archiveIncoming.length === 0) {
+    return errorAlert("لا توجد مرفقات لهذا الوارد");
+  }
+
+  inc.archiveIncoming.forEach((f) => {
+    window.open(f.fileFullUrl, "_blank");
+  });
+};
+
+const closeArchiveUpload = () => modalArchiveUpload.hide();
+
+const onArchiveFilesSelected = (event, index) => {
+  archiveInputs.value[index].files = Array.from(event.target.files);
+};
+
+const submitArchiveUpload = async () => {
+  if (!currentIncomingId.value) {
+    return errorAlert("معاملة غير محددة");
+  }
+
+  // جمع كل الملفات
+  const allFiles = archiveInputs.value.flatMap((x) => x.files);
+
+  if (allFiles.length === 0) {
+    return errorAlert("يرجى اختيار ملفات");
+  }
+
+  try {
+    await uploadIncomingArchive(currentIncomingId.value, allFiles);
+
+    successAlert("تم رفع المرفقات بنجاح");
+    archiveInputs.value = [{ files: [] }];
+    currentIncomingId.value = "";
+
+    modalArchiveUpload.hide();
+    load();
+  } catch (e) {
+    console.error(e);
+    errorAlert("فشل رفع المرفقات");
+  }
+};
+
+const removeArchiveInput = (index) => {
+  archiveInputs.value.splice(index, 1);
+};
+
+const addArchiveInput = () => {
+  archiveInputs.value.push({ files: [] });
+};
+
+const openFile = (url) => {
+  window.open(url, "_blank");
+};
+
 onMounted(() => {
   modal = new Modal(modalEl.value);
   modalAdv = new Modal(advancedModal.value);
   modalTransfer = new Modal(transferModal.value);
   modalView = new Modal(viewModal.value);
   namesModalInstance = new Modal(namesModal.value);
+  modalArchive = new Modal(archiveModal.value);
+  modalArchiveUpload = new Modal(archiveUploadModal.value);
   load();
   loadDepartments();
   loadFormations();

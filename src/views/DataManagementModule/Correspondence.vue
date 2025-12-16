@@ -11,7 +11,7 @@
       </span>
 
       <div>
-        <h2 class="h5 fw-bold m-2">مراسلات الوارد</h2>
+        <h2 class="h5 fw-bold m-2">مراسلات الإدارة</h2>
         <small class="text-muted">تغيير حالة المعاملة: قبول أو رفض</small>
       </div>
     </div>
@@ -46,8 +46,8 @@
     </div>
 
     <div class="card-body">
-      <div v-if="loading" class="text-center py-4">
-        <div class="spinner-border"></div>
+      <div v-if="loading" class="spinner-wrapper">
+        <div class="spinner"></div>
       </div>
 
       <div v-else class="card inner-card">
@@ -144,19 +144,19 @@
                       title="رفض المعاملة"
                       @click="openReject(m)"
                     >
-                      <svg class="svgIcon" viewBox="0 0 384 512">
-                        <path
-                          d="M231.6 256l142.8-142.8c12.5-12.5 12.5-32.7 
-                             0-45.2L352 46.1c-12.5-12.5-32.7-12.5-45.2 
-                             0L192 160.8 77.2 46.1C64.7 33.6 44.5 33.6 32 
-                             46.1L9.4 68.7c-12.5 12.5-12.5 32.7 
-                             0 45.2L152.2 256 9.4 398.8c-12.5 12.5-12.5 32.7 
-                             0 45.2L32 466.1c12.5 12.5 32.7 12.5 
-                             45.2 0L192 351.2l114.8 114.8c12.5 12.5 32.7 12.5 
-                             45.2 0l22.6-22.6c12.5-12.5 12.5-32.7 
-                             0-45.2L231.6 256z"
-                        />
-                      </svg>
+                    <svg class="svgIcon" viewBox="0 0 384 512">
+                  <path
+                         d="M231.6 256l142.8-142.8c12.5-12.5 12.5-32.7 
+                              0-45.2L352 46.1c-12.5-12.5-32.7-12.5-45.2 
+                              0L192 160.8 77.2 46.1C64.7 33.6 44.5 33.6 32 
+                              46.1L9.4 68.7c-12.5 12.5-12.5 32.7 
+                              0 45.2L152.2 256 9.4 398.8c-12.5 12.5-12.5 32.7 
+                              0 45.2L32 466.1c12.5 12.5 32.7 12.5 
+                              45.2 0L192 351.2l114.8 114.8c12.5 12.5 32.7 12.5 
+                              45.2 0l22.6-22.6c12.5-12.5 12.5-32.7 
+                              0-45.2L231.6 256z"
+                       />
+                     </svg>
                     </button>
                   </div>
                 </td>
@@ -340,7 +340,7 @@ const rejection = reactive({
 });
 
 const openReject = (row) => {
-  rejection.id = row.incomingId; 
+  rejection.id = row.incomingId;
   rejection.reason = "";
   rejectModal.show();
 };

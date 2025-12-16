@@ -45,8 +45,8 @@
     </div>
 
     <div class="card-body">
-      <div v-if="loading" class="text-center py-5">
-        <div class="spinner-border"></div>
+      <div v-if="loading" class="spinner-wrapper">
+        <div class="spinner"></div>
       </div>
 
       <div v-else class="card inner-card">
@@ -168,7 +168,9 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-light" @click="close()">إلغاء</button>
+            <button type="button" class="btn btn-light" @click="close()">
+              إلغاء
+            </button>
             <button class="btn btn-add">{{ isEdit ? "حفظ" : "إضافة" }}</button>
           </div>
         </form>
@@ -255,7 +257,7 @@ import { Modal } from "bootstrap";
 import VueSelect from "vue3-select";
 import "vue3-select/dist/vue3-select.css";
 
-import { getUsers, addUser, deleteUser } from "@/services/users.service.js";
+import { getUsers, addUser, deleteUser , updateUser} from "@/services/users.service.js";
 import { getDepartments } from "@/services/departments.service.js";
 
 /* خيارات الدور */
@@ -367,11 +369,26 @@ const removeUser = async (id) => {
 
 /* حفظ */
 const save = async () => {
-  if (!isEdit.value) {
-    await addUser(form);
+  try {
+    if (!isEdit.value) {
+      // إضافة
+      await addUser(form);
+    } else {
+      // تعديل 
+      await updateUser(form.id, {
+        fullName: form.fullName,
+        userName: form.userName,
+        password: form.password || null,
+        role: form.role,
+        departmentId: form.departmentId,
+      });
+    }
+
+    modal.hide();
+    loadUsers();
+  } catch (err) {
+    console.error(err);
   }
-  modal.hide();
-  loadUsers();
 };
 
 /* Reset Form */
