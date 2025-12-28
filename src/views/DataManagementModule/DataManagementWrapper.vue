@@ -34,6 +34,13 @@
       >
         الصادر
       </div>
+      <div
+        class="nav-item"
+        :class="{ active: tab === 'ExpotsSecret' }"
+        @click="tab = 'ExpotsSecret'"
+      >
+        الصادر السري
+      </div>
       </div>
     </div>
   
@@ -46,6 +53,7 @@
   import Correspondence from "./Correspondence.vue";
   import DataManagement from "./DataManagement.vue";
   import Exports from "./Exports.vue"; 
+  import ExpotsSecret from "./ExpotsSecret.vue"; 
   
   const tab = ref("management");
   
@@ -59,6 +67,10 @@
 
         case "Exports":
         return Exports;
+
+
+        case "ExpotsSecret":
+        return ExpotsSecret;
   
       default:
         return DataManagement;

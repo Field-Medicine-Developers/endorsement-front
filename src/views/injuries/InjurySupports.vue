@@ -76,7 +76,7 @@
                 <th>الموقف التأييد</th>
                 <th>رقم الصدور</th>
                 <th>تاريخ الصدور</th>
-                <th>الجهة المؤيدة</th>
+                <th>الموقف السابق</th>
                 <th>أُضيف بواسطة</th>
                 <th>تاريخ الإضافة</th>
                 <th>QR</th>
@@ -384,7 +384,7 @@
               </div>
 
               <div class="col-md-6">
-                <label class="form-label">الجهة المؤيدة</label>
+                <label class="form-label">الموقف السابق</label>
                 <input
                   v-model="form.supportingCentralism"
                   class="form-control"
@@ -392,12 +392,12 @@
               </div>
 
               <div class="col-md-6">
-                <label class="form-label">الرقم المركزي</label>
+                <label class="form-label">الرقم صادر المركزية</label>
                 <input v-model="form.centralNumber" class="form-control" />
               </div>
 
               <div class="col-md-6">
-                <label class="form-label">تاريخ المركزية</label>
+                <label class="form-label">تاريخ صادر المركزية</label>
                 <input
                   type="date"
                   v-model="form.dateCentrality"

@@ -60,6 +60,7 @@
                 <th>#</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
+                <th>هامش مسؤول الشعبة</th>
                 <!-- <th>تاريخ الإدخال</th> -->
                 <th>حالة المعاملة</th>
                 <th>تاريخ الاستلام</th>
@@ -67,7 +68,7 @@
                 <th>تاريخ الرفض</th>
                 <th>رقم المذكرة</th>
                 <th>تاريخ المذكرة</th>
-
+                <th>نوع الصادر</th>
                 <th>الإجراءات</th>
               </tr>
             </thead>
@@ -79,6 +80,7 @@
                 <!-- incoming -->
                 <td>{{ m.incomingBookNumber ?? "-" }}</td>
                 <td>{{ formatDate(m.incomingDate) }}</td>
+                <td>{{ m.marginNoteDivision }}</td>
                 <!-- createdAt -->
                 <!-- <td>{{ formatDate(m.createdAt) }}</td> -->
                 <td>
@@ -103,6 +105,27 @@
                 <!-- memo -->
                 <td>{{ m.memoNumber }}</td>
                 <td>{{ formatDate(m.memoDate) }}</td>
+                <td>
+                  <span
+                    class="badge"
+                    :class="{
+                      'bg-secondary': m.isExport === 0,
+                      'bg-primary': m.isExport === 1,
+                      'bg-warning text-dark': m.isExport === 2,
+                    }"
+                  >
+                    {{
+                      m.isExport === 0
+                        ? "لا يوجد"
+                        : m.isExport === 1
+                        ? "داخلي"
+                        : m.isExport === 2
+                        ? "خارجي"
+                        : "غير معروف"
+                    }}
+                  </span>
+                </td>
+
                 <td>
                   <div class="d-flex justify-content-center gap-2">
                     <!-- زر إضافة هامش -->
@@ -268,6 +291,20 @@
                   class="form-control"
                   required
                 />
+              </div>
+
+              <div class="col-md-12">
+                <label class="form-label">نوع الصادر</label>
+                <div class="custom-vue-select-container">
+                  <VueSelect
+                    v-model="form.isExport"
+                    :options="exportTypeOptions"
+                    label="label"
+                    :reduce="(o) => o.value"
+                    placeholder="اختر نوع الصادر"
+                    class="vue-select"
+                  />
+                </div>
               </div>
 
               <!-- <div class="col-md-6">
@@ -539,20 +576,13 @@
               <i class="bi bi-box-arrow-up-right text-muted"></i>
             </button>
           </div>
-
-          <!-- زر إضافة مرفقات -->
-          <div class="mt-4">
-            <button
-              class="btn btn-outline-primary w-100"
-              @click="openArchiveUploadFromView"
-            >
-              <i class="bi bi-cloud-upload me-1"></i>
-              إضافة مرفقات
-            </button>
-          </div>
         </div>
 
         <div class="modal-footer">
+          <button class="btn btn-primary" @click="openArchiveUploadFromView">
+            <i class="bi bi-cloud-upload me-1"></i>
+            إضافة مرفقات
+          </button>
           <button class="btn btn-light" @click="closeArchive">إغلاق</button>
         </div>
       </div>
@@ -656,6 +686,12 @@ const visiblePages = computed(() => {
   return pages;
 });
 
+const exportTypeOptions = [
+  { label: "لا يوجد", value: 0 },
+  { label: "صادر داخلي", value: 1 },
+  { label: "صادر خارجي", value: 2 },
+];
+
 // ===== مودالات =====
 const modalEl = ref(null);
 const transferModalEl = ref(null);
@@ -669,6 +705,7 @@ const form = reactive({
   marginNoteId: null,
   memoNumber: "",
   memoDate: "",
+  isExport: 0,
   hasOriginalFile: false,
 });
 
@@ -763,6 +800,7 @@ const openEdit = (row) => {
   form.memoNumber = row.memoNumber;
   form.memoDate = row.memoDate ? row.memoDate.slice(0, 10) : "";
   form.hasOriginalFile = row.hasOriginalFile;
+  form.isExport = row.isExport ?? 0;
   modal.show();
 };
 
@@ -778,6 +816,7 @@ const save = async () => {
     memoNumber: form.memoNumber,
     memoDate: form.memoDate ? new Date(form.memoDate).toISOString() : null,
     hasOriginalFile: form.hasOriginalFile,
+    isExport: form.isExport,
   };
 
   try {

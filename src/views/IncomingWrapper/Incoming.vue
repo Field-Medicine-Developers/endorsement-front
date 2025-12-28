@@ -67,6 +67,7 @@
                 <th>هامش مدير القسم</th>
                 <th>هامش مسوؤل الشعبة</th>
                 <th>الملحقات الطبية</th>
+                <th>عدد صفحات المرفقات</th>
                 <th>الإجراءات</th>
               </tr>
             </thead>
@@ -100,7 +101,7 @@
                 <td>{{ inc.managerNote || "—" }}</td>
                 <td>{{ inc.managerNoteDivision || "—" }}</td>
                 <td>{{ medicalAccessoriesText(inc.medicalAccessories) }}</td>
-
+                <td>{{ inc.archiveIncoming?.paginationCount ?? "—" }}</td>
                 <td>
                   <div class="d-flex justify-content-center gap-2">
                     <!-- تعديل -->
@@ -804,9 +805,9 @@ const resetFilters = () => {
 };
 
 const medicalAccessoriesOptions = [
-  { label: "أشعة سينية", value: 0 }, 
+  { label: "أشعة ", value: 0 }, 
   { label: "سونار", value: 1 }, 
-  { label: "فحوصات", value: 2 }, 
+  { label: "رنين", value: 2 }, 
   { label: "قرص (CD)", value: 3 },
 ];
 
