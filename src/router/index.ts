@@ -1,56 +1,57 @@
-import { createRouter, createWebHistory } from "vue-router";
-
-const baseUrl = import.meta.env.VITE_BUILD_ADDRESS || "";
+import { createRouter, createWebHashHistory } from "vue-router";
 
 export const routes = [
-  // صفحة تسجيل الدخول
+  // login
   {
-    path: `${baseUrl}/login`,
+    path: "/login",
     component: () => import("../layouts/Auth.vue"),
-    meta: { hideFromNav: true },
+    meta: { hideFromNav: true, public: true },
     children: [
       {
         path: "",
         component: () => import("@/views/Login.vue"),
-        meta: { hideFromNav: true },
       },
     ],
   },
-  
+
   {
-    path: `${baseUrl}/injury-support-view/:id`,
+    path: "/injury-support-view/:id",
     name: "InjurySupportView",
     component: () => import("@/views/injuries/InjurySupportView.vue"),
     meta: { public: true, hideFromNav: true },
   },
-  
 
   {
-    path: `${baseUrl}/about`,
+    path: "/about",
     component: () => import("@/layouts/Page.vue"),
-    meta: { roles: [0] }, 
-    children: [
-      { path: "", name: "لوحة ", component: () => import("@/views/Dashboard/About.vue") },
-    ],
-  },
-
-  {
-    path: `${baseUrl}/incoming`,
-    component: () => import("@/layouts/Page.vue"),
-    meta: { roles: [0, 1] }, // Admin, EntryData
+    meta: { roles: [0] },
     children: [
       {
         path: "",
-        name: "الوارد",
-        component: () => import("@/views/IncomingWrapper/IncomingWrapper.vue"),
+        name: "لوحة",
+        component: () => import("@/views/Dashboard/About.vue"),
       },
     ],
   },
 
   {
-    path: `${baseUrl}/margin-note`,
+    path: "/incoming",
     component: () => import("@/layouts/Page.vue"),
-    meta: { roles: [0, 1] }, // Admin, MarginEntry
+    meta: { roles: [0, 1] },
+    children: [
+      {
+        path: "",
+        name: "الوارد",
+        component: () =>
+          import("@/views/IncomingWrapper/IncomingWrapper.vue"),
+      },
+    ],
+  },
+
+  {
+    path: "/margin-note",
+    component: () => import("@/layouts/Page.vue"),
+    meta: { roles: [0, 1] },
     children: [
       {
         path: "",
@@ -61,35 +62,37 @@ export const routes = [
   },
 
   {
-    path: `${baseUrl}/division-flow`,
+    path: "/division-flow",
     component: () => import("@/layouts/Page.vue"),
-    meta: { roles: [0, 3] }, 
+    meta: { roles: [0, 3] },
     children: [
       {
         path: "",
-        name: " هامش مسوؤل الشعبة",
-        component: () => import("@/views/Divisionfolder/DivisionTabs.vue")
+        name: "هامش مسؤول الشعبة",
+        component: () =>
+          import("@/views/Divisionfolder/DivisionTabs.vue"),
       },
     ],
   },
 
   {
-    path: `${baseUrl}/data-management`,
+    path: "/data-management",
     component: () => import("@/layouts/Page.vue"),
-    meta: { roles: [0, 3] }, 
+    meta: { roles: [0, 3] },
     children: [
       {
         path: "",
-        name: "شعبة الأدارة ",
+        name: "شعبة الإدارة",
         component: () =>
           import("@/views/DataManagementModule/DataManagementWrapper.vue"),
       },
     ],
   },
+
   {
-    path: `${baseUrl}/flow`,
+    path: "/flow",
     component: () => import("@/layouts/Page.vue"),
-    meta: { roles: [0, 2] }, // Admin, Verifier
+    meta: { roles: [0, 2] },
     children: [
       {
         path: "",
@@ -98,34 +101,25 @@ export const routes = [
       },
     ],
   },
-  // {
-  //   path: `${baseUrl}/return-flow`,
-  //   component: () => import("@/layouts/Page.vue"),
-  //   children: [
-  //     {
-  //       path: "",
-  //       name: "الاسترجاع",
-  //       component: () => import("@/views/ReturnWrapper/ReturnWrapper.vue"),
-  //     },
-  //   ],
-  // },
 
   {
-    path: `${baseUrl}/injury-supports`,
+    path: "/injury-supports",
     component: () => import("@/layouts/Page.vue"),
-    meta: { roles: [0 , 4] }, 
+    meta: { roles: [0, 4] },
     children: [
       {
         path: "",
         name: "تأييد الإصابة",
-        component: () => import("@/views/injuries/InjurySupports.vue"),
+        component: () =>
+          import("@/views/injuries/InjurySupports.vue"),
       },
     ],
   },
+
   {
-    path: `${baseUrl}/contacts`,
+    path: "/contacts",
     component: () => import("@/layouts/Page.vue"),
-    meta: { roles: [0] }, 
+    meta: { roles: [0] },
     children: [
       {
         path: "",
@@ -134,63 +128,27 @@ export const routes = [
       },
     ],
   },
-  
 
-  // {
-  //   path: `${baseUrl}/departments`,
-  //   component: () => import("@/layouts/Page.vue"),
-  //   children: [
-  //     { path: "", name: "الشُعَب", component: () => import("@/views/Departments.vue") }
-  //   ],
-  // },
-
-  // {
-  //   path: `${baseUrl}/formations`,
-  //   component: () => import("@/layouts/Page.vue"),
-  //   children: [
-  //     {
-  //       path: "",
-  //       name: "التشكيلات",
-  //       component: () => import("@/views/Formations.vue")
-  //     }
-  //   ],
-  // },
-
-  // {
-  //   path: `${baseUrl}/users`,
-  //   component: () => import("@/layouts/Page.vue"),
-  //   children: [
-  //     { path: "", name: "الحسابات", component: () => import("@/views/Users.vue") }
-  //   ],
-  // },
-
-  // أي مسار غير معروف → login
-  // {
-  //   path: `${baseUrl}/:pathMatch(.*)*`,
-  //   component: () => import("@/views/errors/NotFound404.vue"),
-  //   meta: { public: true },
-  // },
+  // fallback
   {
-    path: `${baseUrl}/:pathMatch(.*)*`,
-    redirect: `${baseUrl}/login`,
+    path: "/:pathMatch(.*)*",
+    redirect: "/login",
   },
 ];
 
 export const router = createRouter({
-  history: createWebHistory(),
-  routes: routes,
+  history: createWebHashHistory(),
+  routes,
 });
 
-//  حماية الصفحات (اختياري)
+//  حماية الصفحات 
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
-  if (to.meta.public) {
-    return next();
-  }
+  if (to.meta.public) return next();
 
-  if (!isAuthenticated && to.path !== `${baseUrl}/login`) {
-    return next(`${baseUrl}/login`);
+  if (!token && to.path !== "/login") {
+    return next("/login");
   }
 
   next();

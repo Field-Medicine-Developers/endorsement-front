@@ -18,6 +18,50 @@
     <button class="btn btn-primary" @click="openAdd()">إضافة تأييد جديد</button>
   </div>
 
+  <div class="stats-row">
+
+<div class="stats-box stat-blue">
+  <div class="text">
+    <span class="title">عدد المعاملات</span>
+    <strong>{{ stats.totalCount }}</strong>
+  </div>
+  <i class="bi bi-file-earmark-text icon"></i>
+</div>
+<div class="stats-box stat-blue">
+  <div class="text">
+    <span class="title">حكومي</span>
+    <strong>{{ stats.governmentCount }}</strong>
+  </div>
+  <i class="bi bi-building icon"></i>
+</div>
+
+<div class="stats-box stat-purple">
+  <div class="text">
+    <span class="title">ميداني</span>
+    <strong>{{ stats.fieldCount }}</strong>
+  </div>
+  <i class="bi bi-compass icon"></i>
+</div>
+
+<div class="stats-box stat-green">
+  <div class="text">
+    <span class="title">مرضى</span>
+    <strong>{{ stats.patientCount }}</strong>
+  </div>
+  <i class="bi bi-person-check icon"></i>
+</div>
+
+<div class="stats-box stat-dark">
+  <div class="text">
+    <span class="title">جرحى</span>
+    <strong>{{ stats.injuredCount }}</strong>
+  </div>
+  <i class="bi bi-heart-pulse icon"></i>
+</div>
+
+</div>
+
+
   <!-- Search Bar -->
   <div class="card shadow-sm border-0 mb-3 p-3">
     <div class="row g-3">
@@ -751,12 +795,29 @@ const load = async () => {
     const resp = res.data;
     list.value = resp.data || [];
     totalPages.value = resp.pagination?.totalPages || 1;
+      //  Counters
+      if (resp.additionalData) {
+      Object.assign(stats, resp.additionalData);
+    }
+    if (resp.pagination) {
+      Object.assign(stats, resp.pagination);
+    }
   } catch (e) {
     console.error(e);
     errorAlert("فشل تحميل البيانات");
   }
   loading.value = false;
 };
+
+const stats = reactive({
+  governmentCount: 0,
+  fieldCount: 0,
+  civilianCount: 0,
+  otherCount: 0,
+  patientCount: 0,
+  injuredCount: 0,
+  totalCount: 0,
+});
 
 const loadIncomings = async () => {
   try {
@@ -1140,4 +1201,103 @@ onMounted(() => {
   text-overflow: ellipsis;
   vertical-align: middle;
 }
+/* -------------------------------------------------------------
+   Statistics Cards (Unified Border Color)
+------------------------------------------------------------- */
+
+.stats-row {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 1.8rem;
+  flex-wrap: wrap;
+}
+
+/* الكرت */
+.stats-box {
+  flex: 1;
+  min-width: 180px;
+  height: 80px;
+  background:#f8f9fa;
+  border-radius: 16px;
+  padding: 14px 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  /*  بوردر كامل */
+  border: 1px solid #12b1d1;
+
+  box-shadow:
+    12px 12px 30px #e6e6e6,
+    -12px -12px 30px #ffffff;
+
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.stats-box:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 10px 25px rgba(18, 177, 209, 0.25);
+}
+
+/* النص */
+.text {
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #6c757d;
+}
+
+.text strong {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #212529;
+}
+
+/* الأيقونة */
+.icon {
+  font-size: 2rem;
+  color: #12b1d1; /* نفس اللون */
+  opacity: 0.9;
+}
+
+/* موبايل */
+@media (max-width: 768px) {
+  .stats-box {
+    min-width: 100%;
+  }
+}
+
+/* الحالة الابتدائية */
+.stats-box {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: cardFadeUp 0.6s ease forwards;
+}
+
+/* تأخير بسيط لكل كرت */
+.stats-box:nth-child(1) { animation-delay: 0.05s; }
+.stats-box:nth-child(2) { animation-delay: 0.15s; }
+.stats-box:nth-child(3) { animation-delay: 0.25s; }
+.stats-box:nth-child(4) { animation-delay: 0.35s; }
+
+/* الحركة */
+@keyframes cardFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 </style>
