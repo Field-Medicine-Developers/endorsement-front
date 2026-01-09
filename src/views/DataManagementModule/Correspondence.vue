@@ -60,7 +60,7 @@
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
                 <!-- <th>موضوع الوارد</th> -->
-                <!-- <th>اسم الجريح</th> -->
+                <th>اسم الجريح</th>
                 <!-- <th>تاريخ التحويل</th> -->
                 <!-- <th>تاريخ التسليم</th> -->
                 <th>تاريخ الاستلام</th>
@@ -82,19 +82,19 @@
                 <!-- <td>{{ m.incomingSubject }}</td> -->
 
                 <!-- اسم الجريح -->
-                <!-- <td>
-                <div>
-                  <div>{{ m.injuredNames[0] }}</div>
-        
-                  <div
-                    v-if="m.injuredNames.length > 1"
-                    class="show-more"
-                    @click="openNamesModal(m.injuredNames)"
-                  >
-                    عرض الكل ({{ m.injuredNames.length }})
+                <td>
+                  <div>
+                    <div>{{ m.injuredNames[0] }}</div>
+
+                    <div
+                      v-if="m.injuredNames.length > 1"
+                      class="show-more"
+                      @click="openNamesModal(m.injuredNames)"
+                    >
+                      عرض الكل ({{ m.injuredNames.length }})
+                    </div>
                   </div>
-                </div>
-              </td> -->
+                </td>
                 <!-- <td>{{ formatDate(m.createdAt) }}</td> -->
                 <!-- <td>{{ formatDate(m.deliveryDate) }}</td> -->
                 <td>{{ formatDate(m.incomingReceiveDate) }}</td>

@@ -14,3 +14,14 @@ export const trackIncoming = (params) => {
     },
   });
 };
+
+/* Achievements */
+export const getAchievements = (params = {}) => {
+  return api.get("/Achievements", {
+    params: {
+      year: params.year ?? null,
+      month: params.month ?? null,
+      day: params.day ?? null,
+    },
+  });
+};

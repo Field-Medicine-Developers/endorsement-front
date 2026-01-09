@@ -257,8 +257,14 @@ import { Modal } from "bootstrap";
 import VueSelect from "vue3-select";
 import "vue3-select/dist/vue3-select.css";
 
-import { getUsers, addUser, deleteUser , updateUser} from "@/services/users.service.js";
+import {
+  getUsers,
+  addUser,
+  deleteUser,
+  updateUser,
+} from "@/services/users.service.js";
 import { getDepartments } from "@/services/departments.service.js";
+import { successAlert, errorAlert, confirmDelete } from "@/utils/alert.js";
 
 /* Role Options */
 const roleOptions = [
@@ -266,7 +272,7 @@ const roleOptions = [
   { value: 1, label: "مدخل البيانات" },
   { value: 2, label: "حفظ وطباعة وإرسال" },
   { value: 3, label: "كتابة هامش الإدارة" },
-  { value: 3, label: "تاييد الاصابة" },
+  { value: 4, label: "تاييد الاصابة" },
 ];
 
 const roleName = (r) => roleOptions.find((x) => x.value === r)?.label;
@@ -364,18 +370,27 @@ const applyAdvanced = () => {
 
 /* Delete user */
 const removeUser = async (id) => {
-  await deleteUser(id);
-  loadUsers();
+  const result = await confirmDelete();
+
+  if (!result.isConfirmed) return;
+
+  try {
+    await deleteUser(id);
+    successAlert("تم حذف المستخدم بنجاح");
+    loadUsers();
+  } catch (error) {
+    console.error(error);
+    errorAlert("فشل حذف المستخدم");
+  }
 };
 
 /* save */
 const save = async () => {
   try {
     if (!isEdit.value) {
-      // Add
       await addUser(form);
+      successAlert("تمت إضافة المستخدم بنجاح");
     } else {
-      // edit 
       await updateUser(form.id, {
         fullName: form.fullName,
         userName: form.userName,
@@ -383,12 +398,14 @@ const save = async () => {
         role: form.role,
         departmentId: form.departmentId,
       });
+      successAlert("تم تحديث بيانات المستخدم بنجاح");
     }
 
     modal.hide();
     loadUsers();
   } catch (err) {
     console.error(err);
+    errorAlert("حدث خطأ أثناء حفظ البيانات");
   }
 };
 

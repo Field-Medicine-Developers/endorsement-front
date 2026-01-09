@@ -71,11 +71,42 @@
             <tbody>
               <tr v-for="(item, i) in list" :key="item.id">
                 <td>{{ i + 1 }}</td>
-                <td>{{ item.injuredName }}</td>
+                <td>
+                  <div>
+                    <div
+                      v-for="(name, i) in item.injuredName
+                        .split(',')
+                        .slice(0, 3)"
+                      :key="i"
+                    >
+                      • {{ name.trim() }}
+                    </div>
+
+                    <div
+                      v-if="item.injuredName.split(',').length > 2"
+                      class="show-more"
+                      @click="
+                        openNamesModal(
+                          item.injuredName.split(',').map((n) => n.trim())
+                        )
+                      "
+                    >
+                      عرض الكل ({{ item.injuredName.split(",").length }})
+                    </div>
+                  </div>
+                </td>
+
                 <td>{{ item.incomingSubject }}</td>
                 <td>{{ item.incomingBookNumber }}</td>
                 <td>{{ formatDate(item.incomingDate) }}</td>
-                <td>{{ item.marginNote?.managerNote || "-" }}</td>
+                <td>
+                  <button
+                    class="btn btn-search btn-sm"
+                    @click="openManagerNotes(item.managerNotes || [])"
+                  >
+                    عرض الهوامش ({{ item.managerNotes?.length || 0 }})
+                  </button>
+                </td>
                 <td>{{ item.marginNoteDivision || "-" }}</td>
                 <td>
                   <div class="d-flex justify-content-center gap-2">
@@ -261,6 +292,68 @@
       </div>
     </div>
   </div>
+  <!-- Names Modal -->
+  <div class="modal fade" tabindex="-1" ref="namesModal">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">أسماء الجرحى</h5>
+        </div>
+
+        <div class="modal-body">
+          <div
+            v-for="(name, i) in allNames"
+            :key="i"
+            class="border-bottom py-1"
+          >
+            • {{ name }}
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeNamesModal">إغلاق</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" tabindex="-1" ref="managerNotesModalEl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">هوامش مدير القسم</h5>
+        </div>
+
+        <div class="modal-body">
+          <div v-if="selectedManagerNotes.length">
+            <div
+              v-for="(n, i) in selectedManagerNotes"
+              :key="n.id || i"
+              class="border-bottom py-2"
+            >
+              <div class="fw-bold mb-1">
+                {{ i + 1 }}. {{ n.createdBy || "مدير القسم" }}
+              </div>
+              <div class="text-muted small mb-1">
+                {{ formatDate(n.createdAt) }}
+              </div>
+              <div>
+                {{ n.note }}
+              </div>
+            </div>
+          </div>
+
+          <p v-else class="text-muted text-center">لا توجد ملاحظات</p>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeManagerNotes">
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -321,7 +414,6 @@ const removeItem = async (id) => {
     console.error(e);
   }
 };
-
 
 /* ---------------- Add/Edit Modal ------------------ */
 const modalEl = ref(null);
@@ -423,7 +515,6 @@ const transfer = async () => {
     fd.append("MarginNoteDivisionId", transferForm.id);
     fd.append("DepartmentId", transferForm.departmentId);
     fd.append("Notes", transferForm.notes || "");
-
     if (transferForm.files?.length) {
       transferForm.files.forEach((f) => fd.append("files", f));
     }
@@ -442,6 +533,10 @@ const transfer = async () => {
 
 const close = () => modal.hide();
 const closeTransfer = () => transferModal.hide();
+const closeNamesModal = () => {
+  if (!namesModalInstance) return;
+  namesModalInstance.hide();
+};
 
 /* ---------------- Helpers ------------------ */
 const formatDate = (d) => {
@@ -450,14 +545,37 @@ const formatDate = (d) => {
   return `${dt.getFullYear()}/${dt.getMonth() + 1}/${dt.getDate()}`;
 };
 
+const allNames = ref([]);
+const namesModal = ref(null);
+let namesModalInstance = null;
+
+const openNamesModal = (names) => {
+  allNames.value = names;
+  namesModalInstance.show();
+};
+
+const selectedManagerNotes = ref([]);
+const managerNotesModalEl = ref(null);
+let managerNotesModal = null;
+const openManagerNotes = (notes) => {
+  selectedManagerNotes.value = notes || [];
+  managerNotesModal.show();
+};
+
+const closeManagerNotes = () => {
+  managerNotesModal.hide();
+};
+
 /* ---------------- Init ------------------ */
 onMounted(async () => {
   modal = new Modal(modalEl.value);
   transferModal = new Modal(transferModalEl.value);
-
+  managerNotesModal = new Modal(managerNotesModalEl.value);
   await load();
-
   const res = await getDepartments({ pageNumber: 1, pageSize: 200 });
   departments.value = res.data.data;
+  if (namesModal.value) {
+    namesModalInstance = new Modal(namesModal.value);
+  }
 });
 </script>

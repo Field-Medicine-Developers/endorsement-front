@@ -15,6 +15,89 @@
     </div>
   </div>
 
+  <div class="stats-row">
+    <!-- الكل -->
+    <div class="stats-box stat-blue">
+      <div class="text">
+        <span class="title">الكل</span>
+        <strong>{{ totalFromAdditional }}</strong>
+      </div>
+      <i class="bi bi-files icon"></i>
+    </div>
+
+    <!-- قيد الانتظار -->
+    <div class="stats-box stat-dark">
+      <div class="text">
+        <span class="title">قيد الانتظار</span>
+        <strong>{{ stats.additionalData.waitingCount }}</strong>
+      </div>
+      <i class="bi bi-hourglass-split icon"></i>
+    </div>
+
+    <!-- منجز -->
+    <div class="stats-box stat-green">
+      <div class="text">
+        <span class="title">مكتب السيد المعاون</span>
+        <strong>{{ stats.additionalData.completedCount }}</strong>
+      </div>
+      <i class="bi bi-check-circle icon"></i>
+    </div>
+
+    <!-- اعتذار -->
+    <div class="stats-box stat-warning">
+      <div class="text">
+        <span class="title">اعتذار</span>
+        <strong>{{ stats.additionalData.apologyCount }}</strong>
+      </div>
+      <i class="bi bi-exclamation-circle icon"></i>
+    </div>
+
+    <!-- غير منجز -->
+    <div class="stats-box stat-danger">
+      <div class="text">
+        <span class="title">غير منجز</span>
+        <strong>{{ stats.additionalData.notCompletedCount }}</strong>
+      </div>
+      <i class="bi bi-x-circle icon"></i>
+    </div>
+
+    <!-- مدقق -->
+    <div class="stats-box stat-info">
+      <div class="text">
+        <span class="title">مدقق</span>
+        <strong>{{ stats.additionalData.verifiedCount }}</strong>
+      </div>
+      <i class="bi bi-shield-check icon"></i>
+    </div>
+
+    <!-- غير مدقق -->
+    <div class="stats-box stat-secondary">
+      <div class="text">
+        <span class="title">غير مدقق</span>
+        <strong>{{ stats.additionalData.notVerifiedCount }}</strong>
+      </div>
+      <i class="bi bi-shield-x icon"></i>
+    </div>
+
+    <!-- غير معاد -->
+    <div class="stats-box stat-blue">
+      <div class="text">
+        <span class="title">غير معاد</span>
+        <strong>{{ stats.additionalData.isReturnFalseCount }}</strong>
+      </div>
+      <i class="bi bi-arrow-repeat icon"></i>
+    </div>
+
+    <!-- معاد -->
+    <div class="stats-box stat-purple">
+      <div class="text">
+        <span class="title">معاد</span>
+        <strong>{{ stats.additionalData.isReturnTrueCount }}</strong>
+      </div>
+      <i class="bi bi-arrow-counterclockwise icon"></i>
+    </div>
+  </div>
+
   <!-- Search Bar -->
   <div class="card shadow-sm border-0 mb-3 p-3">
     <div class="row g-3">
@@ -59,18 +142,21 @@
                 <th>أسماء الجرحى</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
-                <!-- <th>رقم الكتاب</th> -->
+                <th>رقم الكتاب</th>
+                <th>القيادة / التشكيل</th>
                 <th>استلام المعاملة</th>
                 <th>تسليم المعاملة</th>
                 <th>تسليم الطبيب العسكري</th>
                 <th>استلام الطبيب العسكري</th>
                 <th>تاريخ إرسال التدقيق</th>
                 <th>استلام التدقيق</th>
+                <th>إرسال الى مدير القسم</th>
+                <th>استلام من مدير القسم</th>
                 <th>المواقف</th>
                 <th>الملاحظات</th>
                 <th>الحالة</th>
-                <th>سبب الرفض</th>
-                <th>تاريخ الرفض</th>
+                <!-- <th>سبب الرفض</th> -->
+                <!-- <th>تاريخ الرفض</th> -->
                 <th>حالة التدقيق</th>
                 <th>الحالة النهائية</th>
                 <th>إرجاع</th>
@@ -86,34 +172,26 @@
                 <td>{{ idx + 1 }}</td>
                 <!-- أسماء الجرحى -->
 
-                <td>
-                  <div>
-                    <div
-                      v-for="(name, i) in item.injuredNames.slice(0, 2)"
-                      :key="i"
-                    >
-                      • {{ name }}
-                    </div>
-
-                    <!-- زر عرض الكل -->
-                    <div
-                      v-if="item.injuredNames.length > 2"
-                      class="show-more"
-                      @click="openNamesModal(item.injuredNames)"
-                    >
-                      عرض الكل ({{ item.injuredNames.length }})
-                    </div>
-                  </div>
-                </td>
+                <td>{{ item.injuredName }}</td>
                 <td>{{ item.incomingBookNumber || "-" }}</td>
                 <td>{{ formatDate(item.incomingDate) }}</td>
-                <!-- <td>{{ item.incomingBookNumber || "-" }}</td> -->
+                <td>{{ item.incomingBookNumber || "-" }}</td>
+
+                <td>
+                  <div class="fw-bold">{{ item.command?.name || "—" }}</div>
+                  <small class="text-muted">
+                    {{ item.formation?.name || "—" }}</small
+                  >
+                </td>
+
                 <td>{{ formatDate(item.transactionReceiveDate) }}</td>
                 <td>{{ formatDate(item.transactionDeliveryDate) }}</td>
                 <td>{{ formatDate(item.militaryDoctorDelivery) }}</td>
                 <td>{{ formatDate(item.militaryDoctorReceive) }}</td>
                 <td>{{ formatDate(item.verificationSendDate) }}</td>
                 <td>{{ formatDate(item.verificationReceive) }}</td>
+                <td>{{ formatDate(item.directorpprovalSendDate) }}</td>
+                <td>{{ formatDate(item.directorpprovalReceive) }}</td>
                 <td>
                   <button class="btn btn-search" @click="openSituations(item)">
                     عرض المواقف ({{ item.situations?.length || 0 }})
@@ -177,8 +255,8 @@
                   >
                   <span v-else class="badge bg-success">غير معاد</span>
                 </td>
-                <td>{{ item.returnPercentage || "-" }}</td>
-                <td>{{ formatDate(item.returnDate) }}</td>
+                <!-- <td>{{ item.returnPercentage || "-" }}</td> -->
+                <!-- <td>{{ formatDate(item.returnDate) }}</td> -->
 
                 <td>{{ item.createdByUserName }}</td>
                 <td>{{ formatDate(item.createdAt) }}</td>
@@ -415,39 +493,65 @@
                 />
               </div>
 
+              <div class="col-md-6">
+                <label class="form-label">تاريخ إرسال موافقة المدير</label>
+                <input
+                  type="date"
+                  v-model="form.directorpprovalSendDate"
+                  class="form-control"
+                  :disabled="!editMode && step !== 2"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">تاريخ استلام موافقة المدير</label>
+                <input
+                  type="date"
+                  v-model="form.directorpprovalReceive"
+                  class="form-control"
+                  :disabled="!editMode && step !== 2"
+                />
+              </div>
+
               <!-- ================= STEP 3 ================= -->
 
               <div class="col-md-6">
                 <label class="form-label">حالة التدقيق</label>
-                <VueSelect
-                  v-model="form.verificationStatus"
-                  :options="verificationStatusOptions"
-                  label="label"
-                  :reduce="(o) => o.value"
-                  :disabled="!editMode && step !== 3"
-                />
+                <div class="custom-vue-select-container mb-3">
+                  <VueSelect
+                    v-model="form.verificationStatus"
+                    :options="verificationStatusOptions"
+                    label="label"
+                    :reduce="(o) => o.value"
+                    :disabled="!editMode && step !== 3"
+                  />
+                </div>
               </div>
 
               <div class="col-md-6">
                 <label class="form-label">الحالة النهائية</label>
-                <VueSelect
-                  v-model="form.finalStatus"
-                  :options="finalStatusOptions"
-                  label="label"
-                  :reduce="(o) => o.value"
-                  :disabled="!editMode && step !== 3"
-                />
+                <div class="custom-vue-select-container mb-3">
+                  <VueSelect
+                    v-model="form.finalStatus"
+                    :options="finalStatusOptions"
+                    label="label"
+                    :reduce="(o) => o.value"
+                    :disabled="!editMode && step !== 3"
+                  />
+                </div>
               </div>
 
               <div class="col-md-6">
                 <label class="form-label">هل معاد؟</label>
-                <VueSelect
-                  v-model="form.isReturn"
-                  :options="isReturnOptions"
-                  label="label"
-                  :reduce="(o) => o.value"
-                  :disabled="!editMode && step !== 3"
-                />
+                <div class="custom-vue-select-container mb-3">
+                  <VueSelect
+                    v-model="form.isReturn"
+                    :options="isReturnOptions"
+                    label="label"
+                    :reduce="(o) => o.value"
+                    :disabled="!editMode && step !== 3"
+                  />
+                </div>
               </div>
 
               <div class="col-md-6" v-if="form.isReturn === 1">
@@ -692,6 +796,25 @@
                 disabled
               />
             </div>
+
+            <div class="col-md-6">
+              <label class="form-label">استلام من مدير القسم </label>
+              <input
+                class="form-control"
+                :value="formatDate(selected.directorpprovalReceive)"
+                disabled
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">تسليم من مدير القسم</label>
+              <input
+                class="form-control"
+                :value="formatDate(selected.directorpprovalSendDate)"
+                disabled
+              />
+            </div>
+
             <div class="col-md-6">
               <label class="form-label">حالة الإرجاع</label>
               <input
@@ -728,7 +851,7 @@
             </div>
 
             <div class="col-md-6">
-              <label class="form-label">حالة التدقيق تاريخ</label>
+              <label class="form-label">تاريخ حالة التدقيق</label>
               <input
                 class="form-control"
                 :value="formatDate(selected.statusAuditHistory)"
@@ -864,6 +987,48 @@
               />
             </div>
 
+            <div class="col-md-6">
+              <div class="custom-vue-select-container mb-3">
+                <label class="form-label">الحالة النهائية</label>
+                <VueSelect
+                  v-model="filters.finalStatusType"
+                  :options="finalStatusOptions"
+                  label="label"
+                  :reduce="(o) => o.value"
+                  placeholder="الكل"
+                  clearable
+                />
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="custom-vue-select-container mb-3">
+                <label class="form-label">حالة التدقيق</label>
+                <VueSelect
+                  v-model="filters.verificationStatus"
+                  :options="verificationStatusOptions"
+                  label="label"
+                  :reduce="(o) => o.value"
+                  placeholder="الكل"
+                  clearable
+                />
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="custom-vue-select-container mb-3">
+                <label class="form-label">معادة</label>
+                <VueSelect
+                  v-model="filters.isReturn"
+                  :options="isReturnOptions"
+                  label="label"
+                  :reduce="(o) => o.value"
+                  placeholder="الكل"
+                  clearable
+                />
+              </div>
+            </div>
+
             <!-- <div class="col-md-6">
               <label class="form-label">أضيف بواسطة</label>
               <select v-model="filters.createdByUserId" class="form-select">
@@ -893,19 +1058,26 @@
         </div>
 
         <div class="modal-body">
-          <div v-if="selectedSituations.length">
+          <div v-if="selectedSituations.length" class="situations-list">
             <div
               v-for="(s, i) in selectedSituations"
               :key="i"
               class="situation-item"
             >
+              <!-- الرقم -->
               <div class="s-number">
-                {{ s.situationNumber }}
+                {{ i + 1 }}
               </div>
 
+              <!-- المحتوى -->
               <div class="s-content">
-                <label>اسم الموقف:</label>
-                <p>{{ s.situationName }}</p>
+                <div class="s-title">
+                  {{ s.situationNumber || "—" }}
+                </div>
+
+                <div class="s-name">
+                  {{ s.situationName || "لا يوجد اسم موقف" }}
+                </div>
               </div>
             </div>
           </div>
@@ -956,7 +1128,6 @@ import { Modal } from "bootstrap";
 import { useRoute } from "vue-router";
 import VueSelect from "vue3-select";
 import "vue3-select/dist/vue3-select.css";
-
 import {
   getAuditingAndData,
   addAuditingAndData,
@@ -964,22 +1135,27 @@ import {
   deleteAuditingAndData,
   transferAuditingAndData,
 } from "@/services/auditing-and-data.service.js";
-
+import { getIncomings } from "@/services/incoming.service.js";
 import { getDepartments } from "@/services/departments.service.js";
 import { successAlert, errorAlert, confirmDelete } from "@/utils/alert.js";
 
 const route = useRoute();
-const incomingIdFromRoute = route.query.incomingId || null;
+const incomingIdFromRoute = route.query.injuredPersonIds || null;
 const list = ref([]);
 const loading = ref(false);
 
 // ===== الفلاتر =====
 const filters = reactive({
-  injuredName: "", // خارج المودال
+  injuredName: "", // موجود خارج المودال
   incomingId: "",
   transactionReceiveDateFrom: "",
   transactionReceiveDateTo: "",
   createdByUserId: "",
+
+  finalStatusType: null,
+  verificationStatus: null,
+  isReturn: null,
+
   pageNumber: 1,
   pageSize: 10,
 });
@@ -1001,9 +1177,9 @@ const VerificationStatus = {
 
 const finalStatusOptions = [
   { value: FinalStatusType.Defult, label: "بدون" },
-  { value: FinalStatusType.Completed, label: "منجز" },
-  { value: FinalStatusType.Apology, label: "اعتذار" },
-  { value: FinalStatusType.NotCompleted, label: "غير منجز" },
+  { value: FinalStatusType.Completed, label: "مكتب السيد المعاون" },
+  { value: FinalStatusType.Apology, label: "استرجاع" },
+  // { value: FinalStatusType.NotCompleted, label: "غير منجز" },
 ];
 
 const verificationStatusOptions = [
@@ -1054,13 +1230,15 @@ const editMode = ref(false);
 
 const form = reactive({
   id: "",
-  incomingId: incomingIdFromRoute,
+  injuredPersonIds: incomingIdFromRoute,
   transactionReceiveDate: "",
   transactionDeliveryDate: "",
   militaryDoctorReceive: "",
   militaryDoctorDelivery: "",
   verificationReceive: "",
   verificationSendDate: "",
+  directorpprovalSendDate: "",
+  directorpprovalReceive: "",
   notes: "",
   finalStatus: 0,
   verificationStatus: 0,
@@ -1105,7 +1283,12 @@ const load = async () => {
 
     const res = await getAuditingAndData(params);
 
-    list.value = res.data.data ?? [];
+    const rawList = res.data.data ?? [];
+
+    list.value = rawList.map((item) => ({
+      ...item,
+      injuredName: item.injuredPersonName || "-",
+    }));
     totalPages.value = res.data.pagination?.totalPages ?? 1;
   } catch (e) {
     console.error(e);
@@ -1122,6 +1305,10 @@ const resetFilters = () => {
     transactionReceiveDateFrom: "",
     transactionReceiveDateTo: "",
     createdByUserId: "",
+
+    finalStatusType: null,
+    verificationStatus: null,
+    isReturn: null,
   });
   load();
 };
@@ -1140,92 +1327,93 @@ const loadDepartments = async () => {
   }
 };
 
-const openAdd = (row) => {
-  editMode.value = false;
+const loadInjuredPersonIdsFromIncoming = async (incomingId) => {
+  if (!incomingId) return [];
 
+  const res = await getIncomings({
+    pageNumber: 1,
+    pageSize: 1,
+    incomingId: incomingId,
+  });
+
+  const item = res.data.data?.[0];
+
+  return Array.isArray(item?.injuredPersonIds)
+    ? item.injuredPersonIds.filter(Boolean)
+    : [];
+};
+
+const openAdd = async (row) => {
+  editMode.value = false;
+  const injuredIds = await loadInjuredPersonIdsFromIncoming(row.incomingId);
+  if (!Array.isArray(injuredIds) || injuredIds.length === 0) {
+    errorAlert("لا يمكن إضافة تدقيق بدون تحديد جريح");
+    return;
+  }
   Object.assign(form, {
     id: "",
     incomingId: row.incomingId,
+    injuredPersonIds: [row.injuredPersonId],
     incomingBookNumber: row.incomingBookNumber || "",
     incomingSubject: row.incomingSubject || "",
-
+    injuredPersonIds: injuredIds,
     transactionReceiveDate: "",
     transactionDeliveryDate: "",
     militaryDoctorReceive: "",
     militaryDoctorDelivery: "",
     verificationReceive: "",
     verificationSendDate: "",
-
+    directorpprovalSendDate: "",
+    directorpprovalReceive: "",
     verificationStatus: 0,
     finalStatus: 0,
     isReturn: 0,
     returnPercentage: "",
     returnDate: "",
-
     notes: "",
     situations: [{ situationNumber: "1", situationName: "" }],
   });
 
   step.value = 1;
   modal.show();
-  // Download the previous record discreetly (if available).
-  loadExistingAuditing(row);
+  // loadExistingAuditing(row);
+  loadExistingAuditing(row.injuredPersonId);
 };
 
-const openEdit = (row) => {
+const openEdit = async (row) => {
   editMode.value = true;
-
+  const injuredIds = await loadInjuredPersonIdsFromIncoming(
+    row.incomingId || row.id
+  );
+  if (injuredIds.length === 0) {
+    errorAlert("بيانات الجريح غير مكتملة");
+    return;
+  }
   Object.assign(form, {
     id: row.id,
-    incomingId: row.incomingId || incomingIdFromRoute || null,
-
-    incomingBookNumber: row.incomingBookNumber || "",
-    incomingSubject: row.incomingSubject || "",
-
-    transactionReceiveDate: row.transactionReceiveDate
-      ? row.transactionReceiveDate.slice(0, 10)
-      : "",
-
-    transactionDeliveryDate: row.transactionDeliveryDate
-      ? row.transactionDeliveryDate.slice(0, 10)
-      : "",
-
-    militaryDoctorReceive: row.militaryDoctorReceive
-      ? row.militaryDoctorReceive.slice(0, 10)
-      : "",
-
-    militaryDoctorDelivery: row.militaryDoctorDelivery
-      ? row.militaryDoctorDelivery.slice(0, 10)
-      : "",
-
-    verificationReceive: row.verificationReceive
-      ? row.verificationReceive.slice(0, 10)
-      : "",
-
-    verificationSendDate: row.verificationSendDate
-      ? row.verificationSendDate.slice(0, 10)
-      : "",
-
+    injuredPersonIds: [row.injuredPersonId],
+    transactionReceiveDate: row.transactionReceiveDate?.slice(0, 10) || "",
+    transactionDeliveryDate: row.transactionDeliveryDate?.slice(0, 10) || "",
+    militaryDoctorReceive: row.militaryDoctorReceive?.slice(0, 10) || "",
+    militaryDoctorDelivery: row.militaryDoctorDelivery?.slice(0, 10) || "",
+    verificationReceive: row.verificationReceive?.slice(0, 10) || "",
+    verificationSendDate: row.verificationSendDate?.slice(0, 10) || "",
+    directorpprovalSendDate: row.directorpprovalSendDate?.slice(0, 10) || "",
+    directorpprovalReceive: row.directorpprovalReceive?.slice(0, 10) || "",
     verificationStatus: row.verificationStatus ?? 0,
     finalStatus: row.finalStatus ?? 0,
-
     isReturn: row.isReturn ?? 0,
     returnPercentage: row.returnPercentage || "",
     returnDate: row.returnDate?.slice(0, 10) || "",
-    statusAuditHistory: row.statusAuditHistory,
-    finalStatusDate: row.finalStatusDate
-      ? row.finalStatusDate.slice(0, 10)
-      : "",
-
-    injuredNames: row.injuredNames || [],
     notes: row.notes || "",
     situations: row.situations?.map((s, i) => ({
       situationNumber: s.situationNumber || String(i + 1),
       situationName: s.situationName || "",
     })) || [{ situationNumber: "1", situationName: "" }],
   });
-  step.value = detectStep(row);
+
   modal.show();
+  loadExistingAuditing(row.injuredPersonId);
 };
 
 const addSituationRow = () => {
@@ -1248,7 +1436,7 @@ const finalStatusText = (v) =>
 
 const save = async () => {
   const data = {
-    incomingId: form.incomingId,
+    injuredPersonIds: form.injuredPersonIds,
     transactionReceiveDate: form.transactionReceiveDate || null,
     transactionDeliveryDate: form.transactionDeliveryDate || null,
     militaryDoctorReceive: form.militaryDoctorReceive || null,
@@ -1312,25 +1500,20 @@ const isTransferring = ref(false);
 const transfer = async () => {
   if (transferLoading.value) return;
   transferLoading.value = true;
-
   try {
     const body = {
       auditingAndDataId: transferForm.auditingAndDataId,
       departmentId: transferForm.departmentId,
       notes: transferForm.notes || null,
     };
-
     await transferAuditingAndData(body);
-
     successAlert("تم تحويل المعاملة بنجاح");
     transferModal.hide();
     load();
   } catch (error) {
     console.error("Error transferring AuditingAndData:", error);
-
     const serverMessage =
       error?.response?.data?.message || "حدث خطأ أثناء التحويل";
-
     errorAlert(serverMessage);
   } finally {
     transferLoading.value = false;
@@ -1424,6 +1607,8 @@ const stepRequiredFields = {
     "militaryDoctorDelivery",
     "verificationReceive",
     "verificationSendDate",
+    "directorpprovalSendDate",
+    "directorpprovalReceive",
   ],
 
   3: ["verificationStatus", "finalStatus"],
@@ -1440,66 +1625,82 @@ const isStepComplete = (stepNumber) => {
   });
 };
 
-const buildPayload = () => ({
-  incomingId: form.incomingId,
-  // STEP 1
-  transactionReceiveDate: form.transactionReceiveDate || null,
-  transactionDeliveryDate: form.transactionDeliveryDate || null,
-  // STEP 2
-  militaryDoctorReceive: form.militaryDoctorReceive || null,
-  militaryDoctorDelivery: form.militaryDoctorDelivery || null,
-  verificationReceive: form.verificationReceive || null,
-  verificationSendDate: form.verificationSendDate || null,
-  // STEP 3
-  verificationStatus: form.verificationStatus,
-  finalStatus: form.finalStatus,
-  isReturn: form.isReturn,
-  returnPercentage: form.isReturn === 1 ? form.returnPercentage : null,
-  returnDate: form.isReturn === 1 ? form.returnDate : null,
-  notes: form.notes || null,
-  situations: form.situations
-    .filter((s) => s.situationName || s.situationNumber)
-    .map((s) => ({
-      situationNumber: s.situationNumber,
-      situationName: s.situationName,
-    })),
-});
+const getExistingAuditingByInjured = async () => {
+  if (!form.injuredPersonIds || form.injuredPersonIds.length === 0) {
+    return null;
+  }
+
+  const res = await getAuditingAndData({
+    injuredPersonIds: form.injuredPersonIds,
+    pageNumber: 1,
+    pageSize: 1,
+  });
+
+  return res?.data?.data?.[0] || null;
+};
+
+const buildPayload = () => {
+  const injuredIds = Array.isArray(form.injuredPersonIds)
+    ? form.injuredPersonIds.filter(Boolean)
+    : [];
+
+  if (injuredIds.length === 0) {
+    throw new Error("injuredPersonIds is empty");
+  }
+
+  return {
+    injuredPersonIds: [injuredIds[0]],
+
+    // STEP 1
+    transactionReceiveDate: form.transactionReceiveDate || null,
+    transactionDeliveryDate: form.transactionDeliveryDate || null,
+
+    // STEP 2
+    militaryDoctorReceive: form.militaryDoctorReceive || null,
+    militaryDoctorDelivery: form.militaryDoctorDelivery || null,
+    verificationReceive: form.verificationReceive || null,
+    verificationSendDate: form.verificationSendDate || null,
+    directorpprovalSendDate: form.directorpprovalSendDate || null,
+    directorpprovalReceive: form.directorpprovalReceive || null,
+
+    // STEP 3
+    verificationStatus: form.verificationStatus,
+    finalStatus: form.finalStatus,
+    isReturn: form.isReturn,
+    returnPercentage: form.isReturn === 1 ? form.returnPercentage : null,
+    returnDate: form.isReturn === 1 ? form.returnDate : null,
+
+    notes: form.notes || null,
+    situations: form.situations
+      .filter((s) => s.situationName || s.situationNumber)
+      .map((s) => ({
+        situationNumber: s.situationNumber,
+        situationName: s.situationName,
+      })),
+  };
+};
 
 const isSending = ref(false);
 
 const saveStep = async () => {
   if (isSending.value) return;
-
   isSending.value = true;
 
   const payload = buildPayload();
 
   try {
-    if (!form.id) {
+    if (form.id) {
+      await updateAuditingAndData(form.id, payload);
+    } else {
       const res = await addAuditingAndData(payload);
       form.id = res.data.id;
-    } else {
-      await updateAuditingAndData(form.id, payload);
     }
 
-    if (step.value === 1) {
-      modal.hide();
-      successAlert("تم إرسال بنجاح");
-      return;
-    }
-
-    if (step.value === 2) {
-      modal.hide();
-      successAlert("تم إرسال بنجاح");
-      return;
-    }
-
-    if (step.value === 3) {
-      modal.hide();
-      await load();
-      successAlert("تم إرسال بنجاح");
-    }
+    modal.hide();
+    await load();
+    successAlert("تم إرسال بنجاح");
   } catch (e) {
+    console.error(e);
     errorAlert("حدث خطأ أثناء الإرسال");
   } finally {
     isSending.value = false;
@@ -1507,48 +1708,46 @@ const saveStep = async () => {
 };
 
 const loadingExisting = ref(false);
-const loadExistingAuditing = async (row) => {
-  if (!row?.id) return;
+
+const loadExistingAuditing = async (injuredPersonId) => {
   loadingExisting.value = true;
-  try {
-    const res = await getAuditingAndData({ incomingId: row.incomingId });
-    const existing = res.data.data?.[0];
-    if (!existing) return;
 
-    Object.assign(form, {
-      id: existing.id,
+  const res = await getAuditingAndData({
+    injuredPersonIds: [injuredPersonId],
+    pageNumber: 1,
+    pageSize: 1,
+  });
 
-      transactionReceiveDate:
-        existing.transactionReceiveDate?.slice(0, 10) || "",
-      transactionDeliveryDate:
-        existing.transactionDeliveryDate?.slice(0, 10) || "",
-
-      militaryDoctorReceive: existing.militaryDoctorReceive?.slice(0, 10) || "",
-      militaryDoctorDelivery:
-        existing.militaryDoctorDelivery?.slice(0, 10) || "",
-
-      verificationReceive: existing.verificationReceive?.slice(0, 10) || "",
-      verificationSendDate: existing.verificationSendDate?.slice(0, 10) || "",
-
-      verificationStatus: existing.verificationStatus ?? 0,
-      finalStatus: existing.finalStatus ?? 0,
-
-      isReturn: existing.isReturn ?? 0,
-      returnPercentage: existing.returnPercentage || "",
-      returnDate: existing.returnDate?.slice(0, 10) || "",
-
-      notes: existing.notes || "",
-      situations: existing.situations?.length
-        ? existing.situations
-        : [{ situationNumber: "1", situationName: "" }],
-    });
-
-    step.value = detectStep(existing);
-  } catch (e) {
-    console.error("Failed loading existing auditing", e);
-  } finally {
+  const existing = res.data.data?.[0];
+  if (!existing) {
     loadingExisting.value = false;
+    return;
   }
+
+  Object.assign(form, {
+    id: existing.id,
+    transactionReceiveDate: existing.transactionReceiveDate?.slice(0, 10) || "",
+    transactionDeliveryDate:
+      existing.transactionDeliveryDate?.slice(0, 10) || "",
+    militaryDoctorReceive: existing.militaryDoctorReceive?.slice(0, 10) || "",
+    militaryDoctorDelivery: existing.militaryDoctorDelivery?.slice(0, 10) || "",
+    verificationReceive: existing.verificationReceive?.slice(0, 10) || "",
+    verificationSendDate: existing.verificationSendDate?.slice(0, 10) || "",
+    directorpprovalSendDate:
+      existing.directorpprovalSendDate?.slice(0, 10) || "",
+    directorpprovalReceive: existing.directorpprovalReceive?.slice(0, 10) || "",
+    verificationStatus: existing.verificationStatus ?? 0,
+    finalStatus: existing.finalStatus ?? 0,
+    isReturn: existing.isReturn ?? 0,
+    returnPercentage: existing.returnPercentage || "",
+    returnDate: existing.returnDate?.slice(0, 10) || "",
+    notes: existing.notes || "",
+    situations: existing.situations?.length
+      ? JSON.parse(JSON.stringify(existing.situations))
+      : [{ situationNumber: "1", situationName: "" }],
+  });
+
+  loadingExisting.value = false;
 };
 
 // ==============================
@@ -1567,6 +1766,67 @@ const closeNamesModal = () => {
   namesModalInstance.hide();
 };
 
+const stats = ref({
+  additionalData: {
+    completedCount: 0,
+    apologyCount: 0,
+    notCompletedCount: 0,
+    isReturnFalseCount: 0,
+    isReturnTrueCount: 0,
+    verifiedCount: 0,
+    notVerifiedCount: 0,
+    returnCount: 0,
+    assistantOfficeCount: 0,
+    waitingCount: 0,
+  },
+});
+
+const totalFromAdditional = computed(() => {
+  const a = stats.value.additionalData;
+  return (
+    a.completedCount + a.apologyCount + a.notCompletedCount + a.waitingCount
+  );
+});
+
+const loadStats = async () => {
+  try {
+    const res = await getAuditingAndData();
+
+    stats.value.additionalData = res.data.additionalData || {
+      completedCount: 0,
+      apologyCount: 0,
+      notCompletedCount: 0,
+      isReturnFalseCount: 0,
+      isReturnTrueCount: 0,
+      verifiedCount: 0,
+      notVerifiedCount: 0,
+      returnCount: 0,
+      assistantOfficeCount: 0,
+      waitingCount: 0,
+    };
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+import { watch } from "vue";
+
+watch(
+  () => form.injuredPersonIds?.[0],
+  (newInjuredId) => {
+    if (!newInjuredId) return;
+
+    // 🔍 نبحث هل هذا الجريح عنده سجل سابق
+    const existing = list.value.find((x) => x.injuredPersonId === newInjuredId);
+
+    // ✅ إذا ما عنده سجل → Auto Date
+    if (!existing) {
+      form.transactionReceiveDate = today();
+    }
+  },
+  { immediate: true }
+);
+
 // ===== INIT =====
 onMounted(() => {
   modal = new Modal(modalEl.value);
@@ -1576,6 +1836,7 @@ onMounted(() => {
   namesModalInstance = new Modal(namesModal.value);
   load();
   loadDepartments();
+  loadStats();
 });
 </script>
 
@@ -1729,6 +1990,16 @@ onMounted(() => {
   box-shadow: 0 3px 8px rgba(18, 177, 209, 0.25);
 }
 
+.s-content {
+  flex: 1;
+}
+
+.s-title {
+  font-weight: 600;
+  color: #333;
+  line-height: 1.5;
+}
+
 .s-content label {
   font-weight: 600;
   color: #0f6c88;
@@ -1741,5 +2012,56 @@ onMounted(() => {
   color: #333;
   line-height: 1.6;
   word-break: break-word;
+}
+
+.situations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.situation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: #f9fbfc;
+  border: 1px solid #e5eaf0;
+  border-radius: 14px;
+  padding: 14px;
+  transition: box-shadow 0.2s ease;
+}
+
+.situation-item:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.s-number {
+  min-width: 40px;
+  height: 40px;
+  background: #12b1d1;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  box-shadow: 0 3px 8px rgba(18, 177, 209, 0.25);
+}
+
+.s-content {
+  flex: 1;
+}
+
+.s-title {
+  font-weight: 600;
+  color: #12b1d1;
+  margin-bottom: 6px;
+}
+
+.s-name {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #333;
 }
 </style>

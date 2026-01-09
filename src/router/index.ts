@@ -55,22 +55,8 @@ export const routes = [
     children: [
       {
         path: "",
-        name: "الهامش الإداري",
+        name: "مدير القسم",
         component: () => import("@/views/Margin/MarginTabs.vue"),
-      },
-    ],
-  },
-
-  {
-    path: "/division-flow",
-    component: () => import("@/layouts/Page.vue"),
-    meta: { roles: [0, 3] },
-    children: [
-      {
-        path: "",
-        name: "هامش مسؤول الشعبة",
-        component: () =>
-          import("@/views/Divisionfolder/DivisionTabs.vue"),
       },
     ],
   },
@@ -88,6 +74,22 @@ export const routes = [
       },
     ],
   },
+
+
+  {
+    path: "/division-flow",
+    component: () => import("@/layouts/Page.vue"),
+    meta: { roles: [0, 3] },
+    children: [
+      {
+        path: "",
+        name: "هامش مسؤول الشعبة",
+        component: () =>
+          import("@/views/Divisionfolder/DivisionTabs.vue"),
+      },
+    ],
+  },
+
 
   {
     path: "/flow",

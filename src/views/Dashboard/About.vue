@@ -17,7 +17,19 @@
           </small>
         </div>
       </div>
+      <div class="btn-wrapper">
+        <button
+          class="btn-search w-100"
+          data-bs-toggle="modal"
+          data-bs-target="#achievementsModal"
+          @click="loadAchievements"
+        >
+          <i class="bi bi-bar-chart"></i>
+          عرض إحصائيات الإنجاز
+        </button>
+      </div>
     </div>
+
     <!-- Incoming Tracking Card -->
     <div class="card shadow-sm border-0 mb-4 p-4 track-card">
       <div class="d-flex align-items-center mb-3 gap-2">
@@ -275,14 +287,131 @@
       </div>
     </div>
   </div>
+
+  <div
+    class="modal fade"
+    id="achievementsModal"
+    tabindex="-1"
+    aria-hidden="true"
+  >
+    <div
+      class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+    >
+      <div class="modal-content">
+        <!-- Header -->
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">
+            <!-- <i class="bi bi-bar-chart-line me-1"></i> -->
+            إحصائيات الإنجاز
+          </h5>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body">
+          <!-- Loading -->
+          <div v-if="achievementLoading" class="text-center py-5">
+            <div class="spinner-border text-info"></div>
+          </div>
+
+          <!-- Cards -->
+          <div v-else class="row g-4 achievements-cards">
+            <div
+              class="col-xl-3 col-lg-4 col-md-6 col-sm-12"
+              v-for="(item, i) in achievementCards"
+              :key="i"
+            >
+              <div class="achievement-card">
+                <div class="achievement-icon">
+                  <i :class="`bi ${item.icon}`"></i>
+                </div>
+
+                <div class="achievement-content">
+                  <h6 class="achievement-title">{{ item.title }}</h6>
+                  <div class="achievement-value">{{ item.value }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+            إغلاق
+          </button>
+
+          <button
+            class="btn btn-primary px-4"
+            :disabled="achievementLoading"
+            @click="printReport"
+          >
+            <i class="bi bi-printer ms-1"></i>
+            طباعة التقرير
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Print Area (Hidden) -->
+  <div id="print-area" style="display: none; direction: rtl; text-align: right">
+    <h3 class="print-title">تقرير إحصائيات الإنجاز</h3>
+
+    <table class="print-table" style="width: 100%; border-collapse: collapse">
+      <tbody>
+        <tr>
+          <td>عدد الوارد</td>
+          <td>{{ achievements.incomingCount }}</td>
+        </tr>
+
+        <tr>
+          <td>الاسترجاع</td>
+          <td>{{ achievements.isReturnCount }}</td>
+        </tr>
+
+        <tr>
+          <td>الموظفين الحكومي</td>
+          <td>{{ achievements.governmentCount }}</td>
+        </tr>
+
+        <tr>
+          <td>الموظفين المدني</td>
+          <td>{{ achievements.civilianCount }}</td>
+        </tr>
+
+        <tr>
+          <td>الاعتذارات</td>
+          <td>{{ achievements.apologyCount }}</td>
+        </tr>
+
+        <tr>
+          <td>المرضى</td>
+          <td>{{ achievements.patientCount }}</td>
+        </tr>
+
+        <tr>
+          <td>مكتب المعاون</td>
+          <td>{{ achievements.assistantOfficeCount }}</td>
+        </tr>
+
+        <tr class="total">
+          <td><strong>العدد الكلي</strong></td>
+          <td>
+            <strong>{{ achievements.totalCount }}</strong>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import Chart from "chart.js/auto";
 import {
   getDashboardStats,
   trackIncoming,
+  getAchievements,
 } from "@/services/dashboard.service.js";
 import { successAlert, errorAlert, warningAlert } from "@/utils/alert.js";
 
@@ -365,11 +494,25 @@ const track = async () => {
 
   try {
     const res = await trackIncoming(trackForm.value);
-    trackResult.value = res.data.data;
+    const data = res.data.data;
+
+    trackResult.value = {
+      incomingBookNumber: data.incomingBookNumber || "",
+      incomingDate: data.incomingDate || null,
+      subject: data.subject || "",
+      source: data.source || "",
+      content: data.content || "",
+      formationName: data.formationName || "",
+
+      injuredNames: Array.isArray(data.injuredNames) ? data.injuredNames : [],
+
+      transfers: Array.isArray(data.transfers) ? data.transfers : [],
+
+      actions: Array.isArray(data.actions) ? data.actions : [],
+    };
+
     successAlert("تم العثور على معلومات الوارد");
-    requestAnimationFrame(() => {
-      trackModal.show();
-    });
+    requestAnimationFrame(() => trackModal.show());
   } catch (e) {
     console.error(e);
     errorAlert("لم يتم العثور على معلومات مطابقة");
@@ -392,6 +535,110 @@ const closeTrackModal = () => {
   if (!trackModal) return;
   trackModal.hide();
 };
+
+const achievementFilter = ref({
+  year: new Date().getFullYear(),
+  month: null,
+  day: null,
+});
+
+const achievementLoading = ref(false);
+
+const achievements = ref({
+  incomingCount: 0,
+  isReturnCount: 0,
+  governmentCount: 0,
+  civilianCount: 0,
+  apologyCount: 0,
+  patientCount: 0,
+  assistantOfficeCount: 0,
+  totalCount: 0,
+});
+
+/* تحميل البيانات */
+const loadAchievements = async () => {
+  achievementLoading.value = true;
+  try {
+    const res = await getAchievements(achievementFilter.value);
+    achievements.value = res.data.data;
+  } catch (e) {
+    console.error(e);
+  } finally {
+    achievementLoading.value = false;
+  }
+};
+
+/* بحث مرن */
+watch(
+  () => ({ ...achievementFilter.value }),
+  () => {
+    loadAchievements();
+  }
+);
+
+const achievementCards = computed(() => [
+  {
+    title: "عدد الوارد",
+    value: achievements.value.incomingCount,
+    icon: "bi-inbox",
+  },
+  {
+    title: "الاسترجاع",
+    value: achievements.value.isReturnCount,
+    icon: "bi-arrow-counterclockwise",
+  },
+  {
+    title: "الموظفين الحكومي",
+    value: achievements.value.governmentCount,
+    icon: "bi-person-badge",
+  },
+  {
+    title: "الموظفين المدني",
+    value: achievements.value.civilianCount,
+    icon: "bi-people",
+  },
+  {
+    title: "الاعتذارات",
+    value: achievements.value.apologyCount,
+    icon: "bi-x-circle",
+  },
+  {
+    title: "المرضى",
+    value: achievements.value.patientCount,
+    icon: "bi-heart-pulse",
+  },
+  {
+    title: "مكتب المعاون",
+    value: achievements.value.assistantOfficeCount,
+    icon: "bi-building",
+  },
+  {
+    title: "العدد الكلي",
+    value: achievements.value.totalCount,
+    icon: "bi-bar-chart-line",
+  },
+]);
+const printReport = () => {
+  const printContent = document.getElementById("print-area").innerHTML;
+  const win = window.open("", "", "width=900,height=700");
+  win.document.write(`
+    <html lang="ar">
+      <head>
+        <title>تقرير الإحصائيات</title>
+        <style>
+          body { font-family: Arial; direction: rtl; padding: 20px; }
+          table { width: 100%; border-collapse: collapse; }
+          td { border: 1px solid #000; padding: 8px; }
+          .total { font-weight: bold; color: red; }
+        </style>
+      </head>
+      <body>${printContent}</body>
+    </html>
+  `);
+  win.document.close();
+  win.print();
+};
+
 /* --------- تحميل بيانات الـ Dashboard --------- */
 onMounted(async () => {
   try {
@@ -408,317 +655,3 @@ onMounted(async () => {
   loading.value = false;
 });
 </script>
-
-<style scoped>
-.btn-search {
-  width: 100%;
-  height: 47px;
-  font-size: 1rem;
-  border-radius: 14px;
-}
-
-.icons-box {
-  background: #fff;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-  transition: 0.3s;
-  padding: 2rem !important;
-}
-
-/* Cards */
-.icon-card {
-  flex: 1 1 150px;
-  margin: 0.8rem;
-  padding: 1.5rem 1rem;
-  background: #12b1d10e;
-  border-radius: 0.8rem;
-  border: 2px solid #12b1d1;
-  box-shadow: 0 4px 10px rgba(18, 177, 209, 0.15);
-  text-align: center;
-  transition: 0.3s;
-  opacity: 0;
-  animation: slideDown 0.8s ease forwards;
-}
-
-.icon-card:nth-child(1) {
-  animation-delay: 0.1s;
-}
-.icon-card:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.icon-card:nth-child(3) {
-  animation-delay: 0.3s;
-}
-.icon-card:nth-child(4) {
-  animation-delay: 0.4s;
-}
-.icon-card:nth-child(5) {
-  animation-delay: 0.5s;
-}
-.icon-card:nth-child(6) {
-  animation-delay: 0.6s;
-}
-
-.icon-card:hover {
-  transform: translateY(-6px) scale(1.05);
-}
-
-.icon-card i {
-  font-size: 2.5rem;
-  color: #12b1d1;
-}
-
-.icon-card h6 {
-  margin: 0.3rem 0;
-  font-weight: 600;
-  color: #333;
-}
-
-.icon-card span {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #12b1d1;
-}
-
-/* Charts */
-.charts-box {
-  background: #fff;
-  border: 2px solid #12b1d1;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-}
-
-.chart-card {
-  height: 260px;
-}
-
-/* Animation */
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.track-card {
-  background: #fff;
-  border: 2px dashed #12b1d1 !important;
-  border-radius: 12px;
-  padding: 16px;
-}
-
-.track-result textarea {
-  resize: none;
-}
-
-.track-search-modern {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 14px;
-  align-items: center;
-}
-
-.search-field {
-  position: relative;
-}
-
-.search-field i {
-  position: absolute;
-  top: 50%;
-  right: 14px;
-  transform: translateY(-50%);
-  color: #12b1d1;
-  font-size: 1.1rem;
-}
-
-.search-field input {
-  width: 100%;
-  padding: 12px 44px 12px 14px;
-  border-radius: 12px;
-  border: 1.5px solid #dbe9ee;
-  font-size: 0.95rem;
-  transition: 0.3s;
-}
-
-.search-field input:focus {
-  outline: none;
-  border-color: #12b1d1;
-  box-shadow: 0 0 0 3px rgba(18, 177, 209, 0.15);
-}
-
-.btn-track {
-  background: linear-gradient(135deg, #12b1d1, #0fa0be);
-  color: #fff;
-  border: none;
-  border-radius: 14px;
-  padding: 12px 22px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: 0.3s;
-}
-
-.btn-track:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(18, 177, 209, 0.35);
-}
-
-/* Modal Body */
-.track-modal-body {
-  background: #f9fbfc;
-}
-
-/* Info Card */
-.info-card {
-  background: #fff;
-  border-radius: 18px;
-  padding: 20px 22px;
-  margin-bottom: 22px;
-  border: 1px solid #e4f0f5;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
-}
-
-.info-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.info-header i {
-  font-size: 1.4rem;
-  color: #12b1d1;
-}
-
-.info-header h6 {
-  margin: 0;
-  font-weight: 800;
-  color: #333;
-}
-
-/* Info Grid */
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-.info-item span {
-  font-size: 0.8rem;
-  color: #777;
-}
-
-.info-item strong {
-  display: block;
-  font-size: 0.95rem;
-  color: #111;
-  margin-top: 4px;
-}
-
-/* Injured Badges */
-.injured-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.injured-badge {
-  background: rgba(18, 177, 209, 0.12);
-  border: 1px solid #12b1d1;
-  border-radius: 20px;
-  padding: 6px 14px;
-  font-size: 0.85rem;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #0c6f85;
-}
-
-/* Timeline */
-.timeline-modern {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.timeline-modern li {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-
-.timeline-dot {
-  width: 14px;
-  height: 14px;
-  background: #12b1d1;
-  border-radius: 50%;
-  margin-top: 10px;
-  flex-shrink: 0;
-}
-
-.timeline-dot.action {
-  background: #6c757d;
-}
-
-.timeline-card {
-  background: #f8fcfd;
-  border-radius: 14px;
-  padding: 12px 16px;
-  width: 100%;
-  border: 1px solid #e2eef3;
-}
-
-.timeline-meta {
-  font-size: 0.78rem;
-  color: #777;
-  margin: 4px 0;
-}
-
-.timeline-dates {
-  font-size: 0.75rem;
-  color: #555;
-}
-
-.timeline-note {
-  margin-top: 6px;
-  font-size: 0.8rem;
-  color: #444;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.timeline-status {
-  margin-top: 8px;
-  padding: 8px 10px;
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.timeline-status strong {
-  color: #0f6c88;
-}
-
-.track-title {
-  display: inline-block;
-  border-bottom: 3px solid #12b1d1;
-  padding-bottom: 15px;
-}
-.track-icon {
-  width: 38px;
-  height: 38px;
-  margin-left: 6px;
-  background: rgba(18, 177, 209, 0.12);
-  color: #12b1d1;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-}
-</style>

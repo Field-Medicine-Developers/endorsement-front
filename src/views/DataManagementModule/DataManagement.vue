@@ -60,12 +60,12 @@
                 <th>#</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
-                <th>هامش مسؤول الشعبة</th>
                 <!-- <th>تاريخ الإدخال</th> -->
                 <th>حالة المعاملة</th>
-                <th>تاريخ الاستلام</th>
-                <th>سبب الرفض</th>
-                <th>تاريخ الرفض</th>
+                <th>هامش مسؤول الشعبة</th>
+                <!-- <th>تاريخ الاستلام</th> -->
+                <!-- <th>سبب الرفض</th> -->
+                <!-- <th>تاريخ الرفض</th> -->
                 <th>رقم المذكرة</th>
                 <th>تاريخ المذكرة</th>
                 <th>نوع الصادر</th>
@@ -80,7 +80,7 @@
                 <!-- incoming -->
                 <td>{{ m.incomingBookNumber ?? "-" }}</td>
                 <td>{{ formatDate(m.incomingDate) }}</td>
-                <td>{{ m.marginNoteDivision }}</td>
+
                 <!-- createdAt -->
                 <!-- <td>{{ formatDate(m.createdAt) }}</td> -->
                 <td>
@@ -96,11 +96,11 @@
                     <i class="bi bi-x-circle-fill"></i> مرفوض
                   </span>
                 </td>
-
+                <td>{{ m.marginNoteDivision }}</td>
                 <!-- تواريخ إضافية -->
-                <td>{{ formatDate(m.receiveDate) }}</td>
-                <td>{{ m.rejectionReason ?? "-" }}</td>
-                <td>{{ formatDate(m.rejectionDate) }}</td>
+                <!-- <td>{{ formatDate(m.receiveDate) }}</td> -->
+                <!-- <td>{{ m.rejectionReason ?? "-" }}</td> -->
+                <!-- <td>{{ formatDate(m.rejectionDate) }}</td> -->
 
                 <!-- memo -->
                 <td>{{ m.memoNumber }}</td>
@@ -450,7 +450,30 @@
               </div>
             </div>
 
-            <div class="col-md-6">
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">رقم الوارد</label>
+                <div class="form-control">
+                  {{ incomingView.incomingBookNumber }}
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">تاريخ الوارد</label>
+                <div class="form-control">
+                  {{ formatDate(incomingView.incomingDate) }}
+                </div>
+              </div>
+
+              <div class="col-md-12">
+                <label class="form-label">أسماء الجرحى</label>
+                <div class="form-control">
+                  {{ incomingView.injuredNames.join("، ") || "—" }}
+                </div>
+              </div>
+            </div>
+
+            <!-- <div class="col-md-6">
               <label class="form-label">ملف الأصل</label>
               <div class="form-control">
                 <span v-if="viewItem.hasOriginalFile" class="badge bg-success">
@@ -458,7 +481,7 @@
                 </span>
                 <span v-else class="badge bg-secondary"> لا </span>
               </div>
-            </div>
+            </div> -->
 
             <div class="col-md-6">
               <label class="form-label">اسم المُدخل</label>
@@ -870,9 +893,7 @@ const handleFileUpload = (event) => {
 const transferLoading = ref(false);
 const transfer = async () => {
   if (transferLoading.value) return;
-
   transferLoading.value = true;
-
   try {
     const formData = new FormData();
     formData.append("LandaId", transferForm.landaId);
@@ -884,9 +905,7 @@ const transfer = async () => {
         formData.append("files", file);
       }
     }
-
     await transferLanda(formData);
-
     successAlert("تم التحويل بنجاح");
     transferModal.hide();
     load();
@@ -915,22 +934,33 @@ const loadViewData = async (marginNoteId) => {
   return res.data.data;
 };
 
+import { getIncomings } from "@/services/incoming.service.js";
+
 const openView = async (row) => {
   try {
     const data = await loadViewData(row.id);
-    if (!data || data.length === 0) {
-      errorAlert(
-        "لا توجد بيانات مرتبطة بهذا الهامش (رقم المذكرة و تاريخ المذكرة)"
-      );
-      return;
+    const item = data?.[0];
+
+    if (item) {
+      viewItem.marginNoteId = item.marginNoteId;
+      viewItem.memoNumber = item.memoNumber;
+      viewItem.memoDate = item.memoDate;
+      viewItem.hasOriginalFile = item.hasOriginalFile;
+      viewItem.createdByUserName = item.createdByUserName;
+      viewItem.createdAt = item.createdAt;
     }
-    const item = data[0];
-    viewItem.marginNoteId = item.marginNoteId;
-    viewItem.memoNumber = item.memoNumber;
-    viewItem.memoDate = item.memoDate;
-    viewItem.hasOriginalFile = item.hasOriginalFile;
-    viewItem.createdByUserName = item.createdByUserName;
-    viewItem.createdAt = item.createdAt;
+    if (row.incomingId) {
+      const incomingRes = await getIncomingById(row.incomingId);
+      const inc = incomingRes.data?.data;
+      incomingView.incomingBookNumber = inc?.incomingBookNumber ?? "—";
+      incomingView.incomingDate = inc?.incomingDate ?? null;
+      incomingView.receiveDate = inc?.receiveDate ?? null;
+      incomingView.injuredNames = Array.isArray(inc?.injuredNames)
+        ? inc.injuredNames
+        : [];
+      incomingView.commandName = inc?.commandName ?? "—";
+      incomingView.formationName = inc?.formationName ?? "—";
+    }
 
     viewModal.show();
   } catch (e) {
@@ -950,6 +980,15 @@ const viewItem = reactive({
   createdByUserName: "",
   createdAt: "",
   marginNoteId: "",
+});
+
+const incomingView = reactive({
+  incomingBookNumber: "—",
+  incomingDate: null,
+  receiveDate: null,
+  injuredNames: [],
+  commandName: "—",
+  formationName: "—",
 });
 
 const filters = reactive({

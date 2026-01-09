@@ -110,16 +110,16 @@
                 <th>الحالة</th>
                 <th>رقم الكتاب</th>
                 <th>تاريخ الحادث</th>
-                <th>مكان الحادث</th>
-                <th>مكان الإصابة</th>
+                <th>محل الحادث</th>
+                <th> مكان ونوع الاصابة في</th>
                 <th>التشكيل</th>
                 <th>السنة</th>
                 <!-- <th>الحالة النهائية</th> -->
                 <!-- <th>الرمز العشوائي</th> -->
-                <th>بطاقة طوارئ</th>
-                <th>الموقف التأييد</th>
-                <th>رقم الصدور</th>
-                <th>تاريخ الصدور</th>
+                <!-- <th>بطاقة طوارئ</th> -->
+                <th>موقف التأييد</th>
+                <th>رقم الصادر</th>
+                <th>تاريخ الصادر</th>
                 <th>الموقف السابق</th>
                 <th>أُضيف بواسطة</th>
                 <th>تاريخ الإضافة</th>
@@ -156,7 +156,7 @@
                 <!-- <td>{{ item.finalStatus ?? "—" }}</td> -->
                 <!-- <td>{{ item.randomCode }}</td> -->
 
-                <td>
+                <!-- <td>
                   <span :class="yesNoDisplay(item.emergencyCard).class">
                     <i
                       :class="`bi ${
@@ -165,7 +165,7 @@
                     ></i>
                     {{ yesNoDisplay(item.emergencyCard).text }}
                   </span>
-                </td>
+                </td> -->
                 <td>
                   <span :class="yesNoDisplay(item.supportiveStance).class">
                     <i
@@ -378,16 +378,16 @@
               </div>
 
               <div class="col-md-6">
-                <label class="form-label">مكان الحادث</label>
+                <label class="form-label">محل الحادث</label>
                 <input v-model="form.accidentPlace" class="form-control" />
               </div>
 
               <div class="col-md-6">
-                <label class="form-label">مكان الإصابة</label>
+                <label class="form-label">مكان ونوع الاصابة في جسم </label>
                 <input v-model="form.injuryPlace" class="form-control" />
               </div>
 
-              <div class="col-md-6">
+              <!-- <div class="col-md-6">
                 <label class="form-label">بطاقة طوارئ</label>
                 <div class="custom-vue-select-container">
                   <VueSelect
@@ -399,9 +399,9 @@
                     clearable
                   />
                 </div>
-              </div>
+              </div> -->
               <div class="col-md-6">
-                <label class="form-label">الموقف التأييد</label>
+                <label class="form-label">موقف التأييد</label>
                 <div class="custom-vue-select-container">
                   <VueSelect
                     v-model="form.supportiveStance"
@@ -414,12 +414,12 @@
                 </div>
               </div>
               <div class="col-md-6">
-                <label class="form-label">رقم الصدور</label>
+                <label class="form-label">رقم الصادر</label>
                 <input v-model="form.issueNumber" class="form-control" />
               </div>
 
               <div class="col-md-6">
-                <label class="form-label">تاريخ الصدور</label>
+                <label class="form-label">تاريخ الصادر</label>
                 <input
                   type="date"
                   v-model="form.issueDate"
@@ -449,7 +449,7 @@
                 />
               </div>
 
-              <div class="col-md-6">
+              <!-- <div class="col-md-6">
                 <label class="form-label">التشكيل</label>
 
                 <div class="custom-vue-select-container">
@@ -462,7 +462,7 @@
                     searchable
                   />
                 </div>
-              </div>
+              </div> -->
             </div>
           </div>
 
@@ -597,7 +597,6 @@
     </div>
   </div>
 </div>
-
 </template>
 
 <script setup>
@@ -681,10 +680,7 @@ let uploadModal = null;
 
 const archiveFiles = ref([]);
 const currentIncomingId = ref(null);
-
-/* الجرحى من incoming */
 const incomings = ref([]);
-/* تشكيلات + VueSelect-ready */
 const formations = ref([]);
 const formationsSelect = ref([]);
 
@@ -703,7 +699,6 @@ const form = reactive({
   formationId: null,
   status: 0,
   year: new Date().getFullYear(),
-  // الحقول الجديدة
   emergencyCard: null,
   supportiveStance: null,
   issueNumber: "",
@@ -879,10 +874,8 @@ const openAdd = async () => {
 
 const openEdit = async (item) => {
   editMode.value = true;
-
   await loadIncomings();
   const injuredPersonId = getInjuredPersonIdForSupport(item);
-
   Object.assign(form, {
     id: item.id,
     injuredPersonId: item.injuredPersonId,
@@ -905,7 +898,6 @@ const openEdit = async (item) => {
     centralNumber: item.centralNumber,
     dateCentrality: item.dateCentrality?.substring(0, 10) || "",
   });
-
   modal.show();
 };
 
@@ -926,7 +918,6 @@ const save = async () => {
     formationId: form.formationId,
     status: form.status,
     year: form.year,
-    // 🆕 الحقول الجديدة
     emergencyCard: form.emergencyCard,
     supportiveStance: form.supportiveStance,
     issueNumber: form.issueNumber,
@@ -944,7 +935,6 @@ const save = async () => {
       await updateInjurySupport(form.id, body);
       successAlert("تم حفظ التعديلات");
     }
-
     modal.hide();
     load();
   } catch (e) {
@@ -1061,28 +1051,21 @@ const closeUpload = () => {
   selectedFiles.value = [];
 };
 
-
-
 const upload = async () => {
   if (!currentIncomingId.value) {
     return errorAlert("المعاملة غير محددة");
   }
-
   // جمع كل الملفات من جميع inputs
   const allFiles = archiveInputs.value.flatMap(x => x.files);
-
   if (allFiles.length === 0) {
     return errorAlert("يرجى اختيار ملف واحد على الأقل");
   }
-
   try {
     const res = await uploadIncomingArchive(
       currentIncomingId.value,
       allFiles
     );
-
     successAlert("تم رفع المرفقات بنجاح");
-
     archiveFiles.value.push(...(res.data.data || []));
 
     // reset
@@ -1112,8 +1095,6 @@ const removeArchiveInput = (index) => {
 const openFile = (url) => {
   window.open(url, "_blank");
 };
-
-
 
 onMounted(() => {
   modal = new Modal(modalEl.value);
@@ -1201,103 +1182,4 @@ onMounted(() => {
   text-overflow: ellipsis;
   vertical-align: middle;
 }
-/* -------------------------------------------------------------
-   Statistics Cards (Unified Border Color)
-------------------------------------------------------------- */
-
-.stats-row {
-  display: flex;
-  gap: 14px;
-  margin-bottom: 1.8rem;
-  flex-wrap: wrap;
-}
-
-/* الكرت */
-.stats-box {
-  flex: 1;
-  min-width: 180px;
-  height: 80px;
-  background:#f8f9fa;
-  border-radius: 16px;
-  padding: 14px 18px;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  /*  بوردر كامل */
-  border: 1px solid #12b1d1;
-
-  box-shadow:
-    12px 12px 30px #e6e6e6,
-    -12px -12px 30px #ffffff;
-
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.stats-box:hover {
-  transform: translateY(-3px);
-  box-shadow:
-    0 10px 25px rgba(18, 177, 209, 0.25);
-}
-
-/* النص */
-.text {
-  display: flex;
-  flex-direction: column;
-}
-
-.title {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: #6c757d;
-}
-
-.text strong {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #212529;
-}
-
-/* الأيقونة */
-.icon {
-  font-size: 2rem;
-  color: #12b1d1; /* نفس اللون */
-  opacity: 0.9;
-}
-
-/* موبايل */
-@media (max-width: 768px) {
-  .stats-box {
-    min-width: 100%;
-  }
-}
-
-/* الحالة الابتدائية */
-.stats-box {
-  opacity: 0;
-  transform: translateY(20px);
-  animation: cardFadeUp 0.6s ease forwards;
-}
-
-/* تأخير بسيط لكل كرت */
-.stats-box:nth-child(1) { animation-delay: 0.05s; }
-.stats-box:nth-child(2) { animation-delay: 0.15s; }
-.stats-box:nth-child(3) { animation-delay: 0.25s; }
-.stats-box:nth-child(4) { animation-delay: 0.35s; }
-
-/* الحركة */
-@keyframes cardFadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 </style>

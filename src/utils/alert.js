@@ -39,3 +39,16 @@ export const confirmDelete = () => {
     cancelButtonText: "إلغاء",
   });
 };
+
+
+export const confirmAction = (title, text) => {
+  return Swal.fire({
+    title,
+    text,
+    icon: "question", 
+    showCancelButton: true,
+    confirmButtonText: "نعم",
+    cancelButtonText: "إلغاء",
+    reverseButtons: true,
+  });
+};

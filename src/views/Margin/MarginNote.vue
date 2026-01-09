@@ -59,11 +59,13 @@
               <tr>
                 <th>#</th>
                 <th>تاريح استلام المعاملة</th>
+                <th>أسماء الجرحى</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
                 <th>هامش مدير القسم</th>
                 <th>هامش مسوؤل شعبة</th>
-                <th>تاريخ الكتاب</th>
+                <th>تاريخ هامش المسؤول</th>
+                <!-- <th>تاريخ الكتاب</th> -->
                 <!-- <th>ملف الأصل</th> -->
                 <th>الإجراءات</th>
               </tr>
@@ -73,7 +75,7 @@
               <tr v-for="(m, i) in list" :key="m.id">
                 <td>{{ (page - 1) * pageSize + i + 1 }}</td>
                 <td>{{ formatDate(m.createdAt) }}</td>
-                <!-- <td>
+                <td>
                   <div>
                     <div>{{ m.injuredNames?.[0] }}</div>
                     <div
@@ -84,20 +86,28 @@
                       عرض الكل ({{ m.injuredNames.length }})
                     </div>
                   </div>
-                </td> -->
+                </td>
 
                 <td>{{ m.incomingBookNumber }}</td>
                 <td>{{ formatDate(m.incomingDate) }}</td>
-                <td>{{ m.managerNote }}</td>
+                <td>
+                  <button
+                    class="btn btn-search"
+                    @click="openManagerNotes(m.managerNotes || [])"
+                  >
+                    عرض الهوامش ({{ m.managerNotes?.length || 0 }})
+                  </button>
+                </td>
+
                 <td>{{ m.managerNoteDivision || "—" }}</td>
-                <td>{{ formatDate(m.createdAt) }}</td>
+                <!-- <td>{{ formatDate(m.createdAt) }}</td> -->
                 <!-- <td>
                   <span v-if="m.hasOriginalFile" class="badge bg-success"
                     >نعم</span
                   >
                   <span v-else class="badge bg-secondary">لا</span>
                 </td> -->
-
+                <td>{{ formatDate(m.noteDate) }}</td>
                 <td>
                   <div class="d-flex justify-content-center gap-2">
                     <!-- زر إضافة هامش -->
@@ -155,6 +165,22 @@
                         />
                       </svg>
                     </button>
+
+                    <button class="button-view" @click="openIncomingDetails(m)">
+                      <svg class="svgIcon" viewBox="0 0 576 512">
+                        <path
+                          d="M572.52 241.4C518.29 135.59 407.81 64 288 
+                            64S57.71 135.59 3.48 241.4a48.07 48.07 
+                            0 000 45.2C57.71 376.41 168.19 448 288 
+                            448s230.29-71.59 284.52-161.4a48.07 48.07 
+                            0 000-45.2zM288 400c-88.22 0-168.48-48.33-211.86-128C119.52 
+                            192.33 199.78 144 288 144s168.48 48.33 
+                            211.86 128C456.48 351.67 376.22 400 288 
+                            400zm0-208a80 80 0 1080 80 80.09 80.09 
+                            0 00-80-80z"
+                        />
+                      </svg>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -201,7 +227,7 @@
     </div>
   </div>
   <!-- Modal -->
-  <div class="modal fade" tabindex="-1" ref="modalEl">
+  <div class="modal fade" ref="modalEl" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
@@ -212,48 +238,85 @@
 
         <form @submit.prevent="save">
           <div class="modal-body">
-            <div class="row g-3">
-              <div class="col-md-12">
-                <label class="form-label">هامش المدير</label>
-                <input
-                  v-model="form.managerNote"
-                  class="form-control"
-                  required
-                />
+            <div class="row g-4">
+              <div
+                v-for="(note, index) in form.managerNotes"
+                :key="index"
+                class="col-12"
+              >
+                <div class="note-card">
+                  <div class="note-header">
+                    <span class="note-badge">#{{ index + 1 }}</span>
+                    <span class="note-title">هامش مدير القسم</span>
+
+                    <button
+                      v-if="form.managerNotes.length > 1"
+                      type="button"
+                      class="btn-remove"
+                      @click="removeManagerNote(index)"
+                      title="حذف الهامش"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div class="row g-3 mt-2">
+                    <div class="col-12">
+                      <input
+                        v-model="note.managerNote"
+                        type="text"
+                        class="form-control form-control-lg"
+                        placeholder="اكتب الهامش هنا..."
+                        required
+                      />
+                    </div>
+
+                    <div class="col-12">
+                      <label class="form-label small text-muted">
+                        تاريخ الهامش
+                      </label>
+                      <input
+                        v-model="note.noteDate"
+                        type="date"
+                        class="form-control"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <!-- <div class="col-md-6">
-                <label class="form-label">إرسال إلى الوحدة:</label>
-                <div class="custom-vue-select-container">
-                  <VueSelect
-                    v-model="form.departmentIds"
-                    :options="departments"
-                    label="name"
-                    :reduce="(d) => d.id"
-                    multiple
-                    searchable
-                    placeholder="اختر الوحدة..."
-                  />
-                </div>
-              </div> -->
+              <!-- زر إضافة -->
+              <div class="col-12">
+                <button
+                  type="button"
+                  class="btn-add-note"
+                  @click="addManagerNote"
+                >
+                  <i class="bi bi-plus-circle me-1"></i>
+                  إضافة هامش جديد
+                </button>
+              </div>
             </div>
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-light" @click="close()">
+            <button type="button" class="btn btn-light" @click="handleClose">
               إلغاء
             </button>
-            <button
-              class="btn btn-add"
-              :disabled="isSaving"
-              :class="{ 'btn-saving': isSaving }"
-              @click.prevent="save"
-            >
+
+            <button class="btn btn-primary px-4" :disabled="isSaving">
               <span
                 v-if="isSaving"
                 class="spinner-border spinner-border-sm me-2"
               ></span>
-              {{ isSaving ? "جارٍ الحفظ..." : editMode ? "حفظ" : "إضافة" }}
+              {{
+                isSaving
+                  ? "جارٍ الحفظ..."
+                  : editMode
+                  ? "حفظ التعديلات"
+                  : "حفظ الهوامش"
+              }}
             </button>
           </div>
         </form>
@@ -407,6 +470,200 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal – عرض الهوامش -->
+  <div class="modal fade" ref="managerNotesModalEl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content notes-modal">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">الهوامش الإدارية</h5>
+        </div>
+
+        <div class="modal-body">
+          <div v-if="selectedManagerNotes.length" class="notes-list">
+            <div
+              v-for="(s, i) in selectedManagerNotes"
+              :key="i"
+              class="note-item"
+            >
+              <div class="note-index">
+                {{ i + 1 }}
+              </div>
+
+              <div class="note-content">
+                <div class="note-title">هامش مدير القسم</div>
+
+                <div class="note-text">
+                  {{ s.managerNote || "—" }}
+                </div>
+
+                <div class="note-date">
+                  <i class="bi bi-calendar3 me-1"></i>
+                  {{ formatDate(s.noteDate) }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="empty-state">
+            <i class="bi bi-inbox fs-1 mb-2"></i>
+            <p class="text-muted mb-0">لا توجد هوامش مسجلة</p>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeManagerNotes">
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal – تفاصيل الوارد -->
+  <div class="modal fade" tabindex="-1" ref="incomingDetailsModalEl">
+    <div
+      class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"
+    >
+      <div class="modal-content">
+        <!-- Header -->
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">تفاصيل الوارد</h5>
+          <button
+            type="button"
+            class="btn-close"
+            @click="closeIncomingDetails"
+          ></button>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body" v-if="selectedIncoming">
+          <div class="row g-3">
+            <!-- رقم الوارد -->
+            <div class="col-md-6">
+              <label class="form-label">رقم الوارد</label>
+              <input
+                class="form-control"
+                :value="selectedIncoming.incomingBookNumber ?? '—'"
+                disabled
+              />
+            </div>
+
+            <!-- تاريخ الوارد -->
+            <div class="col-md-6">
+              <label class="form-label">تاريخ الوارد</label>
+              <input
+                class="form-control"
+                :value="formatDate(selectedIncoming.incomingDate)"
+                disabled
+              />
+            </div>
+
+            <!-- تاريخ الاستلام -->
+            <div class="col-md-6">
+              <label class="form-label">تاريخ الاستلام</label>
+              <input
+                class="form-control"
+                :value="formatDate(selectedIncoming.receiveDate)"
+                disabled
+              />
+            </div>
+
+            <!-- الحالة -->
+            <div class="col-md-6">
+              <label class="form-label">الحالة</label>
+              <input
+                class="form-control"
+                :value="selectedIncoming.status === 1 ? 'فعال' : '—'"
+                disabled
+              />
+            </div>
+
+            <!-- أسماء الجرحى -->
+            <div class="col-md-12">
+              <label class="form-label">أسماء الجرحى</label>
+              <input
+                class="form-control"
+                :value="selectedIncoming.injuredNames?.join('، ') || '—'"
+                disabled
+              />
+            </div>
+
+            <!-- القيادة -->
+            <div class="col-md-6">
+              <label class="form-label">القيادة</label>
+              <input
+                class="form-control"
+                :value="selectedIncoming.command?.name || '—'"
+                disabled
+              />
+            </div>
+
+            <!-- التشكيل -->
+            <div class="col-md-6">
+              <label class="form-label">التشكيل</label>
+              <input
+                class="form-control"
+                :value="selectedIncoming.formation?.name || '—'"
+                disabled
+              />
+            </div>
+
+            <!-- أنشئ بواسطة -->
+            <div class="col-md-6">
+              <label class="form-label">أنشئ بواسطة</label>
+              <input
+                class="form-control"
+                :value="selectedIncoming.createdByUserName || '—'"
+                disabled
+              />
+            </div>
+
+            <!-- تاريخ الإنشاء -->
+            <div class="col-md-6">
+              <label class="form-label">تاريخ الإنشاء</label>
+              <input
+                class="form-control"
+                :value="formatDate(selectedIncoming.createdAt)"
+                disabled
+              />
+            </div>
+
+            <!-- الهوامش -->
+            <div class="col-md-12">
+              <label class="form-label">
+                الهوامش ({{ selectedIncoming.managerNotes?.length || 0 }})
+              </label>
+
+              <textarea
+                class="form-control"
+                rows="4"
+                disabled
+                :value="
+                  selectedIncoming.managerNotes?.length
+                    ? selectedIncoming.managerNotes
+                        .map((n, i) => `${i + 1}- ${n.managerNote}`)
+                        .join('\n')
+                    : 'لا توجد هوامش'
+                "
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-light"
+            @click="closeIncomingDetails"
+          >
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -469,12 +726,18 @@ const load = async () => {
       createdAtTo: filters.createdAtTo || null,
     });
 
-    list.value = res.data.data.map((item) => ({
-      ...item,
-      injuredNames: item.injuredName
-        ? item.injuredName.split(",").map((n) => n.trim())
-        : [],
-    }));
+    list.value = res.data.data.map((item) => {
+      console.log("Incoming ID:", item.incomingId);
+      console.log("Manager Notes:", item.managerNotes);
+      console.log("Incoming Data Full:", item);
+
+      return {
+        ...item,
+        managerNotes: item.managerNotes || [],
+      };
+    });
+
+    totalPages.value = res.data.pagination.totalPages;
   } finally {
     loading.value = false;
   }
@@ -504,26 +767,46 @@ const editMode = ref(false);
 const form = reactive({
   id: "",
   incomingId,
-  managerNote: "",
-  hasOriginalFile: false,
-  departmentIds: [departmentId],
+  managerNotes: [
+    {
+      managerNote: "",
+      noteDate: "",
+    },
+  ],
 });
+
+const resetForm = () => {
+  form.id = "";
+  form.managerNotes = [
+    {
+      managerNote: "",
+      noteDate: "",
+    },
+  ];
+};
+
+const handleClose = () => {
+  resetForm();
+  modal.hide();
+};
 
 const openAdd = (incomingIdFromRow) => {
   incomingId.value = incomingIdFromRow;
   editMode.value = false;
-  form.id = "";
-  form.managerNote = "";
-  form.hasOriginalFile = false;
-  form.departmentIds = [];
+  resetForm();
   modal.show();
 };
 
 const openEdit = (row) => {
   editMode.value = true;
-  form.id = row.id;
-  form.managerNote = row.managerNote;
-  form.hasOriginalFile = row.hasOriginalFile;
+  resetForm();
+  form.managerNotes = row.managerNotes?.length
+    ? row.managerNotes.map((n) => ({
+        managerNote: n.managerNote,
+        noteDate: n.noteDate?.substring(0, 10) || "",
+      }))
+    : [{ managerNote: "", noteDate: "" }];
+
   modal.show();
 };
 
@@ -532,34 +815,37 @@ const isSaving = ref(false);
 const save = async () => {
   if (isSaving.value) return;
 
-  //  تحقق قبل تشغيل السبنر
-  if (!incomingId?.value) {
-    errorAlert("لا يمكن الإضافة — بيانات الوارد غير موجودة");
+  if (!incomingId.value) {
+    errorAlert("بيانات الوارد غير موجودة");
+    return;
+  }
+  const managerNotesPayload = form.managerNotes
+    .filter((n) => n.managerNote?.trim() && n.noteDate)
+    .map((n) => ({
+      managerNote: n.managerNote.trim(),
+      noteDate: new Date(n.noteDate).toISOString(),
+    }));
+
+  if (!managerNotesPayload.length) {
+    errorAlert("يرجى إدخال هامش مدير القسم");
     return;
   }
 
   const data = {
     incomingId: incomingId.value,
-    managerNote: form.managerNote,
-    departmentIds: form.departmentIds,
+    managerNotes: managerNotesPayload,
   };
 
   isSaving.value = true;
 
   try {
-    if (!editMode.value) {
-      await addMarginNote(data);
-      successAlert("تمت إضافة الهامش بنجاح");
-    } else {
-      await updateMarginNote(form.id, data);
-      successAlert("تم تحديث الهامش بنجاح");
-    }
-
+    await addMarginNote(data);
+    successAlert("تمت إضافة الهوامش بنجاح");
     modal.hide();
     load();
   } catch (error) {
-    console.error("SERVER ERROR:", error);
-    errorAlert("فشل الحفظ — تحقق من الحقول");
+    console.error(error);
+    errorAlert("فشل الحفظ");
   } finally {
     isSaving.value = false;
   }
@@ -578,7 +864,16 @@ const remove = async (id) => {
   }
 };
 
-const close = () => modal.hide();
+const addManagerNote = () => {
+  form.managerNotes.push({
+    managerNote: "",
+    noteDate: "",
+  });
+};
+
+const removeManagerNote = (index) => {
+  form.managerNotes.splice(index, 1);
+};
 
 // ===== Transfer Functions =====
 const openTransfer = (row) => {
@@ -589,16 +884,11 @@ const openTransfer = (row) => {
   transferModal.show();
 };
 
-const handleFileUpload = (event) => {
-  transferForm.files = Array.from(event.target.files);
-};
-
 const transferLoading = ref(false);
 
 const transfer = async () => {
   if (transferLoading.value) return;
 
-  //  تحقق قبل التشغيل
   if (!transferForm.marginNoteId || !transferForm.departmentId) {
     errorAlert("يرجى اختيار الجهة المراد التحويل إليها");
     return;
@@ -685,13 +975,173 @@ const closeNamesModal = () => {
   namesModal.hide();
 };
 
+const selectedManagerNotes = ref([]);
+const managerNotesModalEl = ref(null);
+let managerNotesModal = null;
+
+const openManagerNotes = (notes) => {
+  selectedManagerNotes.value = notes;
+  managerNotesModal.show();
+};
+
+const closeManagerNotes = () => {
+  managerNotesModal.hide();
+};
+
+const selectedIncoming = ref(null);
+
+const openIncomingDetails = (row) => {
+  selectedIncoming.value = row;
+  incomingDetailsModal.show();
+};
+
+const closeIncomingDetails = () => {
+  incomingDetailsModal.hide();
+};
+const incomingDetailsModalEl = ref(null);
+let incomingDetailsModal = null;
+
 // ===== INIT =====
 onMounted(() => {
   modal = new Modal(modalEl.value);
   transferModal = new Modal(transferModalEl.value);
   advancedModal = new Modal(advancedModalEl.value);
   namesModal = new Modal(namesModalEl.value);
+  managerNotesModal = new Modal(managerNotesModalEl.value);
+  incomingDetailsModal = new Modal(incomingDetailsModalEl.value);
+  modalEl.value.addEventListener("hidden.bs.modal", () => {
+    resetForm();
+  });
   load();
   loadDepartments();
 });
 </script>
+
+<style>
+.note-card {
+  background: #f9fbfc;
+  border: 1px solid #e5eaf0;
+  border-radius: 14px;
+  padding: 16px;
+  transition: box-shadow 0.2s ease;
+}
+
+.note-card:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.note-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.note-badge {
+  background: #12b1d1;
+  color: #fff;
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 50px;
+}
+
+.note-title {
+  font-weight: 600;
+  color: #12b1d1;
+  flex-grow: 1;
+}
+
+.btn-remove {
+  background: transparent;
+  border: none;
+  color: #dc3545;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.btn-remove:hover {
+  color: #a71d2a;
+}
+
+.btn-add-note {
+  width: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px dashed #12b1d1;
+  background: transparent;
+  color: #12b1d1;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-add-note:hover {
+  background: #12b1d1;
+  color: #fff;
+}
+
+.modal-footer {
+  border-top: 1px solid #eee;
+}
+
+.notes-modal {
+  border-radius: 16px;
+}
+
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.note-item {
+  display: flex;
+  gap: 14px;
+  background: #f9fbfc;
+  border: 1px solid #e5eaf0;
+  border-radius: 14px;
+  padding: 14px;
+  transition: box-shadow 0.2s ease;
+}
+
+.note-item:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.note-index {
+  min-width: 36px;
+  height: 36px;
+  background: #12b1d1;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.note-content {
+  flex: 1;
+}
+
+.note-title {
+  font-weight: 600;
+  color: #12b1d1;
+  margin-bottom: 6px;
+}
+
+.note-text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #333;
+}
+
+.note-date {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 10px;
+}
+</style>

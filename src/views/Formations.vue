@@ -59,6 +59,7 @@
             <thead>
               <tr>
                 <th>#</th>
+                <th>القيادة</th>
                 <th>اسم التشكيل</th>
                 <th>الإجراءات</th>
               </tr>
@@ -67,6 +68,7 @@
             <tbody>
               <tr v-for="(f, i) in list" :key="f.id">
                 <td>{{ (page - 1) * pageSize + i + 1 }}</td>
+                <td>{{ f.commandName || "—" }}</td>
                 <td>{{ f.name }}</td>
 
                 <td>
@@ -158,6 +160,19 @@
         </div>
 
         <form @submit.prevent="save">
+          <label class="form-label">القيادة</label>
+          <div class="custom-vue-select-container mb-3">
+            <VueSelect
+              v-model="form.commandId"
+              :options="commands"
+              label="name"
+              :reduce="(c) => c.id"
+              placeholder="اختر القيادة..."
+              searchable
+              clearable
+            />
+          </div>
+
           <div class="modal-body">
             <label class="form-label">اسم التشكيل</label>
             <input v-model="form.name" class="form-control" required />
@@ -186,15 +201,17 @@ import {
   addFormation,
   updateFormation,
   deleteFormation,
+  getCommands,
 } from "@/services/formations.service.js";
-
+import VueSelect from "vue3-select";
+import "vue3-select/dist/vue3-select.css";
 const list = ref([]);
 const loading = ref(false);
 
 const page = ref(1);
 const pageSize = 10;
 const totalPages = ref(1);
-
+const commands = ref([]);
 const filters = reactive({
   name: "",
 });
@@ -206,6 +223,7 @@ const editMode = ref(false);
 const form = reactive({
   id: "",
   name: "",
+  commandId: null,
 });
 
 // Load
@@ -222,6 +240,15 @@ const load = async () => {
     totalPages.value = res.data.pagination.totalPages;
   } finally {
     loading.value = false;
+  }
+};
+
+const loadCommands = async () => {
+  try {
+    const res = await getCommands();
+    commands.value = res.data.data;
+  } catch (e) {
+    console.error("فشل تحميل القيادات", e);
   }
 };
 
@@ -258,6 +285,7 @@ const openAdd = () => {
   editMode.value = false;
   form.id = "";
   form.name = "";
+  form.commandId = null;
   modal.show();
 };
 
@@ -265,6 +293,7 @@ const openEdit = (item) => {
   editMode.value = true;
   form.id = item.id;
   form.name = item.name;
+  form.commandId = item.commandId;
   modal.show();
 };
 
@@ -272,6 +301,7 @@ const save = async () => {
   try {
     const payload = {
       name: form.name,
+      commandId: form.commandId,
     };
     if (editMode.value) {
       await updateFormation(form.id, payload);
@@ -312,5 +342,6 @@ const close = () => modal.hide();
 onMounted(() => {
   modal = new Modal(modalEl.value);
   load();
+  loadCommands();
 });
 </script>

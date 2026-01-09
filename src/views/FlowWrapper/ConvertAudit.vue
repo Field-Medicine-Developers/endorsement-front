@@ -79,13 +79,19 @@
                 <td>{{ formatDate(item.rejectionDate) }}</td>
 
                 <td>
-                  <div class="d-flex justify-content-center gap-2">
+                  <!-- إذا الحالة انتظار -->
+                  <div
+                    v-if="item.status === 0"
+                    class="d-flex justify-content-center gap-2"
+                  >
                     <!-- قبول -->
                     <button
                       class="button-accept"
                       title="قبول المعاملة"
                       @click="approve(item)"
-                      :disabled="approvingId === item.id"
+                      :disabled="
+                        approvingId === item.id || rejectingId === item.id
+                      "
                     >
                       <span
                         v-if="approvingId === item.id"
@@ -130,6 +136,8 @@
                       </svg>
                     </button>
                   </div>
+                  <!-- إذا ليست انتظار -->
+                  <span v-else class="text-muted">—</span>
                 </td>
               </tr>
 

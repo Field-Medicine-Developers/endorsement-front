@@ -11,3 +11,7 @@ export const updateFormation = (id, body) =>
 
 export const deleteFormation = (id) =>
   api.delete(`/Formations/${id}`);
+
+export const getCommands = () => {
+  return api.get("/Commands");
+};

@@ -2,7 +2,7 @@ import axios from "axios";
 
 const api = axios.create({
   // baseURL: "http://ems-api.somee.com/api",
-  // baseURL: "http://10.10.9.29:5001/api",
+  // baseURL: "http://192.168.9.54:5001/api",
   baseURL: "https://tayid-api.cmfsa-iq.com/api",
   headers: {
     "Content-Type": "application/json",

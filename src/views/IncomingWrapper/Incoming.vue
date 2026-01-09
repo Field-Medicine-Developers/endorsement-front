@@ -18,6 +18,14 @@
       <button type="button" class="btn btn-primary" @click="openAdd()">
         إضافة وارد جديد
       </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        :disabled="selectedDepartmentIds.length === 0"
+        @click="openBulkTransfer"
+      >
+        ترحيل المحدد ({{ selectedDepartmentIds.length }})
+      </button>
     </div>
   </div>
 
@@ -59,12 +67,27 @@
           <table class="table custom-table align-middle text-center mb-0">
             <thead>
               <tr>
+                <th>
+                  <label class="custom-checkbox">
+                    <input
+                      type="checkbox"
+                      v-model="selectAll"
+                      @change="toggleSelectAll"
+                    />
+                    <span></span>
+                  </label>
+                </th>
                 <th>#</th>
                 <th>اسم الجريح</th>
-                <th>التشكيل</th>
-                <th>رقم الوارد</th>
+                <th>عدد الوارد</th>
                 <th>تاريخ الوارد</th>
+                <th>عدد الكتاب</th>
+                <th>تاريخ الكتاب</th>
+                <th>القيادة / التشكيل</th>
+                <th>المحتوى</th>
+                <th>الموضوع</th>
                 <th>هامش مدير القسم</th>
+                <th>تاريخ هامش مدير القسم</th>
                 <th>هامش مسوؤل الشعبة</th>
                 <th>الملحقات الطبية</th>
                 <th>عدد صفحات المرفقات</th>
@@ -74,6 +97,16 @@
 
             <tbody>
               <tr v-for="(inc, idx) in incomingList" :key="inc.id">
+                <td>
+                  <label class="custom-checkbox">
+                    <input
+                      type="checkbox"
+                      :value="inc.id"
+                      v-model="selectedDepartmentIds"
+                    />
+                    <span></span>
+                  </label>
+                </td>
                 <td>{{ (page - 1) * pageSize + idx + 1 }}</td>
                 <td>
                   <div>
@@ -83,7 +116,6 @@
                     >
                       • {{ name }}
                     </div>
-
                     <!-- زر عرض الكل -->
                     <div
                       v-if="inc.injuredNames.length > 2"
@@ -94,11 +126,26 @@
                     </div>
                   </div>
                 </td>
-
-                <td>{{ inc.formationName }}</td>
                 <td>{{ inc.incomingBookNumber }}</td>
                 <td>{{ formatDate(inc.incomingDate) }}</td>
-                <td>{{ inc.managerNote || "—" }}</td>
+                <td>{{ inc.bookCount ?? "—" }}</td>
+                <td>{{ formatDate(inc.bookDate) }}</td>
+                <td>
+                  <div class="fw-bold">{{ inc.commandName || "—" }}</div>
+                  <small class="text-muted"> {{ inc.formationName }}</small>
+                </td>
+                <td>{{ inc.subject || "—" }}</td>
+                <td>{{ inc.content || "—" }}</td>
+                <td>
+                  <button
+                    class="btn btn-search btn-sm"
+                    @click="openManagerNotes(inc.managerNotes || [])"
+                  >
+                    عرض الهوامش ({{ inc.managerNotes?.length || 0 }})
+                  </button>
+                </td>
+
+                <td>{{ formatDate(inc.managerNoteDate) }}</td>
                 <td>{{ inc.managerNoteDivision || "—" }}</td>
                 <td>{{ medicalAccessoriesText(inc.medicalAccessories) }}</td>
                 <td>{{ inc.archiveIncoming?.paginationCount ?? "—" }}</td>
@@ -288,6 +335,20 @@
               </div>
 
               <div class="col-md-6">
+                <label class="form-label">القيادة</label>
+                <div class="custom-vue-select-container">
+                  <VueSelect
+                    v-model="form.commandId"
+                    :options="commands"
+                    label="label"
+                    :reduce="(c) => c.value"
+                    placeholder="اختر القيادة..."
+                    searchable
+                  />
+                </div>
+              </div>
+
+              <div class="col-md-6">
                 <label class="form-label">التشكيل</label>
                 <div class="custom-vue-select-container">
                   <VueSelect
@@ -295,28 +356,74 @@
                     :options="formations"
                     label="name"
                     :reduce="(f) => f.id"
-                    searchable
                     placeholder="اختر التشكيل..."
+                    :disabled="!form.commandId"
                   />
                 </div>
               </div>
 
               <div class="col-md-6">
-                <label class="form-label">رقم الوارد</label>
+                <label class="form-label">عدد الوارد</label>
                 <input
-                  v-model="form.incomingBookNumber"
+                  v-model.number="form.incomingBookNumber"
+                  type="number"
                   class="form-control"
                   required
                 />
               </div>
 
               <div class="col-md-6">
-                <label class="form-label">تاريخ الوارد</label>
+                <label class="form-label d-flex align-items-center gap-1">
+                  تاريخ الوارد
+                  <i
+                    class="bi bi-info-circle-fill text-warning"
+                    data-bs-toggle="tooltip"
+                    title="أدخل اليوم ثم الشهر ثم السنة"
+                    style="cursor: pointer"
+                  ></i>
+                </label>
+
                 <input
-                  v-model="form.incomingDate"
-                  type="date"
+                  type="text"
                   class="form-control"
-                  required
+                  title="أدخل اليوم ثم الشهر ثم السنة"
+                  v-model="incomingDateText"
+                  placeholder="أدخل اليوم ثم الشهر ثم السنة"
+                  @input="normalizeIncomingDate"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">عدد الكتاب</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  v-model.number="form.bookCount"
+                  min="0"
+                  placeholder="أدخل عدد الكتاب"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label d-flex align-items-center gap-1">
+                  تاريخ الكتاب
+
+                  <!-- أيقونة تنبيه -->
+                  <i
+                    class="bi bi-info-circle-fill text-warning"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="أدخل اليوم ثم الشهر ثم السنة"
+                    style="cursor: pointer"
+                  ></i>
+                </label>
+
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="أدخل اليوم ثم الشهر ثم السنة"
+                  v-model="bookDateText"
+                  @input="normalizeBookDate"
                 />
               </div>
 
@@ -346,7 +453,7 @@
                 <label class="form-label">هامش مدير القسم</label>
                 <input v-model="form.content" rows="3" class="form-control" />
                    </div> -->
-          <!-- <div class="col-md-6">
+              <!-- <div class="col-md-6">
                  <label class="form-label">ارسال الى :</label>
                  <div class="custom-vue-select-container">
                   <VueSelect
@@ -554,7 +661,7 @@
             </div>
 
             <div class="col-md-6">
-              <label class="form-label">رقم الوارد</label>
+              <label class="form-label">عدد الوارد</label>
               <input
                 class="form-control"
                 :value="view.incomingBookNumber"
@@ -567,6 +674,20 @@
               <input
                 class="form-control"
                 :value="formatDate(view.incomingDate)"
+                disabled
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">عدد الكتاب</label>
+              <input class="form-control" :value="view.bookCount" disabled />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">تاريخ الكتاب</label>
+              <input
+                class="form-control"
+                :value="view.bookDate ? view.bookDate.split('T')[0] : ''"
                 disabled
               />
             </div>
@@ -740,6 +861,45 @@
       </div>
     </div>
   </div>
+
+  <!-- Manager Notes Modal -->
+  <div class="modal fade" tabindex="-1" ref="managerNotesModalEl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">هوامش مدير القسم</h5>
+        </div>
+
+        <div class="modal-body">
+          <div v-if="selectedManagerNotes.length">
+            <div
+              v-for="(n, i) in selectedManagerNotes"
+              :key="i"
+              class="border-bottom py-3"
+            >
+              <div class="fw-bold mb-1">{{ i + 1 }}. هامش مدير القسم</div>
+
+              <div class="text-muted small mb-2">
+                {{ formatDate(n.noteDate) }}
+              </div>
+
+              <div class="note-box">
+                {{ n.managerNote }}
+              </div>
+            </div>
+          </div>
+
+          <p v-else class="text-muted text-center">لا توجد هوامش</p>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeManagerNotes">
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -748,9 +908,14 @@ import { Modal } from "bootstrap";
 import { computed } from "vue";
 import VueSelect from "vue3-select";
 import { useRouter } from "vue-router";
-import { successAlert, errorAlert, confirmDelete } from "@/utils/alert.js";
+import {
+  successAlert,
+  errorAlert,
+  confirmDelete,
+  confirmAction,
+} from "@/utils/alert.js";
 import { getDepartments } from "@/services/departments.service.js";
-import { getFormations } from "@/services/formations.service.js";
+import { getFormations, getCommands } from "@/services/formations.service.js";
 import {
   getIncomings,
   addIncoming,
@@ -782,7 +947,8 @@ const loading = ref(false);
 const page = ref(1);
 const totalPages = ref(1);
 const pageSize = 10;
-
+const commands = ref([]);
+const bookDateText = ref("");
 /* Filters */
 const filters = reactive({
   injuredName: "",
@@ -805,9 +971,9 @@ const resetFilters = () => {
 };
 
 const medicalAccessoriesOptions = [
-  { label: "أشعة ", value: 0 }, 
-  { label: "سونار", value: 1 }, 
-  { label: "رنين", value: 2 }, 
+  { label: "أشعة ", value: 0 },
+  { label: "سونار", value: 1 },
+  { label: "رنين", value: 2 },
   { label: "قرص (CD)", value: 3 },
 ];
 
@@ -905,13 +1071,17 @@ const form = reactive({
   id: "",
   injuredNames: [],
   formationId: null,
-  incomingBookNumber: "",
+  commandId: null,
+  incomingBookNumber: null,
   incomingDate: "",
   subject: "",
   content: "",
   departmentIds: [],
   medicalAccessories: null,
+  bookCount: "",
+  bookDate: null,
 });
+console.log(commands.value);
 
 const openAdd = () => ((editMode.value = false), reset(), modal.show());
 
@@ -920,29 +1090,67 @@ const openEdit = (item) => {
   form.id = item.id;
   form.injuredNames = item.injuredNames || [];
   form.formationId = item.formationId;
+  form.commandId = item.commandId;
   form.incomingBookNumber = item.incomingBookNumber;
+  // ✅ تاريخ الوارد (ISO)
   form.incomingDate = item.incomingDate
     ? item.incomingDate.substring(0, 10)
+    : null;
+
+  // ✅ تحويله إلى DDMMYYYY للحقل النصي
+  incomingDateText.value = item.incomingDate
+    ? item.incomingDate.substring(8, 10) + // day
+      item.incomingDate.substring(5, 7) + // month
+      item.incomingDate.substring(0, 4) // year
     : "";
   form.subject = item.subject;
   form.content = item.content;
   form.departmentIds = item.departmentIds || [];
   form.medicalAccessories = item.medicalAccessories;
+  form.bookCount = item.bookCount;
+  form.bookDate = item.bookDate ? item.bookDate.split("T")[0] : null;
+  bookDateText.value = form.bookDate
+    ? form.bookDate.substring(8, 10) +
+      form.bookDate.substring(5, 7) +
+      form.bookDate.substring(0, 4)
+    : "";
   modal.show();
 };
 
 const isSaving = ref(false);
 const save = async () => {
+  // منع الضغط المتكرر
   if (isSaving.value) return;
+  //  تحقق قبل أي شيء
+  normalizeBookDate();
+  //  تحقق منطقي كافي
+  if (!form.bookDate) {
+    errorAlert("يرجى إدخال تاريخ الكتاب بصيغة صحيحة (يوم / شهر / سنة)");
+    return;
+  }
+  if (!form.incomingDate) {
+    errorAlert("يرجى إدخال تاريخ الوارد بصيغة صحيحة (يوم / شهر / سنة)");
+    return;
+  }
+  //  منع الإرسال إذا لم يتم إدخال تاريخ
+  if (!form.bookDate) {
+    errorAlert("يرجى إدخال تاريخ الكتاب بشكل صحيح قبل الحفظ");
+    return;
+  }
 
   isSaving.value = true;
 
   try {
+    const payload = {
+      ...form,
+      bookDate: form.bookDate,
+    };
+
     if (!editMode.value) {
-      await addIncoming(form);
+      await addIncoming(payload);
       successAlert("تمت الإضافة بنجاح");
     } else {
-      await updateIncoming(form.id, form);
+      await updateIncoming(form.id, payload);
       successAlert("تم التعديل بنجاح");
     }
 
@@ -984,6 +1192,9 @@ const reset = () => {
   form.departmentIds = [];
   tempName.value = "";
   form.medicalAccessories = null;
+  form.bookCount = "";
+  form.bookDate = null;
+  bookDateText.value = "";
 };
 
 const close = () => modal.hide();
@@ -1027,38 +1238,84 @@ const isTransferring = ref(false);
 const submitTransfer = async () => {
   if (isTransferring.value) return;
 
-  // تحقق قبل تفعيل السبنر
-  if (!transfer.incomingId || !transfer.departmentId) {
+  // ✅ تحقق عام
+  if (!transfer.departmentId) {
     errorAlert("يرجى اختيار الشعبة المراد الترحيل إليها.");
+    return;
+  }
+
+  // ✅ تحقق حسب نوع الترحيل
+  if (!isBulkTransfer.value && !transfer.incomingId) {
+    errorAlert("لم يتم تحديد معاملة للترحيل.");
+    return;
+  }
+
+  if (isBulkTransfer.value && selectedDepartmentIds.value.length === 0) {
+    errorAlert("لم يتم تحديد أي معاملة.");
     return;
   }
 
   isTransferring.value = true;
 
   try {
-    const fd = new FormData();
+    // ===============================
+    // 🔹 ترحيل جماعي
+    // ===============================
+    if (isBulkTransfer.value) {
+      for (const incId of selectedDepartmentIds.value) {
+        const fd = new FormData();
+        fd.append("IncomingId", incId);
+        fd.append("DepartmentId", transfer.departmentId);
 
-    fd.append("IncomingId", transfer.incomingId);
-    fd.append("DepartmentId", transfer.departmentId);
+        if (transfer.notes) {
+          fd.append("Notes", transfer.notes);
+        }
 
-    if (transfer.notes) {
-      fd.append("Notes", transfer.notes);
+        if (transfer.files.length > 0) {
+          transfer.files.forEach((f) => fd.append("files", f));
+        }
+
+        await transferIncoming(fd);
+      }
+
+      successAlert(
+        `تم ترحيل (${selectedDepartmentIds.value.length}) معاملات بنجاح`
+      );
+
+      // تنظيف التحديد
+      selectedDepartmentIds.value = [];
+      selectAll.value = false;
     }
 
-    if (transfer.files.length > 0) {
-      transfer.files.forEach((f) => fd.append("files", f));
+    // ===============================
+    // 🔹 ترحيل مفرد
+    // ===============================
+    else {
+      const fd = new FormData();
+      fd.append("IncomingId", transfer.incomingId);
+      fd.append("DepartmentId", transfer.departmentId);
+
+      if (transfer.notes) {
+        fd.append("Notes", transfer.notes);
+      }
+
+      if (transfer.files.length > 0) {
+        transfer.files.forEach((f) => fd.append("files", f));
+      }
+
+      await transferIncoming(fd);
+
+      successAlert("تم ترحيل المعاملة بنجاح");
     }
 
-    await transferIncoming(fd);
-
-    successAlert("تم ترحيل المعاملة بنجاح");
     modalTransfer.hide();
     load();
   } catch (e) {
-    console.log("خطأ في الترحيل", e);
-    errorAlert("تم إرسال الوارد إلى هذا القسم مسبقاً");
+    console.error("خطأ في الترحيل", e);
+    errorAlert("حدث خطأ أثناء الترحيل أو أن المعاملة مُرحلة مسبقاً");
   } finally {
     isTransferring.value = false;
+    isBulkTransfer.value = false;
   }
 };
 
@@ -1086,7 +1343,8 @@ const openView = (inc) => {
   view.subject = inc.subject;
   view.content = inc.content;
   view.departmentNames = inc.departmentNames || [];
-
+  view.bookCount = inc.bookCount;
+  view.bookDate = inc.bookDate;
   modalView.show();
 };
 const closeView = () => modalView.hide();
@@ -1121,7 +1379,9 @@ const selectedArchiveFiles = ref([]);
 const openArchive = (inc) => {
   document.activeElement?.blur();
   currentIncomingId.value = inc.id;
-  archiveFiles.value = inc.archiveIncoming || [];
+
+  archiveFiles.value = inc.archiveIncoming?.items ?? [];
+
   modalArchive.show();
 };
 
@@ -1133,7 +1393,6 @@ const openArchiveUploadFromView = () => {
 const archiveInputRef = ref(null);
 const archiveInputs = ref([{ files: [] }]);
 const closeArchive = () => modalArchive.hide();
-
 
 const openArchiveUpload = (inc) => {
   document.activeElement?.blur();
@@ -1215,7 +1474,196 @@ const medicalAccessoriesText = (value) => {
   }
 };
 
+const loadCommands = async () => {
+  const res = await getCommands();
+  console.log("Commands response:", res.data);
+  commands.value = res.data.data.map((c) => ({
+    label: c.name,
+    value: c.id,
+    formations: c.formations,
+  }));
+};
+
+import { watch } from "vue";
+watch(
+  () => form.commandId,
+  (commandId) => {
+    if (!commandId) {
+      formations.value = [];
+      form.formationId = null;
+      return;
+    }
+    const selectedCommand = commands.value.find(
+      (c) => c.value === commandId // ✅
+    );
+    formations.value = selectedCommand?.formations ?? [];
+    form.formationId = null;
+  }
+);
+
+const normalizeBookDate = () => {
+  if (!bookDateText.value) {
+    form.bookDate = null;
+    return;
+  }
+
+  const clean = bookDateText.value.replace(/\D/g, "");
+
+  if (clean.length !== 8) {
+    form.bookDate = null;
+    return;
+  }
+
+  const day = clean.slice(0, 2);
+  const month = clean.slice(2, 4);
+  const year = clean.slice(4, 8);
+
+  if (
+    +day < 1 ||
+    +day > 31 ||
+    +month < 1 ||
+    +month > 12 ||
+    +year < 1900 ||
+    +year > 2100
+  ) {
+    form.bookDate = null;
+    return;
+  }
+
+  // ✅ فقط تاريخ الكتاب
+  form.bookDate = `${year}-${month}-${day}`;
+};
+
+const incomingDateText = ref("");
+const normalizeIncomingDate = () => {
+  if (!incomingDateText.value) {
+    form.incomingDate = null;
+    return;
+  }
+
+  const clean = incomingDateText.value.replace(/\D/g, "");
+
+  // DDMMYYYY
+  if (clean.length !== 8) {
+    form.incomingDate = null;
+    return;
+  }
+
+  const day = clean.slice(0, 2);
+  const month = clean.slice(2, 4);
+  const year = clean.slice(4, 8);
+
+  if (
+    +day < 1 ||
+    +day > 31 ||
+    +month < 1 ||
+    +month > 12 ||
+    +year < 1900 ||
+    +year > 2100
+  ) {
+    form.incomingDate = null;
+    return;
+  }
+
+  form.incomingDate = `${year}-${month}-${day}`;
+};
+
+import { Tooltip } from "bootstrap";
+
+// IDs الصفوف المحددة من الجدول
+const selectedDepartmentIds = ref([]);
+
+// للتحكم بتحديد الكل
+const selectAll = ref(false);
+
+// تحديد / إلغاء تحديد الكل
+const toggleSelectAll = () => {
+  if (selectAll.value) {
+    selectedDepartmentIds.value = incomingList.value.map((x) => x.id);
+  } else {
+    selectedDepartmentIds.value = [];
+  }
+};
+
+// مزامنة checkbox "تحديد الكل"
+watch(selectedDepartmentIds, () => {
+  selectAll.value =
+    selectedDepartmentIds.value.length === incomingList.value.length &&
+    incomingList.value.length > 0;
+});
+
+const bulkTransfer = async () => {
+  if (selectedDepartmentIds.value.length === 0) {
+    errorAlert("لم يتم تحديد أي عنصر");
+    return;
+  }
+
+  const confirm = await confirmAction(
+    "تأكيد الترحيل",
+    `هل تريد ترحيل (${selectedDepartmentIds.value.length}) معاملات إلى الوحدة المحددة؟`
+  );
+
+  if (!confirm.isConfirmed) return;
+
+  isTransferring.value = true;
+
+  try {
+    for (const incId of selectedDepartmentIds.value) {
+      const fd = new FormData();
+      fd.append("IncomingId", incId);
+      fd.append("DepartmentId", transfer.departmentId);
+
+      await transferIncoming(fd);
+    }
+
+    successAlert("تم ترحيل المعاملات المحددة بنجاح");
+    selectedDepartmentIds.value = [];
+    selectAll.value = false;
+    load();
+  } catch (e) {
+    console.error(e);
+    errorAlert("حدث خطأ أثناء الترحيل");
+  } finally {
+    isTransferring.value = false;
+  }
+};
+
+const isBulkTransfer = ref(false); // يحدد نوع الترحيل
+const openBulkTransfer = () => {
+  if (selectedDepartmentIds.value.length === 0) {
+    errorAlert("لم يتم تحديد أي معاملة");
+    return;
+  }
+
+  isBulkTransfer.value = true;
+  transfer.incomingId = "";
+  transfer.departmentId = null;
+  transfer.notes = "";
+  transfer.files = [];
+  modalTransfer.show();
+};
+
+// ==============================
+// Manager Notes Modal
+// ==============================
+const selectedManagerNotes = ref([]);
+const managerNotesModalEl = ref(null);
+let managerNotesModal = null;
+
+const openManagerNotes = (notes = []) => {
+  selectedManagerNotes.value = Array.isArray(notes) ? notes : [];
+  managerNotesModal?.show();
+};
+
+const closeManagerNotes = () => {
+  managerNotesModal?.hide();
+};
+
 onMounted(() => {
+  const tooltipTriggerList = [].slice.call(
+    document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  );
+  tooltipTriggerList.map((tooltipTriggerEl) => new Tooltip(tooltipTriggerEl));
   modal = new Modal(modalEl.value);
   modalAdv = new Modal(advancedModal.value);
   modalTransfer = new Modal(transferModal.value);
@@ -1223,8 +1671,12 @@ onMounted(() => {
   namesModalInstance = new Modal(namesModal.value);
   modalArchive = new Modal(archiveModal.value);
   modalArchiveUpload = new Modal(archiveUploadModal.value);
+  if (managerNotesModalEl.value) {
+    managerNotesModal = new Modal(managerNotesModalEl.value);
+  }
   load();
   loadDepartments();
   loadFormations();
+  loadCommands();
 });
 </script>
