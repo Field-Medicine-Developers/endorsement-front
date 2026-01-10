@@ -39,12 +39,10 @@ export const updateMarginNoteDivision = (id, data) => {
 //  TRANSFER MARGIN NOTE DIVISION
 // ===============================
 export const transferMarginNoteDivision = (formData) => {
-  return axios.post("/MarginNotesDivision/transfer", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  return axios.post("/MarginNotesDivision/transfer", formData);
 };
+
+
 
 // ===============================
 //  GET TRANSFERS

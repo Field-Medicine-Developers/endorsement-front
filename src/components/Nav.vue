@@ -8,13 +8,21 @@
         <span class="brand-title" style="color: #12b1d1">نظام التأييدات</span>
       </router-link>
 
-      <button
-  class="navbar-toggler border-0 shadow-none"
-  type="button"
-  @click="toggleNavbar"
->
-  <span class="navbar-toggler-icon"></span>
-</button>
+      <!-- Mobile / Tablet controls -->
+      <div class="d-flex align-items-center gap-2 d-lg-none">
+        <!-- زر البروفايل -->
+        <div class="profile-btn d-lg-none" @click="toggleProfile">
+          <i class="bi bi-person-fill"></i>
+        </div>
+        
+        <button
+          class="navbar-toggler border-0 shadow-none"
+          type="button"
+          @click="toggleNavbar"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      </div>
 
       <div
         class="collapse navbar-collapse align-items-center justify-content-between"
@@ -47,40 +55,38 @@
         </ul>
 
         <!-- زر البروفايل -->
-        <div class="profile-wrapper">
+        <div class="profile-wrapper d-none d-lg-flex">
           <div class="profile-btn" ref="profileBtn" @click="toggleProfile">
             <i class="bi bi-person-fill"></i>
-          </div>
-
-          <div v-if="showProfile" class="profile-card-new" ref="profileCard">
-            <div class="arrow-up"></div>
-
-            <div class="profile-header">
-              <div class="avatar">{{ user.fullName.charAt(0) }}</div>
-              <div class="name">{{ user.fullName }}</div>
-              <div class="username">@{{ user.userName }}</div>
-            </div>
-
-            <div class="profile-info">
-              <div class="info-row">
-                <span class="label">الدور:</span>
-                <span class="value">{{ user.departmentName }}</span>
-              </div>
-
-              <!-- <div class="info-row">
-                <span class="label">الدور:</span>
-                <span class="value">{{ getRoleName(user.role) }}</span>
-              </div> -->
-            </div>
-
-            <button class="logout-btn-new" @click="logout">
-              <i class="bi bi-box-arrow-right me-1"></i>
-              تسجيل الخروج
-            </button>
           </div>
         </div>
       </div>
     </nav>
+    <div
+      v-if="showProfile"
+      class="profile-card-new floating-profile"
+      ref="profileCard"
+    >
+      <div class="arrow-up"></div>
+
+      <div class="profile-header">
+        <div class="avatar">{{ user.fullName.charAt(0) }}</div>
+        <div class="name">{{ user.fullName }}</div>
+        <div class="username">@{{ user.userName }}</div>
+      </div>
+
+      <div class="profile-info">
+        <div class="info-row">
+          <span class="label">الدور:</span>
+          <span class="value">{{ user.departmentName }}</span>
+        </div>
+      </div>
+
+      <button class="logout-btn-new" @click="logout">
+        <i class="bi bi-box-arrow-right me-1"></i>
+        تسجيل الخروج
+      </button>
+    </div>
   </div>
 </template>
 
@@ -167,7 +173,6 @@ const logout = () => {
   router.push(`${siteUrl}/login`);
 };
 
-
 let navbarCollapse: Collapse | null = null;
 
 onMounted(() => {
@@ -196,11 +201,8 @@ router.afterEach(() => {
   }
 });
 
-
 // عند مغادرة الصفحة
 onUnmounted(() => {
   document.removeEventListener("click", handleClickOutside);
 });
 </script>
-
-

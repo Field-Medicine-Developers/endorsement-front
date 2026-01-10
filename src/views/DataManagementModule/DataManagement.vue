@@ -16,6 +16,17 @@
         >
       </div>
     </div>
+    <!-- Bulk Transfer Button -->
+    <div class="d-flex gap-2">
+      <button
+        type="button"
+        class="btn btn-primary"
+        :disabled="selectedDepartmentIds.length === 0"
+        @click="openBulkTransfer"
+      >
+        ترحيل المحدد ({{ selectedDepartmentIds.length }})
+      </button>
+    </div>
   </div>
 
   <!-- Search Bar -->
@@ -57,6 +68,16 @@
           <table class="table custom-table align-middle text-center mb-0">
             <thead>
               <tr>
+                <th>
+                  <label class="custom-checkbox">
+                    <input
+                      type="checkbox"
+                      v-model="selectAll"
+                      @change="toggleSelectAll"
+                    />
+                    <span></span>
+                  </label>
+                </th>
                 <th>#</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
@@ -75,6 +96,16 @@
 
             <tbody>
               <tr v-for="(m, i) in list" :key="m.id">
+                <td>
+                  <label class="custom-checkbox">
+                    <input
+                      type="checkbox"
+                      :value="m.id"
+                      v-model="selectedDepartmentIds"
+                    />
+                    <span></span>
+                  </label>
+                </td>
                 <!-- رقم تسلسلي -->
                 <td>{{ (page - 1) * pageSize + i + 1 }}</td>
                 <!-- incoming -->
@@ -220,7 +251,7 @@
               </tr>
 
               <tr v-if="list.length === 0">
-                <td colspan="13" class="py-4 text-muted">
+                <td colspan="14" class="py-4 text-muted">
                   <i class="bi bi-inboxes fs-1 d-block mb-2"></i>
                   لا توجد بيانات
                 </td>
@@ -662,6 +693,69 @@
       </div>
     </div>
   </div>
+
+  <!-- BULK TRANSFER Modal -->
+  <div class="modal fade" tabindex="-1" ref="bulkTransferModalEl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">ترحيل المحدد إلى قسم</h5>
+        </div>
+
+        <form @submit.prevent="bulkTransferFunc">
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-12">
+                <label class="form-label">القسم</label>
+                <div class="custom-vue-select-container">
+                  <VueSelect
+                    v-model="bulkTransfer.departmentId"
+                    :options="departments"
+                    label="name"
+                    :reduce="(d) => d.id"
+                    searchable
+                    placeholder="اختر القسم..."
+                  />
+                </div>
+              </div>
+
+              <div class="col-md-12">
+                <label class="form-label">ملاحظات</label>
+                <textarea
+                  v-model="bulkTransfer.notes"
+                  class="form-control"
+                  rows="3"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-light"
+              @click="closeBulkTransfer()"
+            >
+              إلغاء
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              :disabled="bulkTransferLoading"
+              :class="{ 'btn-saving': bulkTransferLoading }"
+              @click="bulkTransferFunc"
+            >
+              <span
+                v-if="bulkTransferLoading"
+                class="spinner-border spinner-border-sm me-2"
+              ></span>
+              {{ bulkTransferLoading ? "جارٍ الترحيل..." : "ترحيل" }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -679,7 +773,12 @@ import {
   getLandaViwe,
 } from "@/services/Data-management.service.js";
 import { getDepartments } from "@/services/departments.service.js";
-import { successAlert, errorAlert, confirmDelete } from "@/utils/alert.js";
+import {
+  successAlert,
+  errorAlert,
+  confirmDelete,
+  confirmAction,
+} from "@/utils/alert.js";
 import {
   uploadIncomingArchive,
   getIncomingArchive,
@@ -718,9 +817,15 @@ const exportTypeOptions = [
 // ===== مودالات =====
 const modalEl = ref(null);
 const transferModalEl = ref(null);
+const bulkTransferModalEl = ref(null);
 let modal = null;
 let transferModal = null;
+let bulkTransferModal = null;
 const editMode = ref(false);
+
+// ===== Selection state for bulk operations =====
+const selectedDepartmentIds = ref([]);
+const selectAll = ref(false);
 
 // ===== فورم الإضافة/التعديل =====
 const form = reactive({
@@ -739,6 +844,15 @@ const transferForm = reactive({
   notes: "",
   files: [],
 });
+
+// ===== Bulk Transfer Form =====
+const bulkTransfer = reactive({
+  departmentId: null,
+  notes: "",
+});
+
+// ===== Bulk Transfer Loading =====
+const bulkTransferLoading = ref(false);
 
 const load = async () => {
   loading.value = true;
@@ -789,6 +903,10 @@ const load = async () => {
         }
       })
     );
+
+    // Reset selections when data is reloaded
+    selectedDepartmentIds.value = [];
+    selectAll.value = false;
   } catch (e) {
     console.error(e);
     errorAlert("فشل في جلب البيانات");
@@ -1037,6 +1155,95 @@ const resetFilters = () => {
   load();
 };
 
+const toggleSelectAll = () => {
+  if (selectAll.value) {
+    selectedDepartmentIds.value = list.value.map((item) => item.id);
+  } else {
+    selectedDepartmentIds.value = [];
+  }
+};
+
+const openBulkTransfer = async () => {
+  if (selectedDepartmentIds.value.length === 0) {
+    errorAlert("لم يتم تحديد أي عناصر");
+    return;
+  }
+
+  const confirm = await confirmAction(
+    "تأكيد الترحيل",
+    `هل تريد ترحيل (${selectedDepartmentIds.value.length}) عناصر إلى القسم المحدد؟`
+  );
+
+  if (!confirm.isConfirmed) return;
+
+  bulkTransfer.departmentId = null;
+  bulkTransfer.notes = "";
+  bulkTransferModal.show();
+};
+
+const bulkTransferFunc = async () => {
+  if (bulkTransferLoading.value) return;
+
+  if (!bulkTransfer.departmentId) {
+    errorAlert("يرجى اختيار القسم");
+    return;
+  }
+
+  bulkTransferLoading.value = true;
+
+  try {
+    // Process each selected item individually using the existing transfer function
+    const successfulTransfers = [];
+    const failedTransfers = [];
+
+    for (const landaId of selectedDepartmentIds.value) {
+      try {
+        const formData = new FormData();
+        formData.append("LandaId", landaId);
+        formData.append("DepartmentId", bulkTransfer.departmentId);
+        formData.append("Notes", bulkTransfer.notes || "");
+
+        await transferLanda(formData);
+        successfulTransfers.push(landaId);
+      } catch (error) {
+        console.error(`Error transferring landa ${landaId}:`, error);
+        failedTransfers.push({ id: landaId, error: error.message });
+      }
+    }
+
+    if (failedTransfers.length > 0) {
+      console.warn(
+        `Successfully transferred ${successfulTransfers.length} items, ${failedTransfers.length} failed`
+      );
+      if (successfulTransfers.length > 0) {
+        successAlert(
+          `تم ترحيل ${successfulTransfers.length} عناصر بنجاح مع فشل ${failedTransfers.length} عناصر`
+        );
+      } else {
+        errorAlert(`فشل ترحيل جميع العناصر (${failedTransfers.length})`);
+      }
+    } else {
+      successAlert("تم ترحيل العناصر المحددة بنجاح");
+    }
+
+    bulkTransferModal.hide();
+    selectedDepartmentIds.value = [];
+    selectAll.value = false;
+    load();
+  } catch (error) {
+    console.error("Unexpected error in bulk transfer:", error);
+    errorAlert("فشل الترحيل");
+  } finally {
+    bulkTransferLoading.value = false;
+  }
+};
+
+const closeBulkTransfer = () => {
+  bulkTransfer.departmentId = null;
+  bulkTransfer.notes = "";
+  bulkTransferModal.hide();
+};
+
 const formatDate = (d) => {
   if (!d) return "-";
   const dt = new Date(d);
@@ -1119,6 +1326,7 @@ const openFile = (url) => {
 onMounted(() => {
   modal = new Modal(modalEl.value);
   transferModal = new Modal(transferModalEl.value);
+  bulkTransferModal = new Modal(bulkTransferModalEl.value);
   viewModal = new Modal(viewModalEl.value);
   archiveModal = new Modal(archiveModalEl.value);
   archiveUploadModal = new Modal(archiveUploadModalEl.value);

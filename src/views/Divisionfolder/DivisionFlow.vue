@@ -13,6 +13,17 @@
         <small class="text-muted">عرض وإدارة ملاحظات الشعبة وتحويلها</small>
       </div>
     </div>
+    <!-- Bulk Transfer Button -->
+    <div class="d-flex gap-2">
+      <button
+        type="button"
+        class="btn btn-primary"
+        :disabled="selectedDepartmentIds.length === 0"
+        @click="openBulkTransfer"
+      >
+        ترحيل المحدد ({{ selectedDepartmentIds.length }})
+      </button>
+    </div>
   </div>
 
   <!-- Search -->
@@ -22,7 +33,8 @@
         <input
           v-model="filters.injuredName"
           class="form-control"
-          placeholder="اسم الجريح..."
+          placeholder="بحث عن اسم الجريح..."
+          @keyup.enter="load"
         />
       </div>
 
@@ -57,6 +69,16 @@
           <table class="table custom-table align-middle text-center mb-0">
             <thead>
               <tr>
+                <th>
+                  <label class="custom-checkbox">
+                    <input
+                      type="checkbox"
+                      v-model="selectAll"
+                      @change="toggleSelectAll"
+                    />
+                    <span></span>
+                  </label>
+                </th>
                 <th>#</th>
                 <th>اسم الجريح</th>
                 <th>موضوع الوارد</th>
@@ -70,7 +92,17 @@
 
             <tbody>
               <tr v-for="(item, i) in list" :key="item.id">
-                <td>{{ i + 1 }}</td>
+                <td>
+                  <label class="custom-checkbox">
+                    <input
+                      type="checkbox"
+                      :value="item.id"
+                      v-model="selectedDepartmentIds"
+                    />
+                    <span></span>
+                  </label>
+                </td>
+                <td>{{ (page - 1) * pageSize + i + 1 }}</td>
                 <td>
                   <div>
                     <div
@@ -102,9 +134,13 @@
                 <td>
                   <button
                     class="btn btn-search btn-sm"
-                    @click="openManagerNotes(item.managerNotes || [])"
+                    @click="
+                      openManagerNotes(item.marginNote?.managerNotes || [])
+                    "
                   >
-                    عرض الهوامش ({{ item.managerNotes?.length || 0 }})
+                    عرض الهوامش ({{
+                      item.marginNote?.managerNotes?.length || 0
+                    }})
                   </button>
                 </td>
                 <td>{{ item.marginNoteDivision || "-" }}</td>
@@ -139,10 +175,14 @@
                     <button class="button-reject" @click="removeItem(item.id)">
                       <svg class="svgIcon" viewBox="0 0 448 512">
                         <path
-                          d="M135.2 17.7L128 32H32c-17.7 0-32 14.3-32 32s14.3 32 
-                           32 32h384c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 
-                           6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 
-                           128H32l21.2 339c1.6 25.3 22.6 45 47.9 45h246c25.3 
+                          d="M135.2 17.7L128 32H32C14.3
+                           32 0 46.3 0 64s14.3 32 
+                           32 32h384c17.7 0 32-14.3 
+                           32-32s-14.3-32-32-32H320l-7.2-14.3C307.4
+                           6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2
+                           6.8-28.6 17.7zM416 
+                           128H32l21.2 339c1.6 25.3 
+                           22.6 45 47.9 45h246c25.3 
                            0 46.3-19.7 47.9-45L416 128z"
                         />
                       </svg>
@@ -163,7 +203,7 @@
                 </td>
               </tr>
               <tr v-if="list.length === 0">
-                <td colspan="8" class="text-muted py-4">
+                <td colspan="9" class="text-muted py-4">
                   <i class="bi bi-inboxes fs-1 d-block mb-2"></i>
                   لا توجد بيانات
                 </td>
@@ -174,7 +214,33 @@
       </div>
     </div>
   </div>
+  <nav class="circle-pagination d-flex justify-content-center mt-4">
+    <button
+      class="page-btn"
+      :disabled="page === 1"
+      @click="changePage(page - 1)"
+    >
+      <i class="bi bi-chevron-right"></i>
+    </button>
 
+    <button
+      v-for="p in visiblePages"
+      :key="p"
+      class="page-number"
+      :class="{ active: p === page }"
+      @click="changePage(p)"
+    >
+      {{ p }}
+    </button>
+
+    <button
+      class="page-btn"
+      :disabled="page === totalPages"
+      @click="changePage(page + 1)"
+    >
+      <i class="bi bi-chevron-left"></i>
+    </button>
+  </nav>
   <!-- ADD/EDIT Modal -->
   <div class="modal fade" tabindex="-1" ref="modalEl">
     <div class="modal-dialog modal-dialog-centered">
@@ -292,6 +358,62 @@
       </div>
     </div>
   </div>
+
+  <!-- BULK TRANSFER Modal -->
+  <div class="modal fade" tabindex="-1" ref="bulkTransferModalEl">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form @submit.prevent="bulkTransferFunc">
+          <div class="modal-header">
+            <h5 class="modal-title">ترحيل المحدد إلى قسم</h5>
+          </div>
+
+          <div class="modal-body">
+            <label class="form-label">القسم</label>
+            <div class="custom-vue-select-container">
+              <VueSelect
+                v-model="bulkTransfer.departmentId"
+                :options="departments"
+                label="name"
+                :reduce="(d) => d.id"
+                placeholder="اختر القسم..."
+                :clearable="false"
+              />
+            </div>
+
+            <label class="mt-3">ملاحظات</label>
+            <textarea
+              class="form-control"
+              v-model="bulkTransfer.notes"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-light"
+              @click="closeBulkTransfer"
+            >
+              إلغاء
+            </button>
+            <button
+              class="btn btn-primary"
+              :class="{ 'btn-saving': isBulkTransferring }"
+              :disabled="isBulkTransferring"
+            >
+              <span
+                v-if="isBulkTransferring"
+                class="spinner-border spinner-border-sm me-2"
+              ></span>
+
+              {{ isBulkTransferring ? "جارٍ الترحيل..." : "ترحيل" }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
   <!-- Names Modal -->
   <div class="modal fade" tabindex="-1" ref="namesModal">
     <div class="modal-dialog modal-dialog-centered">
@@ -329,21 +451,21 @@
             <div
               v-for="(n, i) in selectedManagerNotes"
               :key="n.id || i"
-              class="border-bottom py-2"
+              class="border-bottom py-3"
             >
-              <div class="fw-bold mb-1">
-                {{ i + 1 }}. {{ n.createdBy || "مدير القسم" }}
+              <div class="fw-bold mb-1">{{ i + 1 }}. هامش مدير القسم</div>
+
+              <div class="text-muted small mb-2">
+                {{ formatDate(n.noteDate) }}
               </div>
-              <div class="text-muted small mb-1">
-                {{ formatDate(n.createdAt) }}
-              </div>
-              <div>
-                {{ n.note }}
+
+              <div class="note-box">
+                {{ n.managerNote }}
               </div>
             </div>
           </div>
 
-          <p v-else class="text-muted text-center">لا توجد ملاحظات</p>
+          <p v-else class="text-muted text-center">لا توجد هوامش</p>
         </div>
 
         <div class="modal-footer">
@@ -357,7 +479,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import {
   getMarginNotesDivision,
   addMarginNoteDivision,
@@ -368,28 +490,45 @@ import {
 import { getDepartments } from "@/services/departments.service.js";
 import { Modal } from "bootstrap";
 import VueSelect from "vue3-select";
-import { successAlert, errorAlert, confirmDelete } from "@/utils/alert.js";
+import {
+  successAlert,
+  errorAlert,
+  confirmDelete,
+  confirmAction,
+} from "@/utils/alert.js";
 /* ---------------- State ------------------ */
 const loading = ref(false);
 const list = ref([]);
 const departments = ref([]);
+
+const page = ref(1);
+const pageSize = 10;
+const totalPages = ref(1);
 
 const filters = reactive({
   injuredName: "",
   managerNote: "",
 });
 
+// Add state for bulk selection
+const selectedDepartmentIds = ref([]);
+const selectAll = ref(false);
+
 /* ---------------- Load Data ------------------ */
 const load = async () => {
   loading.value = true;
   try {
     const res = await getMarginNotesDivision({
-      pageNumber: 1,
-      pageSize: 50,
+      pageNumber: page.value,
+      pageSize,
       injuredName: filters.injuredName || null,
       managerNote: filters.managerNote || null,
     });
     list.value = res.data.data ?? [];
+    totalPages.value = res.data.pagination?.totalPages ?? 1;
+    // Reset selections when data is reloaded
+    selectedDepartmentIds.value = [];
+    selectAll.value = false;
   } finally {
     loading.value = false;
   }
@@ -398,7 +537,18 @@ const load = async () => {
 const reset = () => {
   filters.injuredName = "";
   filters.managerNote = "";
+  selectedDepartmentIds.value = [];
+  selectAll.value = false;
   load();
+};
+
+/* ---------------- Select All Toggle ------------------ */
+const toggleSelectAll = () => {
+  if (selectAll.value) {
+    selectedDepartmentIds.value = list.value.map((item) => item.id);
+  } else {
+    selectedDepartmentIds.value = [];
+  }
 };
 
 /* ---------------- Delete ------------------ */
@@ -417,7 +567,11 @@ const removeItem = async (id) => {
 
 /* ---------------- Add/Edit Modal ------------------ */
 const modalEl = ref(null);
+const transferModalEl = ref(null);
+const bulkTransferModalEl = ref(null);
 let modal = null;
+let transferModal = null;
+let bulkTransferModal = null;
 
 const editMode = ref(false);
 
@@ -479,9 +633,6 @@ const save = async () => {
 };
 
 /* ---------------- Transfer ------------------ */
-const transferModalEl = ref(null);
-let transferModal = null;
-
 const transferForm = reactive({
   id: "",
   departmentId: "",
@@ -531,8 +682,125 @@ const transfer = async () => {
   }
 };
 
+/* ---------------- Bulk Transfer ------------------ */
+const bulkTransfer = reactive({
+  departmentId: null,
+  notes: "",
+});
+
+const isBulkTransferring = ref(false);
+
+const openBulkTransfer = async () => {
+  if (selectedDepartmentIds.value.length === 0) {
+    errorAlert("لم يتم تحديد أي عناصر");
+    return;
+  }
+
+  const confirm = await confirmAction(
+    "تأكيد الترحيل",
+    `هل تريد ترحيل (${selectedDepartmentIds.value.length}) عناصر إلى القسم المحدد؟`
+  );
+
+  if (!confirm.isConfirmed) return;
+
+  bulkTransfer.departmentId = null;
+  bulkTransfer.notes = "";
+  bulkTransferModal.show();
+};
+
+const bulkTransferFunc = async () => {
+  if (isBulkTransferring.value) return;
+
+  if (!bulkTransfer.departmentId) {
+    errorAlert("يرجى اختيار القسم");
+    return;
+  }
+
+  isBulkTransferring.value = true;
+
+  try {
+    // Process each selected item individually using the existing transfer function
+    const successfulTransfers = [];
+    const failedTransfers = [];
+
+    for (const noteId of selectedDepartmentIds.value) {
+      try {
+        const fd = new FormData();
+        fd.append("MarginNoteDivisionId", noteId);
+        fd.append("DepartmentId", bulkTransfer.departmentId);
+        fd.append("Notes", bulkTransfer.notes || "");
+
+        await transferMarginNoteDivision(fd);
+        successfulTransfers.push(noteId);
+      } catch (error) {
+        console.error(
+          `Error transferring margin note division ${noteId}:`,
+          error
+        );
+        failedTransfers.push({ id: noteId, error: error.message });
+      }
+    }
+
+    if (failedTransfers.length > 0) {
+      console.warn(
+        `Successfully transferred ${successfulTransfers.length} items, ${failedTransfers.length} failed`
+      );
+      if (successfulTransfers.length > 0) {
+        successAlert(
+          `تم ترحيل ${successfulTransfers.length} عناصر بنجاح مع فشل ${failedTransfers.length} عناصر`
+        );
+      } else {
+        errorAlert(`فشل ترحيل جميع العناصر (${failedTransfers.length})`);
+      }
+    } else {
+      successAlert("تم ترحيل العناصر المحددة بنجاح");
+    }
+
+    bulkTransferModal.hide();
+    selectedDepartmentIds.value = [];
+    selectAll.value = false;
+    load();
+  } catch (error) {
+    console.error("Unexpected error in bulk transfer:", error);
+    errorAlert("فشل الترحيل");
+  } finally {
+    isBulkTransferring.value = false;
+  }
+};
+
+const visiblePages = computed(() => {
+  const pages = [];
+  const maxVisible = 3;
+
+  let start = page.value - 1;
+  if (start < 1) start = 1;
+
+  let end = start + maxVisible - 1;
+  if (end > totalPages.value) {
+    end = totalPages.value;
+    start = Math.max(1, end - maxVisible + 1);
+  }
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+
+  return pages;
+});
+
+const changePage = (p) => {
+  if (p < 1 || p > totalPages.value) return;
+  page.value = p;
+  load();
+};
+
 const close = () => modal.hide();
 const closeTransfer = () => transferModal.hide();
+const closeBulkTransfer = () => {
+  bulkTransfer.departmentId = null;
+  bulkTransfer.notes = "";
+  bulkTransferModal.hide();
+};
 const closeNamesModal = () => {
   if (!namesModalInstance) return;
   namesModalInstance.hide();
@@ -570,6 +838,7 @@ const closeManagerNotes = () => {
 onMounted(async () => {
   modal = new Modal(modalEl.value);
   transferModal = new Modal(transferModalEl.value);
+  bulkTransferModal = new Modal(bulkTransferModalEl.value);
   managerNotesModal = new Modal(managerNotesModalEl.value);
   await load();
   const res = await getDepartments({ pageNumber: 1, pageSize: 200 });

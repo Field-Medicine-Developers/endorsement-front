@@ -9,7 +9,7 @@
         <i class="bi bi-shield-check"></i>
       </span>
       <div>
-        <h2 class="h5 fw-bold m-2">المراسلات</h2>
+        <h2 class="h5 fw-bold m-2">المراسلات التدقيق</h2>
         تغيير حالة المعاملة: قبول أو رفض
       </div>
     </div>
@@ -18,7 +18,7 @@
   <!-- Table -->
   <div class="card shadow-sm border-0 mb-4">
     <div class="card-header custom-card-header">
-      <h5 class="mb-0 fw-bold primary">قائمة معاملات التدقيق</h5>
+      <h5 class="mb-0 fw-bold primary">قائمة المراسلات التدقيق</h5>
     </div>
 
     <div class="card-body">
@@ -200,9 +200,25 @@ const load = async () => {
   loading.value = true;
   try {
     const res = await getTransfers({});
+
+    // ✅ في حال الباك يرجع success = false مع 200
+    if (res?.data?.success === false) {
+      errorAlert(res.data.message || "حدث خطأ أثناء جلب البيانات");
+      list.value = [];
+      return;
+    }
+
     list.value = res?.data?.data || [];
   } catch (e) {
     console.error("LOAD ERROR:", e);
+
+    // ✅ في حال HTTP Error (400 / 403 / 500)
+    const backendMessage =
+      e?.response?.data?.message ||
+      e?.response?.data?.errorMessage ||
+      "فشل في جلب التحويلات";
+
+    errorAlert(backendMessage);
   } finally {
     loading.value = false;
   }

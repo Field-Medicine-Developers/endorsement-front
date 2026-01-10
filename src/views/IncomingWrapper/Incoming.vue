@@ -87,7 +87,7 @@
                 <th>المحتوى</th>
                 <th>الموضوع</th>
                 <th>هامش مدير القسم</th>
-                <th>تاريخ هامش مدير القسم</th>
+                <!-- <th>تاريخ هامش مدير القسم</th> -->
                 <th>هامش مسوؤل الشعبة</th>
                 <th>الملحقات الطبية</th>
                 <th>عدد صفحات المرفقات</th>
@@ -145,7 +145,7 @@
                   </button>
                 </td>
 
-                <td>{{ formatDate(inc.managerNoteDate) }}</td>
+                <!-- <td>{{ formatDate(inc.managerNoteDate) }}</td> -->
                 <td>{{ inc.managerNoteDivision || "—" }}</td>
                 <td>{{ medicalAccessoriesText(inc.medicalAccessories) }}</td>
                 <td>{{ inc.archiveIncoming?.paginationCount ?? "—" }}</td>
@@ -153,7 +153,7 @@
                   <div class="d-flex justify-content-center gap-2">
                     <!-- تعديل -->
                     <button
-                      v-role="[0]"
+                      v-role="[0, 1]"
                       class="button-edit"
                       @click="openEdit(inc)"
                     >
@@ -884,7 +884,7 @@
               </div>
 
               <div class="note-box">
-                {{ n.managerNote }}
+                {{ n.managerNote || "—" }}
               </div>
             </div>
           </div>
@@ -908,6 +908,8 @@ import { Modal } from "bootstrap";
 import { computed } from "vue";
 import VueSelect from "vue3-select";
 import { useRouter } from "vue-router";
+import { Tooltip } from "bootstrap";
+import { watch } from "vue";
 import {
   successAlert,
   errorAlert,
@@ -1092,16 +1094,13 @@ const openEdit = (item) => {
   form.formationId = item.formationId;
   form.commandId = item.commandId;
   form.incomingBookNumber = item.incomingBookNumber;
-  // ✅ تاريخ الوارد (ISO)
   form.incomingDate = item.incomingDate
     ? item.incomingDate.substring(0, 10)
     : null;
-
-  // ✅ تحويله إلى DDMMYYYY للحقل النصي
   incomingDateText.value = item.incomingDate
-    ? item.incomingDate.substring(8, 10) + // day
-      item.incomingDate.substring(5, 7) + // month
-      item.incomingDate.substring(0, 4) // year
+    ? item.incomingDate.substring(8, 10) +
+      item.incomingDate.substring(5, 7) +
+      item.incomingDate.substring(0, 4)
     : "";
   form.subject = item.subject;
   form.content = item.content;
@@ -1238,13 +1237,11 @@ const isTransferring = ref(false);
 const submitTransfer = async () => {
   if (isTransferring.value) return;
 
-  // ✅ تحقق عام
   if (!transfer.departmentId) {
     errorAlert("يرجى اختيار الشعبة المراد الترحيل إليها.");
     return;
   }
 
-  // ✅ تحقق حسب نوع الترحيل
   if (!isBulkTransfer.value && !transfer.incomingId) {
     errorAlert("لم يتم تحديد معاملة للترحيل.");
     return;
@@ -1484,7 +1481,6 @@ const loadCommands = async () => {
   }));
 };
 
-import { watch } from "vue";
 watch(
   () => form.commandId,
   (commandId) => {
@@ -1493,87 +1489,58 @@ watch(
       form.formationId = null;
       return;
     }
-    const selectedCommand = commands.value.find(
-      (c) => c.value === commandId // ✅
-    );
+    const selectedCommand = commands.value.find((c) => c.value === commandId);
     formations.value = selectedCommand?.formations ?? [];
     form.formationId = null;
   }
 );
 
-const normalizeBookDate = () => {
-  if (!bookDateText.value) {
-    form.bookDate = null;
-    return;
-  }
+const parseDateNoLeadingZero = (text) => {
+  if (!text) return null;
+  // يسمح فقط أرقام و /
+  const parts = text.split("/");
+  if (parts.length !== 3) return null;
+  const [dayStr, monthStr, yearStr] = parts;
 
-  const clean = bookDateText.value.replace(/\D/g, "");
+  //  منع 0 أو 01 أو 02
+  if (dayStr.startsWith("0") || monthStr.startsWith("0")) return null;
 
-  if (clean.length !== 8) {
-    form.bookDate = null;
-    return;
-  }
-
-  const day = clean.slice(0, 2);
-  const month = clean.slice(2, 4);
-  const year = clean.slice(4, 8);
+  const day = Number(dayStr);
+  const month = Number(monthStr);
+  const year = Number(yearStr);
 
   if (
-    +day < 1 ||
-    +day > 31 ||
-    +month < 1 ||
-    +month > 12 ||
-    +year < 1900 ||
-    +year > 2100
-  ) {
-    form.bookDate = null;
-    return;
-  }
+    !Number.isInteger(day) ||
+    !Number.isInteger(month) ||
+    !Number.isInteger(year)
+  )
+    return null;
 
-  // ✅ فقط تاريخ الكتاب
-  form.bookDate = `${year}-${month}-${day}`;
+  if (
+    day < 1 ||
+    day > 31 ||
+    month < 1 ||
+    month > 12 ||
+    year < 1900 ||
+    year > 2100
+  )
+    return null;
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(
+    2,
+    "0"
+  )}`;
+};
+
+const normalizeBookDate = () => {
+  form.bookDate = parseDateNoLeadingZero(bookDateText.value);
 };
 
 const incomingDateText = ref("");
 const normalizeIncomingDate = () => {
-  if (!incomingDateText.value) {
-    form.incomingDate = null;
-    return;
-  }
-
-  const clean = incomingDateText.value.replace(/\D/g, "");
-
-  // DDMMYYYY
-  if (clean.length !== 8) {
-    form.incomingDate = null;
-    return;
-  }
-
-  const day = clean.slice(0, 2);
-  const month = clean.slice(2, 4);
-  const year = clean.slice(4, 8);
-
-  if (
-    +day < 1 ||
-    +day > 31 ||
-    +month < 1 ||
-    +month > 12 ||
-    +year < 1900 ||
-    +year > 2100
-  ) {
-    form.incomingDate = null;
-    return;
-  }
-
-  form.incomingDate = `${year}-${month}-${day}`;
+  form.incomingDate = parseDateNoLeadingZero(incomingDateText.value);
 };
 
-import { Tooltip } from "bootstrap";
-
-// IDs الصفوف المحددة من الجدول
 const selectedDepartmentIds = ref([]);
-
-// للتحكم بتحديد الكل
 const selectAll = ref(false);
 
 // تحديد / إلغاء تحديد الكل
@@ -1602,11 +1569,8 @@ const bulkTransfer = async () => {
     "تأكيد الترحيل",
     `هل تريد ترحيل (${selectedDepartmentIds.value.length}) معاملات إلى الوحدة المحددة؟`
   );
-
   if (!confirm.isConfirmed) return;
-
   isTransferring.value = true;
-
   try {
     for (const incId of selectedDepartmentIds.value) {
       const fd = new FormData();
@@ -1615,7 +1579,6 @@ const bulkTransfer = async () => {
 
       await transferIncoming(fd);
     }
-
     successAlert("تم ترحيل المعاملات المحددة بنجاح");
     selectedDepartmentIds.value = [];
     selectAll.value = false;
@@ -1628,12 +1591,19 @@ const bulkTransfer = async () => {
   }
 };
 
-const isBulkTransfer = ref(false); // يحدد نوع الترحيل
-const openBulkTransfer = () => {
+const isBulkTransfer = ref(false);
+const openBulkTransfer = async () => {
   if (selectedDepartmentIds.value.length === 0) {
     errorAlert("لم يتم تحديد أي معاملة");
     return;
   }
+
+  const confirm = await confirmAction(
+    "تأكيد الترحيل",
+    `هل تريد ترحيل (${selectedDepartmentIds.value.length}) عناصر إلى القسم المحدد؟`
+  );
+
+  if (!confirm.isConfirmed) return;
 
   isBulkTransfer.value = true;
   transfer.incomingId = "";
