@@ -155,9 +155,9 @@
               </div>
 
               <div class="info-item">
-                <span>الجهة المرسلة</span>
-                <strong>{{ trackResult.source }}</strong>
-              </div>
+  <span>الجهة المرسلة</span>
+  <strong>{{ trackResult?.createdByUserName || "—" }}</strong>
+</div>
               <div class="info-item">
                 <span>الجهة الاصابة</span>
                 <strong>{{ trackResult.subject }}</strong>
@@ -480,6 +480,7 @@ const trackResult = ref({
   incomingDate: null,
   subject: "",
   source: "",
+  createdByUserName: "",
   content: "",
   formationName: "",
   injuredNames: [],
@@ -501,6 +502,7 @@ const track = async () => {
       incomingDate: data.incomingDate || null,
       subject: data.subject || "",
       source: data.source || "",
+      createdByUserName: data.createdByUserName || "",
       content: data.content || "",
       formationName: data.formationName || "",
 
@@ -588,12 +590,12 @@ const achievementCards = computed(() => [
     icon: "bi-arrow-counterclockwise",
   },
   {
-    title: "الموظفين الحكومي",
+    title: "المؤيدين الحكومي",
     value: achievements.value.governmentCount,
     icon: "bi-person-badge",
   },
   {
-    title: "الموظفين المدني",
+    title: "المؤيدين الميداني",
     value: achievements.value.civilianCount,
     icon: "bi-people",
   },

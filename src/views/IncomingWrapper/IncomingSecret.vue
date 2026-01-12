@@ -84,8 +84,8 @@
                 <th>عدد الكتاب</th>
                 <th>تاريخ الكتاب</th>
                 <th>القيادة / التشكيل</th>
-                <th>المحتوى</th>
                 <th>الموضوع</th>
+                <th>المحتوى</th>
                 <th>هامش مدير القسم</th>
                 <!-- <th>تاريخ هامش مدير القسم</th> -->
                 <th>هامش مسوؤل الشعبة</th>
@@ -136,7 +136,15 @@
                 </td>
                 <td>{{ inc.subject || "—" }}</td>
                 <td>{{ inc.content || "—" }}</td>
-                <td>{{ inc.managerNote || "—" }}</td>
+                <td>
+                  <button
+                    class="btn btn-search btn-sm"
+                    @click="openManagerNotes(inc.managerNotes || [])"
+                  >
+                    عرض الهوامش ({{ inc.managerNotes?.length || 0 }})
+                  </button>
+                </td>
+
                 <!-- <td>{{ formatDate(inc.managerNoteDate) }}</td> -->
                 <td>{{ inc.managerNoteDivision || "—" }}</td>
                 <td>{{ medicalAccessoriesText(inc.medicalAccessories) }}</td>
@@ -145,7 +153,7 @@
                   <div class="d-flex justify-content-center gap-2">
                     <!-- تعديل -->
                     <button
-                      v-role="[0]"
+                      v-role="[0, 1]"
                       class="button-edit"
                       @click="openEdit(inc)"
                     >
@@ -848,6 +856,45 @@
           </button>
           <button class="btn btn-primary" @click="submitArchiveUpload">
             رفع
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manager Notes Modal -->
+  <div class="modal fade" tabindex="-1" ref="managerNotesModalEl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">هوامش مدير القسم</h5>
+        </div>
+
+        <div class="modal-body">
+          <div v-if="selectedManagerNotes.length">
+            <div
+              v-for="(n, i) in selectedManagerNotes"
+              :key="i"
+              class="border-bottom py-3"
+            >
+              <div class="fw-bold mb-1">{{ i + 1 }}. هامش مدير القسم</div>
+
+              <div class="text-muted small mb-2">
+                {{ formatDate(n.noteDate) }}
+              </div>
+
+              <div class="note-box">
+                {{ n.managerNote || "—" }}
+              </div>
+            </div>
+          </div>
+
+          <p v-else class="text-muted text-center">لا توجد هوامش</p>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeManagerNotes">
+            إغلاق
           </button>
         </div>
       </div>

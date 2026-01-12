@@ -372,7 +372,7 @@
                 <label class="form-label">تاريخ الحادث</label>
                 <input
                   v-model="form.accidentDate"
-                  type="datetime-local"
+                  type="date"
                   class="form-control"
                 />
               </div>
