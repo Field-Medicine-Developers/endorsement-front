@@ -10,13 +10,6 @@
               fill-rule="evenodd" clip-rule="evenodd"></path>
           </svg>
         </div>
-        
-        <!-- <div v-else class="d-flex justify-content-between align-items-center">
-          <small class="me-1">Darken</small>
-          <svg class="pa-0 ma-0" width="20" height="20" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
-          </svg>
-        </div> -->
       </a>
     </section>
     <div style="color:#12b1d1;"> لجنة البرمجة والتطوير</div>

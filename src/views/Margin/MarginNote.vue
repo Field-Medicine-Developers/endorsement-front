@@ -14,18 +14,17 @@
         <small class="text-muted">إضافة رقم الكتاب – التاريخ – الأصل</small>
       </div>
     </div>
-      <div class="d-flex gap-2">
-        <!-- Bulk Transfer Button -->
-        <button
-          type="button"
-          class="btn btn-primary"
-          :disabled="selectedDepartmentIds.length === 0"
-          @click="openBulkTransfer"
-        >
-          ترحيل المحدد ({{ selectedDepartmentIds.length }})
-        </button>
+    <div class="d-flex gap-2">
+      <!-- Bulk Transfer Button -->
+      <button
+        type="button"
+        class="btn btn-primary"
+        :disabled="selectedDepartmentIds.length === 0"
+        @click="openBulkTransfer"
+      >
+        ترحيل المحدد ({{ selectedDepartmentIds.length }})
+      </button>
     </div>
-  
   </div>
 
   <!-- Search Bar -->
@@ -49,8 +48,6 @@
         <button class="btn-advanced" @click="resetFilters()">
           إعادة تعيين
         </button>
-        
-      
       </div>
     </div>
   </div>
@@ -157,7 +154,7 @@
                     </button>
                     <!-- تعديل -->
                     <button
-                      v-role="[0 ,1]"
+                      v-role="[0, 1]"
                       class="button-edit"
                       @click="openEdit(m)"
                     >
@@ -582,17 +579,14 @@
               :key="i"
               class="border-bottom py-3"
             >
-            <div class="fw-bold mb-1">{{ i + 1 }}. هامش مدير القسم</div>
+              <div class="fw-bold mb-1">{{ i + 1 }}. هامش مدير القسم</div>
 
-
-            <div class="text-muted small mb-2">
-                  {{ formatDate(s.noteDate) }}
-                </div>
-                <div class="note-box">
-                  {{ s.managerNote || "—" }}
-                </div>
-
-              
+              <div class="text-muted small mb-2">
+                {{ formatDate(s.noteDate) }}
+              </div>
+              <div class="note-box">
+                {{ s.managerNote || "—" }}
+              </div>
             </div>
           </div>
 
@@ -771,7 +765,12 @@ import {
   deleteMarginNote,
   transferMarginNote,
 } from "@/services/margin-note.service.js";
-import { successAlert, errorAlert, confirmDelete, confirmAction } from "@/utils/alert.js";
+import {
+  successAlert,
+  errorAlert,
+  confirmDelete,
+  confirmAction,
+} from "@/utils/alert.js";
 import { getDepartments } from "@/services/departments.service.js";
 
 const route = useRoute();
@@ -842,7 +841,7 @@ const load = async () => {
     });
 
     totalPages.value = res.data.pagination.totalPages;
-    
+
     // Reset selections when data is reloaded
     selectedDepartmentIds.value = [];
     selectAll.value = false;
@@ -897,7 +896,7 @@ const resetForm = () => {
 
 const toggleSelectAll = () => {
   if (selectAll.value) {
-    selectedDepartmentIds.value = list.value.map(item => item.id);
+    selectedDepartmentIds.value = list.value.map((item) => item.id);
   } else {
     selectedDepartmentIds.value = [];
   }
@@ -1072,7 +1071,7 @@ const bulkTransfer = async () => {
     // Process each selected item individually using the existing transfer function
     const successfulTransfers = [];
     const failedTransfers = [];
-    
+
     for (const noteId of selectedDepartmentIds.value) {
       try {
         const formData = new FormData();
@@ -1084,25 +1083,30 @@ const bulkTransfer = async () => {
         successfulTransfers.push(noteId);
       } catch (error) {
         console.error(`Error transferring margin note ${noteId}:`, error);
-        failedTransfers.push({id: noteId, error: error.message});
+        failedTransfers.push({ id: noteId, error: error.message });
       }
     }
 
     if (failedTransfers.length > 0) {
-      console.warn(`Successfully transferred ${successfulTransfers.length} items, ${failedTransfers.length} failed`);
+      console.warn(
+        `Successfully transferred ${successfulTransfers.length} items, ${failedTransfers.length} failed`
+      );
       if (successfulTransfers.length > 0) {
-        successAlert(`تم ترحيل ${successfulTransfers.length} عناصر بنجاح مع فشل ${failedTransfers.length} عناصر`);
+        successAlert(
+          `تم ترحيل ${successfulTransfers.length} عناصر بنجاح مع فشل ${failedTransfers.length} عناصر`
+        );
       } else {
         errorAlert(`فشل ترحيل جميع العناصر (${failedTransfers.length})`);
       }
     } else {
       successAlert("تم ترحيل العناصر المحددة بنجاح");
     }
-    
+
     bulkTransferModal.hide();
     selectedDepartmentIds.value = [];
     selectAll.value = false;
     load();
+    س;
   } catch (error) {
     console.error("Unexpected error in bulk transfer:", error);
     errorAlert("فشل الترحيل");

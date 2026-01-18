@@ -36,6 +36,7 @@
                 <!-- <th>موضوع الوارد</th> -->
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
+                <th>الجهة المحولة</th>
                 <th>الحالة</th>
                 <th>سبب الرفض</th>
                 <th>الإجراءات</th>
@@ -44,7 +45,7 @@
 
             <tbody>
               <tr v-for="(item, i) in list" :key="item.id">
-                <td>{{ i + 1 }}</td>
+                <td>{{ (page - 1) * pageSize + i + 1 }}</td>
                 <!-- <td>
             <div>
               <div>{{ item.injuredNames?.[0] }}</div>
@@ -62,7 +63,7 @@
                 <!-- <td>{{ item.incomingSubject }}</td> -->
                 <td>{{ item.incomingBookNumber }}</td>
                 <td>{{ formatDate(item.incomingDate) }}</td>
-
+                <td>{{ item.departmentName }}</td>
                 <td>
                   <span v-if="item.status === 0" class="badge bg-secondary">
                     <i class="bi bi-hourglass-split"></i>
@@ -176,6 +177,35 @@
     </div>
   </div>
 
+  <!-- Pagination -->
+  <nav class="circle-pagination d-flex justify-content-center mt-4">
+    <button
+      class="page-btn"
+      :disabled="page === 1"
+      @click="changePage(page - 1)"
+    >
+      <i class="bi bi-chevron-right"></i>
+    </button>
+
+    <button
+      v-for="p in visiblePages"
+      :key="p"
+      class="page-number"
+      :class="{ active: p === page }"
+      @click="changePage(p)"
+    >
+      {{ p }}
+    </button>
+
+    <button
+      class="page-btn"
+      :disabled="page === totalPages"
+      @click="changePage(page + 1)"
+    >
+      <i class="bi bi-chevron-left"></i>
+    </button>
+  </nav>
+
   <!-- Names Modal – عرض كل أسماء الجرحى -->
   <div class="modal fade" tabindex="-1" ref="namesModalEl">
     <div class="modal-dialog modal-dialog-centered">
@@ -205,7 +235,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { Modal } from "bootstrap";
 import { successAlert, errorAlert } from "@/utils/alert.js";
 
@@ -217,6 +247,29 @@ import {
 const list = ref([]);
 const loading = ref(false);
 
+// ===== Pagination =====
+const page = ref(1);
+const pageSize = 10;
+const totalPages = ref(1);
+
+const visiblePages = ref([1]);
+
+// Update visible pages when page or totalPages changes
+const updateVisiblePages = () => {
+  const pages = [];
+  let start = page.value - 1;
+  if (start < 1) start = 1;
+
+  let end = start + 2;
+  if (end > totalPages.value) {
+    end = totalPages.value;
+    start = Math.max(1, end - 2);
+  }
+
+  for (let i = start; i <= end; i++) pages.push(i);
+  visiblePages.value = pages;
+};
+
 const reason = ref("");
 const rejectId = ref(null);
 
@@ -227,7 +280,10 @@ const load = async () => {
   loading.value = true;
 
   try {
-    const res = await getMarginNotesTransfer({});
+    const res = await getMarginNotesTransfer({
+      pageNumber: page.value,
+      pageSize: pageSize,
+    });
 
     list.value = res.data.data.map((item) => ({
       ...item,
@@ -237,6 +293,9 @@ const load = async () => {
         ? item.injuredName.split(",").map((n) => n.trim())
         : [],
     }));
+
+    totalPages.value = res.data.pagination?.totalPages || 1;
+    updateVisiblePages();
   } catch (err) {
     console.error(err);
     errorAlert("فشل في تحميل البيانات");
@@ -307,6 +366,16 @@ const openNamesModal = (names) => {
 const closeNamesModal = () => {
   namesModal.hide();
 };
+
+const changePage = (newPage) => {
+  if (newPage >= 1 && newPage <= totalPages.value && newPage !== page.value) {
+    page.value = newPage;
+    load();
+  }
+};
+
+// Initial update of visible pages
+updateVisiblePages();
 
 const formatDate = (value) => {
   if (!value) return "—";

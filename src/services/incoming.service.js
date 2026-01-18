@@ -3,6 +3,9 @@ import api from "./services.js";
 export const getIncomings = (params) =>
   api.get("/Incomings", { params });
 
+export const getIncomingSecret = (params) =>
+  api.get("/Incomings/secret", { params });
+
 
 export const addIncoming = (data) =>
   api.post("/Incomings", data);
@@ -17,3 +20,6 @@ export const transferIncoming = (data) =>
   api.post("/Incomings/transfer", data, {
     headers: { "Content-Type": "multipart/form-data" }
   });
+
+
+

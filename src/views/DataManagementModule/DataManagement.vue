@@ -81,6 +81,7 @@
                 <th>#</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
+                <th>رقم الكتاب</th>
                 <!-- <th>تاريخ الإدخال</th> -->
                 <th>حالة المعاملة</th>
                 <th>هامش مسؤول الشعبة</th>
@@ -111,7 +112,7 @@
                 <!-- incoming -->
                 <td>{{ m.incomingBookNumber ?? "-" }}</td>
                 <td>{{ formatDate(m.incomingDate) }}</td>
-
+                <td>{{ m.incomingBookNumber ?? "-" }}</td>
                 <!-- createdAt -->
                 <!-- <td>{{ formatDate(m.createdAt) }}</td> -->
                 <td>
@@ -172,7 +173,7 @@
                     </button>
                     <!-- تعديل -->
                     <button
-                      v-role="[0]"
+                      v-role="[0, 3]"
                       class="button-edit"
                       @click="openEdit(m)"
                     >
@@ -464,14 +465,17 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title fw-bold primary">عرض تفاصيل بيانات الهامش</h5>
+          <h5 class="modal-title fw-bold primary">عرض تفاصيل بيانات الإدارة</h5>
         </div>
 
         <div class="modal-body">
           <div class="row g-3">
+            <!-- ===== بيانات المذكرة ===== -->
             <div class="col-md-6">
-              <label class="form-label">تاريخ المذكرة</label>
-              <div class="form-control">{{ viewItem.memoNumber }}</div>
+              <label class="form-label">رقم المذكرة</label>
+              <div class="form-control">
+                {{ viewItem.memoNumber || "—" }}
+              </div>
             </div>
 
             <div class="col-md-6">
@@ -481,61 +485,77 @@
               </div>
             </div>
 
-            <div class="row g-3 mb-3">
-              <div class="col-md-6">
-                <label class="form-label">رقم الوارد</label>
-                <div class="form-control">
-                  {{ incomingView.incomingBookNumber }}
-                </div>
-              </div>
-
-              <div class="col-md-6">
-                <label class="form-label">تاريخ الوارد</label>
-                <div class="form-control">
-                  {{ formatDate(incomingView.incomingDate) }}
-                </div>
-              </div>
-
-              <div class="col-md-12">
-                <label class="form-label">أسماء الجرحى</label>
-                <div class="form-control">
-                  {{ incomingView.injuredNames.join("، ") || "—" }}
-                </div>
+            <div class="col-md-12">
+              <label class="form-label">نوع الصادر</label>
+              <div class="form-control">
+                {{
+                  viewItem.isExport === 0
+                    ? "لا يوجد"
+                    : viewItem.isExport === 1
+                    ? "داخلي"
+                    : viewItem.isExport === 2
+                    ? "خارجي"
+                    : "—"
+                }}
               </div>
             </div>
-
-            <!-- <div class="col-md-6">
-              <label class="form-label">ملف الأصل</label>
+            <div class="col-md-12">
+              <label class="form-label">أسماء الجرحى</label>
               <div class="form-control">
-                <span v-if="viewItem.hasOriginalFile" class="badge bg-success">
-                  نعم
-                </span>
-                <span v-else class="badge bg-secondary"> لا </span>
+                {{
+                  incomingView.injuredNames?.length
+                    ? incomingView.injuredNames.join("، ")
+                    : "—"
+                }}
               </div>
-            </div> -->
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">رقم الوارد</label>
+              <div class="form-control">
+                {{ incomingView.incomingBookNumber || "—" }}
+              </div>
+            </div>
 
             <div class="col-md-6">
-              <label class="form-label">اسم المُدخل</label>
-              <div class="form-control">{{ viewItem.createdByUserName }}</div>
+              <label class="form-label">تاريخ الوارد</label>
+              <div class="form-control">
+                {{ formatDate(incomingView.incomingDate) }}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">الموضوع</label>
+              <div class="form-control">
+                {{ viewItem.subject || "—" }}
+              </div>
             </div>
 
-            <div class="col-md-12">
+            <div class="col-md-6">
+              <label class="form-label">المحتوى</label>
+              <div class="form-control">
+                {{ viewItem.content || "—" }}
+              </div>
+            </div>
+
+            <!-- ===== بيانات الإدخال ===== -->
+            <div class="col-md-6">
+              <label class="form-label">اسم المُدخل</label>
+              <div class="form-control">
+                {{ viewItem.createdByUserName || "—" }}
+              </div>
+            </div>
+
+            <div class="col-md-6">
               <label class="form-label">تاريخ الإدخال</label>
               <div class="form-control">
                 {{ formatDate(viewItem.createdAt) }}
               </div>
             </div>
-
-            <!-- <div class="col-md-12">
-              <label class="form-label">رقم هامش المذكرة </label>
-              <div class="view-box">{{ viewItem.marginNoteId }}</div>
-            </div> -->
           </div>
         </div>
 
         <div class="modal-footer">
           <button type="button" class="btn btn-light" @click="closeView">
-            إلغاء
+            إغلاق
           </button>
         </div>
       </div>
@@ -686,8 +706,17 @@
           <button class="btn btn-light" @click="closeArchiveUpload">
             إلغاء
           </button>
-          <button class="btn btn-primary" @click="submitArchiveUpload">
-            رفع
+          <button
+            class="btn btn-primary"
+            :disabled="isUploadingArchive"
+            @click="submitArchiveUpload"
+          >
+            <span
+              v-if="isUploadingArchive"
+              class="spinner-border spinner-border-sm me-2"
+            ></span>
+
+            {{ isUploadingArchive ? "جارٍ الرفع..." : "رفع" }}
           </button>
         </div>
       </div>
@@ -866,7 +895,6 @@ const load = async () => {
     const res = await getLanda({
       pageNumber: page.value,
       pageSize,
-
       injuredName: filters.injuredName || null,
       marginNoteId: filters.marginNoteId || null,
       memoNumber: filters.memoNumber || null,
@@ -1052,33 +1080,23 @@ const loadViewData = async (marginNoteId) => {
   return res.data.data;
 };
 
-import { getIncomings } from "@/services/incoming.service.js";
-
-const openView = async (row) => {
+const openView = (row) => {
   try {
-    const data = await loadViewData(row.id);
-    const item = data?.[0];
+    viewItem.memoNumber = row.memoNumber ?? "—";
+    viewItem.memoDate = row.memoDate ?? null;
+    viewItem.isExport = row.isExport ?? 0;
 
-    if (item) {
-      viewItem.marginNoteId = item.marginNoteId;
-      viewItem.memoNumber = item.memoNumber;
-      viewItem.memoDate = item.memoDate;
-      viewItem.hasOriginalFile = item.hasOriginalFile;
-      viewItem.createdByUserName = item.createdByUserName;
-      viewItem.createdAt = item.createdAt;
-    }
-    if (row.incomingId) {
-      const incomingRes = await getIncomingById(row.incomingId);
-      const inc = incomingRes.data?.data;
-      incomingView.incomingBookNumber = inc?.incomingBookNumber ?? "—";
-      incomingView.incomingDate = inc?.incomingDate ?? null;
-      incomingView.receiveDate = inc?.receiveDate ?? null;
-      incomingView.injuredNames = Array.isArray(inc?.injuredNames)
-        ? inc.injuredNames
-        : [];
-      incomingView.commandName = inc?.commandName ?? "—";
-      incomingView.formationName = inc?.formationName ?? "—";
-    }
+    viewItem.subject = row.subject ?? "—";
+    viewItem.content = row.content ?? "—";
+
+    incomingView.incomingBookNumber = row.incomingBookNumber ?? "—";
+    incomingView.incomingDate = row.incomingDate ?? null;
+    incomingView.injuredNames = Array.isArray(row.injuredNames)
+      ? row.injuredNames
+      : [];
+
+    viewItem.createdByUserName = row.createdByUserName ?? "—";
+    viewItem.createdAt = row.createdAt ?? null;
 
     viewModal.show();
   } catch (e) {
@@ -1098,6 +1116,8 @@ const viewItem = reactive({
   createdByUserName: "",
   createdAt: "",
   marginNoteId: "",
+  subject: "",
+  content: "",
 });
 
 const incomingView = reactive({
@@ -1267,12 +1287,8 @@ const currentIncomingId = ref("");
 
 /* فتح عرض المرفقات */
 const openArchive = (row) => {
-  if (!row.archiveIncoming || !row.archiveIncoming.items?.length) {
-    archiveFiles.value = [];
-  } else {
-    archiveFiles.value = row.archiveIncoming.items;
-  }
-
+  currentIncomingId.value = row.incomingId;
+  archiveFiles.value = row.archiveIncoming?.items || [];
   archiveModal.show();
 };
 
@@ -1299,23 +1315,35 @@ const removeArchiveInput = (index) => {
 };
 
 /* رفع المرفقات */
+const isUploadingArchive = ref(false);
 const submitArchiveUpload = async () => {
+  if (isUploadingArchive.value) return;
+
   const files = archiveInputs.value.flatMap((x) => x.files);
 
-  if (!files.length) {
-    return errorAlert("يرجى اختيار ملفات");
-  }
+  if (!files.length) return errorAlert("يرجى اختيار ملفات");
+  if (!currentIncomingId.value) return errorAlert("incomingId غير موجود");
+
+  isUploadingArchive.value = true;
 
   try {
     await uploadIncomingArchive(currentIncomingId.value, files);
+
     archiveUploadModal.hide();
-    await openArchive({ incomingId: currentIncomingId.value });
     successAlert("تم رفع المرفقات بنجاح");
 
     archiveInputs.value = [{ files: [] }];
-    load(); // تحديث الجدول
+    await load();
+
+    const updatedRow = list.value.find(
+      (x) => x.incomingId === currentIncomingId.value
+    );
+    if (updatedRow) openArchive(updatedRow);
   } catch (e) {
+    console.error(e);
     errorAlert("فشل رفع المرفقات");
+  } finally {
+    isUploadingArchive.value = false;
   }
 };
 

@@ -118,8 +118,6 @@
                       </svg>
                     </button>
                   </div>
-
-                  <!-- إذا ليست انتظار -->
                   <span v-else class="text-muted">—</span>
                 </td>
               </tr>
@@ -134,6 +132,37 @@
         </div>
       </div>
     </div>
+    <!-- Pagination -->
+    <nav
+      v-if="totalPages > 1"
+      class="circle-pagination d-flex justify-content-center mt-4"
+    >
+      <button
+        class="page-btn"
+        :disabled="page === 1"
+        @click="changePage(page - 1)"
+      >
+        <i class="bi bi-chevron-right"></i>
+      </button>
+
+      <button
+        class="page-number"
+        v-for="p in visiblePages"
+        :key="p"
+        :class="{ active: p === page }"
+        @click="changePage(p)"
+      >
+        {{ p }}
+      </button>
+
+      <button
+        class="page-btn"
+        :disabled="page === totalPages"
+        @click="changePage(page + 1)"
+      >
+        <i class="bi bi-chevron-left"></i>
+      </button>
+    </nav>
   </div>
 
   <!-- Reject Modal -->
@@ -177,12 +206,43 @@ const list = ref([]);
 const loading = ref(false);
 
 // ===============================
+// Pagination
+// ===============================
+const page = ref(1);
+const pageSize = 10;
+const totalPages = ref(1);
+
+const visiblePages = computed(() => {
+  const pages = [];
+  let start = page.value - 1;
+  if (start < 1) start = 1;
+
+  let end = start + 2;
+  if (end > totalPages.value) {
+    end = totalPages.value;
+    start = Math.max(1, end - 2);
+  }
+
+  for (let i = start; i <= end; i++) pages.push(i);
+  return pages;
+});
+
+const changePage = (p) => {
+  if (p < 1 || p > totalPages.value) return;
+  page.value = p;
+  load();
+};
+
+// ===============================
 // LOAD DATA
 // ===============================
 const load = async () => {
   loading.value = true;
   try {
-    const res = await getMarginNotesDivisionTransfers();
+    const res = await getMarginNotesDivisionTransfers({
+      pageNumber: page.value,
+      pageSize: pageSize,
+    });
     list.value = res.data.data ?? [];
   } finally {
     loading.value = false;

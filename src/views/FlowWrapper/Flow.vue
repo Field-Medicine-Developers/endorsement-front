@@ -146,12 +146,12 @@
                 <th>القيادة / التشكيل</th>
                 <th>استلام المعاملة</th>
                 <th>تسليم المعاملة</th>
-                <th>تسليم الطبيب العسكري</th>
-                <th>استلام الطبيب العسكري</th>
-                <th>تاريخ إرسال التدقيق</th>
-                <th>استلام التدقيق</th>
-                <th>إرسال الى مدير القسم</th>
-                <th>استلام من مدير القسم</th>
+                <th>استلام الطبيب</th>
+                <th>تسليم الطبيب</th>
+                <th>استلام للتدقيق</th>
+                <th>تسليم التدقيق</th>
+                <th>استلام للمدير</th>
+                <th>تسليم المدير</th>
                 <th>المواقف</th>
                 <th>الملاحظات</th>
                 <th>الحالة</th>
@@ -160,9 +160,9 @@
                 <th>حالة التدقيق</th>
                 <th>الحالة النهائية</th>
                 <th>إرجاع</th>
-                <th>سبب الإرجاع</th>
-                <th>تاريخ الإرجاع</th>
-                <th>أضيف بواسطة</th>
+                <!-- <th>سبب الإرجاع</th> -->
+                <!-- <th>تاريخ الإرجاع</th> -->
+                <!-- <th>أضيف بواسطة</th> -->
                 <th>تاريخ الإضافة</th>
                 <th>الإجراءات</th>
               </tr>
@@ -186,8 +186,8 @@
 
                 <td>{{ formatDate(item.transactionReceiveDate) }}</td>
                 <td>{{ formatDate(item.transactionDeliveryDate) }}</td>
-                <td>{{ formatDate(item.militaryDoctorDelivery) }}</td>
                 <td>{{ formatDate(item.militaryDoctorReceive) }}</td>
+                <td>{{ formatDate(item.militaryDoctorDelivery) }}</td>
                 <td>{{ formatDate(item.verificationSendDate) }}</td>
                 <td>{{ formatDate(item.verificationReceive) }}</td>
                 <td>{{ formatDate(item.directorpprovalSendDate) }}</td>
@@ -219,9 +219,9 @@
                   </span>
                 </td>
                 <!-- سبب الرفض -->
-                <td>{{ item.rejectionReason || "-" }}</td>
+                <!-- <td>{{ item.rejectionReason || "-" }}</td> -->
                 <!-- تاريخ الرفض -->
-                <td>{{ formatDate(item.rejectionDate) }}</td>
+                <!-- <td>{{ formatDate(item.rejectionDate) }}</td> -->
                 <td>
                   <span
                     class="badge"
@@ -258,7 +258,7 @@
                 <!-- <td>{{ item.returnPercentage || "-" }}</td> -->
                 <!-- <td>{{ formatDate(item.returnDate) }}</td> -->
 
-                <td>{{ item.createdByUserName }}</td>
+                <!-- <td>{{ item.createdByUserName }}</td> -->
                 <td>{{ formatDate(item.createdAt) }}</td>
                 <td>
                   <div class="d-flex justify-content-center gap-2">
@@ -336,6 +336,25 @@
                              34.1zM20 238.6l92.7-92.7c15-15 41-4.5 41 17v42h151c22.1 
                              0 40 17.9 40 40v48c0 22.1-17.9 40-40 40H153v29.1c0 21.5-26 
                              32-41 17L20 273.4c-9.4-9.4-9.4-24.6 0-34.1z"
+                        />
+                      </svg>
+                    </button>
+                    <!-- مرفقات الوارد -->
+                    <button
+                      class="button-archive"
+                      title="عرض مرفقات الوارد"
+                      @click="openArchive(item)"
+                    >
+                      <svg class="svgIcon" viewBox="0 0 512 512">
+                        <path
+                          d="M424.4 214.7L253.1 386c-35.2 35.2-92.3 35.2-127.5 0
+         s-35.2-92.3 0-127.5L300.3 83.9c23.4-23.4 61.4-23.4
+         84.9 0s23.4 61.4 0 84.9L224.6 329.4c-11.7 11.7-30.7
+         11.7-42.4 0s-11.7-30.7 0-42.4L318.1 151c6.2-6.2
+         6.2-16.4 0-22.6s-16.4-6.2-22.6 0L159.6 264.3
+         c-23.4 23.4-23.4 61.4 0 84.9s61.4 23.4 84.9 0
+         l160.6-160.6c35.2-35.2 35.2-92.3 0-127.5
+         s-92.3-35.2-127.5 0L106.3 232.4"
                         />
                       </svg>
                     </button>
@@ -493,13 +512,15 @@
                 />
               </div>
 
+              <!-- ================= STEP 3 ================= -->
+
               <div class="col-md-6">
                 <label class="form-label">تاريخ إرسال موافقة المدير</label>
                 <input
                   type="date"
                   v-model="form.directorpprovalSendDate"
                   class="form-control"
-                  :disabled="!editMode && step !== 2"
+                  :disabled="!editMode && step !== 3"
                 />
               </div>
 
@@ -509,11 +530,9 @@
                   type="date"
                   v-model="form.directorpprovalReceive"
                   class="form-control"
-                  :disabled="!editMode && step !== 2"
+                  :disabled="!editMode && step !== 3"
                 />
               </div>
-
-              <!-- ================= STEP 3 ================= -->
 
               <div class="col-md-6">
                 <label class="form-label">حالة التدقيق</label>
@@ -1120,6 +1139,121 @@
       </div>
     </div>
   </div>
+
+  <!-- Archive Modal -->
+  <div class="modal fade" ref="archiveModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">
+            <i class="bi bi-folder2-open me-1"></i>
+            مرفقات الوارد
+          </h5>
+        </div>
+
+        <div class="modal-body">
+          <!-- لا توجد مرفقات -->
+          <div
+            v-if="archiveFiles.length === 0"
+            class="text-muted text-center py-4"
+          >
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            لا توجد مرفقات
+          </div>
+
+          <!-- قائمة المرفقات -->
+          <div v-else class="list-group">
+            <button
+              v-for="(file, i) in archiveFiles"
+              :key="i"
+              class="list-group-item list-group-item-action d-flex align-items-center gap-2"
+              @click="openFile(file.fileFullUrl)"
+            >
+              <i class="bi bi-file-earmark-pdf text-danger fs-5"></i>
+              <span class="flex-grow-1">
+                {{ file.fileName }}
+              </span>
+              <i class="bi bi-box-arrow-up-right text-muted"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeArchive()">إغلاق</button>
+
+          <button class="btn btn-primary" @click="openArchiveUploadFromView">
+            <i class="bi bi-cloud-upload me-1"></i>
+            إضافة مرفقات
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Archive Upload Modal -->
+  <div class="modal fade" ref="archiveUploadModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <!-- Header -->
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">
+            <i class="bi bi-cloud-upload me-1"></i>
+            إضافة مرفقات
+          </h5>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body">
+          <div
+            v-for="(item, index) in archiveInputs"
+            :key="index"
+            class="d-flex gap-2 align-items-center mb-2"
+          >
+            <input
+              type="file"
+              accept=".pdf,image/*"
+              multiple
+              class="form-control"
+              @change="onArchiveFilesSelected($event, index)"
+            />
+
+            <button
+              v-if="archiveInputs.length > 1"
+              class="btn btn-outline-danger"
+              @click="removeArchiveInput(index)"
+              title="حذف"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+
+          <button class="btn btn-search w-100 mt-3" @click="addArchiveInput">
+            <i class="bi bi-plus-lg me-1"></i>
+            إضافة مرفق آخر
+          </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeArchiveUpload">
+            إلغاء
+          </button>
+          <button
+            class="btn btn-primary"
+            :disabled="isUploadingArchive"
+            @click="submitArchiveUpload"
+          >
+            <span
+              v-if="isUploadingArchive"
+              class="spinner-border spinner-border-sm me-2"
+            ></span>
+
+            {{ isUploadingArchive ? "جارٍ الرفع..." : "رفع" }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -1138,7 +1272,7 @@ import {
 import { getIncomings } from "@/services/incoming.service.js";
 import { getDepartments } from "@/services/departments.service.js";
 import { successAlert, errorAlert, confirmDelete } from "@/utils/alert.js";
-
+import { uploadIncomingArchive } from "@/services/incoming-archive.service.js";
 const route = useRoute();
 const incomingIdFromRoute = route.query.injuredPersonIds || null;
 const list = ref([]);
@@ -1288,6 +1422,10 @@ const load = async () => {
     list.value = rawList.map((item) => ({
       ...item,
       injuredName: item.injuredPersonName || "-",
+      verificationStatus:
+        item.verificationStatus ?? item.verificationStatusType ?? 0,
+
+      finalStatus: item.finalStatus ?? item.finalStatusType ?? 0,
     }));
     totalPages.value = res.data.pagination?.totalPages ?? 1;
   } catch (e) {
@@ -1487,7 +1625,13 @@ const remove = async (id) => {
   }
 };
 
-const close = () => modal.hide();
+
+
+const close = () => {
+  resetFilters();
+  modal.hide();
+};
+
 
 const openTransfer = (row) => {
   transferForm.auditingAndDataId = row.id;
@@ -1816,16 +1960,109 @@ watch(
   (newInjuredId) => {
     if (!newInjuredId) return;
 
-    // 🔍 نبحث هل هذا الجريح عنده سجل سابق
     const existing = list.value.find((x) => x.injuredPersonId === newInjuredId);
 
-    // ✅ إذا ما عنده سجل → Auto Date
     if (!existing) {
       form.transactionReceiveDate = today();
     }
   },
   { immediate: true }
 );
+// ==============================
+// Archive Incoming (مرفقات الوارد)
+// ==============================
+const archiveModal = ref(null);
+const archiveUploadModal = ref(null);
+
+let modalArchive = null;
+let modalArchiveUpload = null;
+
+const archiveFiles = ref([]);
+const currentIncomingId = ref("");
+
+const archiveInputs = ref([{ files: [] }]);
+
+const openFile = (url) => window.open(url, "_blank");
+
+const openArchive = (row) => {
+  const incomingId =
+    row.incomingId ||
+    row.incoming?.id ||
+    row.incoming?.incomingId ||
+    row.id;
+
+  if (!incomingId) {
+    return errorAlert("incomingId غير موجود داخل هذا السطر");
+  }
+
+  currentIncomingId.value = incomingId;
+  archiveFiles.value = row.archiveIncoming?.items ?? [];
+  modalArchive.show();
+};
+
+
+const closeArchive = () => modalArchive.hide();
+
+const openArchiveUploadFromView = () => {
+  modalArchive.hide();
+  modalArchiveUpload.show();
+};
+
+const closeArchiveUpload = () => modalArchiveUpload.hide();
+
+const onArchiveFilesSelected = (event, index) => {
+  archiveInputs.value[index].files = Array.from(event.target.files || []);
+};
+
+const removeArchiveInput = (index) => {
+  archiveInputs.value.splice(index, 1);
+};
+
+const addArchiveInput = () => {
+  archiveInputs.value.push({ files: [] });
+};
+
+const isUploadingArchive = ref(false);
+const submitArchiveUpload = async () => {
+  if (isUploadingArchive.value) return;
+
+  if (!currentIncomingId.value) {
+    return errorAlert("معاملة غير محددة");
+  }
+
+  const allFiles = archiveInputs.value.flatMap((x) => x.files);
+
+  if (allFiles.length === 0) {
+    return errorAlert("يرجى اختيار ملفات");
+  }
+
+  isUploadingArchive.value = true;
+
+  try {
+    await uploadIncomingArchive(currentIncomingId.value, allFiles);
+
+    successAlert("تم رفع المرفقات بنجاح");
+    archiveInputs.value = [{ files: [] }];
+    currentIncomingId.value = "";
+
+    modalArchiveUpload.hide();
+    load();
+  } catch (e) {
+    console.error(e);
+    errorAlert("فشل رفع المرفقات");
+  } finally {
+    isUploadingArchive.value = false;
+  }
+};
+
+const today = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`; 
+};
+
 
 // ===== INIT =====
 onMounted(() => {
@@ -1834,6 +2071,8 @@ onMounted(() => {
   viewModal = new Modal(viewModalEl.value);
   situationsModal = new Modal(situationsModalEl.value);
   namesModalInstance = new Modal(namesModal.value);
+  modalArchive = new Modal(archiveModal.value);
+  modalArchiveUpload = new Modal(archiveUploadModal.value);
   load();
   loadDepartments();
   loadStats();

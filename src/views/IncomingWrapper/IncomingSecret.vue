@@ -15,9 +15,9 @@
     </div>
 
     <div class="d-flex gap-2">
-      <button type="button" class="btn btn-primary" @click="openAdd()">
+      <!-- <button type="button" class="btn btn-primary" @click="openAdd()">
         إضافة وارد جديد
-      </button>
+      </button> -->
       <button
         type="button"
         class="btn btn-primary"
@@ -248,7 +248,7 @@
               </tr>
 
               <tr v-if="incomingList.length === 0">
-                <td colspan="7" class="py-5 text-muted">
+                <td colspan="14" class="py-5 text-muted">
                   <i class="bi bi-inboxes fs-1 d-block mb-2"></i>
                   لا توجد بيانات
                 </td>
@@ -301,6 +301,35 @@
         <form @submit.prevent="save">
           <div class="modal-body">
             <div class="row g-3">
+              <!-- نوع الوارد -->
+<!-- نوع الوارد -->
+<div class="col-12">
+  <div class="typeIncoming-header">
+    <label class="form-label m-0">نوع الوارد</label>
+
+    <div class="typeIncoming-wrapper">
+      <button
+        type="button"
+        class="typeIncoming-btn"
+        :class="{ active: form.typeIncoming === 1 }"
+        @click="form.typeIncoming = 1"
+      >
+        عام
+      </button>
+
+      <button
+        type="button"
+        class="typeIncoming-btn"
+        :class="{ active: form.typeIncoming === 2 }"
+        @click="form.typeIncoming = 2"
+      >
+        سري
+      </button>
+    </div>
+  </div>
+</div>
+
+
               <div class="col-12">
                 <label class="form-label">أسماء الجرحى</label>
 
@@ -692,6 +721,16 @@
               />
             </div>
 
+
+            <div class="col-md-12">
+              <label class="form-label">الملحقات الطبية</label>
+              <input
+                class="form-control"
+                :value="medicalAccessoriesText(view.medicalAccessories)"
+                disabled
+              />
+            </div>
+
             <div class="col-md-12">
               <label class="form-label">الموضوع</label>
               <input class="form-control" :value="view.subject" disabled />
@@ -919,7 +958,7 @@ import {
 import { getDepartments } from "@/services/departments.service.js";
 import { getFormations, getCommands } from "@/services/formations.service.js";
 import {
-  getIncomings,
+  getIncomingSecret,
   addIncoming,
   updateIncoming,
   deleteIncoming,
@@ -979,6 +1018,12 @@ const medicalAccessoriesOptions = [
   { label: "قرص (CD)", value: 3 },
 ];
 
+const typeIncomingOptions = [
+  { label: "عام", value: 1 },
+  { label: "سري", value: 2 },
+];
+
+
 const tempName = ref("");
 const inputRef = ref(null);
 
@@ -1004,7 +1049,7 @@ const removeTag = (index) => {
 const load = async () => {
   loading.value = true;
   try {
-    const res = await getIncomings({
+    const res = await getIncomingSecret({
       pageNumber: page.value,
       pageSize,
       injuredName: filters.injuredName || null,
@@ -1082,6 +1127,7 @@ const form = reactive({
   medicalAccessories: null,
   bookCount: "",
   bookDate: null,
+  typeIncoming: 1,
 });
 console.log(commands.value);
 
@@ -1094,14 +1140,13 @@ const openEdit = (item) => {
   form.formationId = item.formationId;
   form.commandId = item.commandId;
   form.incomingBookNumber = item.incomingBookNumber;
+  form.typeIncoming = item.typeIncoming ?? 1;
   form.incomingDate = item.incomingDate
     ? item.incomingDate.substring(0, 10)
     : null;
-  incomingDateText.value = item.incomingDate
-    ? item.incomingDate.substring(8, 10) +
-      item.incomingDate.substring(5, 7) +
-      item.incomingDate.substring(0, 4)
-    : "";
+    incomingDateText.value = item.incomingDate
+  ? `${item.incomingDate.substring(8, 10)}/${item.incomingDate.substring(5, 7)}/${item.incomingDate.substring(0, 4)}`
+  : "";
   form.subject = item.subject;
   form.content = item.content;
   form.departmentIds = item.departmentIds || [];
@@ -1109,20 +1154,15 @@ const openEdit = (item) => {
   form.bookCount = item.bookCount;
   form.bookDate = item.bookDate ? item.bookDate.split("T")[0] : null;
   bookDateText.value = form.bookDate
-    ? form.bookDate.substring(8, 10) +
-      form.bookDate.substring(5, 7) +
-      form.bookDate.substring(0, 4)
-    : "";
+  ? `${form.bookDate.substring(8, 10)}/${form.bookDate.substring(5, 7)}/${form.bookDate.substring(0, 4)}`
+  : "";
   modal.show();
 };
 
 const isSaving = ref(false);
 const save = async () => {
-  // منع الضغط المتكرر
   if (isSaving.value) return;
-  //  تحقق قبل أي شيء
   normalizeBookDate();
-  //  تحقق منطقي كافي
   if (!form.bookDate) {
     errorAlert("يرجى إدخال تاريخ الكتاب بصيغة صحيحة (يوم / شهر / سنة)");
     return;
@@ -1131,7 +1171,6 @@ const save = async () => {
     errorAlert("يرجى إدخال تاريخ الوارد بصيغة صحيحة (يوم / شهر / سنة)");
     return;
   }
-  //  منع الإرسال إذا لم يتم إدخال تاريخ
   if (!form.bookDate) {
     errorAlert("يرجى إدخال تاريخ الكتاب بشكل صحيح قبل الحفظ");
     return;
@@ -1194,6 +1233,7 @@ const reset = () => {
   form.bookCount = "";
   form.bookDate = null;
   bookDateText.value = "";
+  form.typeIncoming = 1;
 };
 
 const close = () => modal.hide();
@@ -1255,9 +1295,7 @@ const submitTransfer = async () => {
   isTransferring.value = true;
 
   try {
-    // ===============================
-    // 🔹 ترحيل جماعي
-    // ===============================
+    // ============== ترحيل جماعي  ==============
     if (isBulkTransfer.value) {
       for (const incId of selectedDepartmentIds.value) {
         const fd = new FormData();
@@ -1278,15 +1316,11 @@ const submitTransfer = async () => {
       successAlert(
         `تم ترحيل (${selectedDepartmentIds.value.length}) معاملات بنجاح`
       );
-
-      // تنظيف التحديد
       selectedDepartmentIds.value = [];
       selectAll.value = false;
     }
 
-    // ===============================
-    // 🔹 ترحيل مفرد
-    // ===============================
+    // ============= ترحيل مفرد  =============
     else {
       const fd = new FormData();
       fd.append("IncomingId", transfer.incomingId);
@@ -1342,6 +1376,8 @@ const openView = (inc) => {
   view.departmentNames = inc.departmentNames || [];
   view.bookCount = inc.bookCount;
   view.bookDate = inc.bookDate;
+  view.medicalAccessories = inc.medicalAccessories;
+
   modalView.show();
 };
 const closeView = () => modalView.hide();
@@ -1497,13 +1533,11 @@ watch(
 
 const parseDateNoLeadingZero = (text) => {
   if (!text) return null;
-  // يسمح فقط أرقام و /
+
   const parts = text.split("/");
   if (parts.length !== 3) return null;
-  const [dayStr, monthStr, yearStr] = parts;
 
-  //  منع 0 أو 01 أو 02
-  if (dayStr.startsWith("0") || monthStr.startsWith("0")) return null;
+  const [dayStr, monthStr, yearStr] = parts;
 
   const day = Number(dayStr);
   const month = Number(monthStr);
@@ -1525,21 +1559,24 @@ const parseDateNoLeadingZero = (text) => {
     year > 2100
   )
     return null;
+
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(
     2,
     "0"
   )}`;
 };
 
+
 const normalizeBookDate = () => {
+  if (!bookDateText.value) return; 
   form.bookDate = parseDateNoLeadingZero(bookDateText.value);
 };
 
 const incomingDateText = ref("");
 const normalizeIncomingDate = () => {
+  if (!incomingDateText.value) return;
   form.incomingDate = parseDateNoLeadingZero(incomingDateText.value);
 };
-
 const selectedDepartmentIds = ref([]);
 const selectAll = ref(false);
 
@@ -1650,3 +1687,4 @@ onMounted(() => {
   loadCommands();
 });
 </script>
+
