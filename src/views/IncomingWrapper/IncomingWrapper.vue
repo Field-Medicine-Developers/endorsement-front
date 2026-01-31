@@ -28,6 +28,13 @@
         >
           الوارد السري
         </div>
+        <div
+        class="nav-item"
+        :class="{ active: tab === 'transfers' }"
+        @click="tab = 'transfers'"
+      >
+        سجل 
+      </div>
       </div>
     </div>
   
@@ -39,6 +46,7 @@
   import { ref, computed } from "vue";
   import Incoming from "./Incoming.vue";
   import IncomingSecret from "./IncomingSecret.vue";
+  import IncomingTransfers from "./IncomingTransfers.vue"; 
   
   const tab = ref("public");
   
@@ -49,6 +57,9 @@
   
       case "secret":
         return IncomingSecret;
+
+       case "transfers":
+        return IncomingTransfers;
   
       default:
         return Incoming;

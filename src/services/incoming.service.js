@@ -22,4 +22,6 @@ export const transferIncoming = (data) =>
   });
 
 
-
+  export const getIncomingTransfers = (params) => {
+    return api.get("/Incomings/transfers", { params });
+  };

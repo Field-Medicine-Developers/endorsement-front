@@ -369,7 +369,7 @@
 
  .navbar-nav {
     flex-wrap: nowrap;              
-    justify-content: space-between; 
+    /* justify-content: space-between;  */
     width: 100%;
     gap: 24px;
   }
@@ -391,3 +391,43 @@
      margin-right: 35px;
     }
   }
+
+
+ /* -----------------------------------------------------------
+   Navbar Responsive Professional Fix
+----------------------------------------------------------- */
+@media (max-width: 1199.98px) and (min-width: 768px) {
+  .navbar {
+    padding: 8px 12px !important;
+  }
+
+  .brand-title {
+    font-size: 1.25rem !important;
+  }
+
+  .navbar-nav {
+    flex: 1;
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+  }
+
+
+  .navbar-nav::-webkit-scrollbar {
+    height: 5px;
+  }
+  .navbar-nav::-webkit-scrollbar-thumb {
+    background: rgba(18, 177, 209, 0.35);
+    border-radius: 10px;
+  }
+
+  .nav-link {
+    font-size: 0.85rem !important;
+    padding: 8px 10px !important;
+  }
+}
+
+
+

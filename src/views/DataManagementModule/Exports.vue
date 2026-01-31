@@ -18,6 +18,28 @@
     <button class="btn btn-primary" @click="openAdd">إضافة صادر جديد</button>
   </div>
 
+  <!-- Search -->
+  <div class="card shadow-sm border-0 mb-3 p-3">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <input
+          v-model="filters.exportNumber"
+          class="form-control"
+          placeholder="بحث عن رقم الصادر..."
+          @keyup.enter="load"
+        />
+      </div>
+
+      <div class="col-md-6 d-flex justify-content-end gap-2 align-items-end">
+        <button class="btn-search" @click="load">بحث</button>
+        <button class="btn-advanced" @click="openAdvancedSearchModal">
+          بحث متقدم
+        </button>
+        <button class="btn-advanced" @click="reset">إعادة تعيين</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Table -->
   <div class="card shadow-sm border-0 mb-4">
     <div class="card-header custom-card-header">
@@ -188,7 +210,6 @@
                 </div>
               </div>
             </div>
-
             <div class="col-md-6">
               <label class="form-label">رقم الصادر</label>
               <input v-model="form.exportNumber" class="form-control" />
@@ -298,17 +319,8 @@
           <button class="btn btn-light" @click="closeArchiveUpload">
             إلغاء
           </button>
-          <button
-            class="btn btn-primary"
-            :disabled="isUploadingArchive"
-            @click="submitArchiveUpload"
-          >
-            <span
-              v-if="isUploadingArchive"
-              class="spinner-border spinner-border-sm me-2"
-            ></span>
-
-            {{ isUploadingArchive ? "جارٍ الرفع..." : "رفع" }}
+          <button class="btn btn-primary" @click="submitArchiveUpload">
+            رفع
           </button>
         </div>
       </div>
@@ -359,28 +371,82 @@
       </div>
     </div>
   </div>
+
+  <!-- Advanced Search Modal -->
+  <div class="modal fade" tabindex="-1" ref="advancedSearchModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">بحث متقدم</h5>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-3">
+            <!-- رقم الصادر -->
+            <div class="col-md-6">
+              <label class="form-label">رقم الصادر</label>
+              <input
+                v-model="filters.exportNumber"
+                class="form-control"
+                placeholder="أدخل رقم الصادر..."
+              />
+            </div>
+
+            <!-- تاريخ الصادر -->
+            <div class="col-md-6">
+              <label class="form-label">تاريخ الصادر</label>
+              <input
+                v-model="filters.exportDate"
+                type="date"
+                class="form-control"
+              />
+            </div>
+
+            <!-- الجهة المرسل إليها -->
+            <div class="col-md-12">
+              <label class="form-label">الجهة المرسل إليها</label>
+              <input
+                v-model="filters.destinationDepartment"
+                class="form-control"
+                placeholder="أدخل اسم الجهة..."
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeAdvancedSearchModal">
+            إغلاق
+          </button>
+
+          <button class="btn btn-primary" @click="applyAdvancedSearch">
+            بحث
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import * as bootstrap from "bootstrap";
 import {
   getExports,
   createExport,
   updateExport,
   deleteExport,
-  uploadExportArchive,
 } from "@/services/exports.service";
+import { uploadIncomingArchive } from "@/services/incoming-archive.service.js";
 import { successAlert, errorAlert, confirmDelete } from "@/utils/alert.js";
 
-// ========== state ==========
 const list = ref([]);
 const loading = ref(false);
 const isEdit = ref(false);
 const currentId = ref(null);
 const isSaving = ref(false);
 
-// Pagination
+// ===== Pagination =====
 const page = ref(1);
 const pageSize = 10;
 const totalPages = ref(1);
@@ -400,7 +466,16 @@ const visiblePages = computed(() => {
   return pages;
 });
 
-// Form
+// ===== Archive functionality =====
+const archiveModalEl = ref(null);
+const archiveUploadModal = ref(null);
+const archiveFiles = ref([]);
+const currentExportId = ref("");
+const selectedArchiveFiles = ref([]);
+const archiveInputs = ref([{ files: [] }]);
+let archiveModalInstance = null;
+let archiveUploadModalInstance = null;
+
 const form = ref({
   typeExport: 1,
   exportNumber: "",
@@ -410,53 +485,65 @@ const form = ref({
   content: "",
 });
 
-// Modals
-const modalEl = ref(null);
-const archiveModalEl = ref(null);
-const archiveUploadModal = ref(null);
-
-let modalInstance = null;
-let archiveModalInstance = null;
-let archiveUploadModalInstance = null;
-
-// Archive
-const archiveFiles = ref([]);
-const currentExportId = ref("");
-const archiveInputs = ref([{ files: [] }]);
-
-// ========== lifecycle ==========
-onMounted(() => {
-  modalInstance = new bootstrap.Modal(modalEl.value, {
-    backdrop: "static",
-    keyboard: false,
-  });
-  archiveModalInstance = new bootstrap.Modal(archiveModalEl.value, {
-    backdrop: "static",
-    keyboard: false,
-  });
-  archiveUploadModalInstance = new bootstrap.Modal(archiveUploadModal.value, {
-    backdrop: "static",
-    keyboard: false,
-  });
-
-  load();
+const filters = reactive({
+  exportNumber: "",
+  exportDate: "",
+  destinationDepartment: "",
 });
 
-// ========== functions ==========
+const advancedSearchModal = ref(null);
+let advancedSearchModalInstance = null;
+
+// ====== Modal ======
+const modalEl = ref(null);
+let modalInstance = null;
+
+// ====== Load ======
 const load = async () => {
   loading.value = true;
   try {
-    const res = await getExports({ pageNumber: page.value, pageSize });
+    const res = await getExports({
+      pageNumber: page.value,
+      pageSize: pageSize,
+      exportNumber: filters.exportNumber || null,
+      exportDate: filters.exportDate
+        ? new Date(filters.exportDate).toISOString()
+        : null,
+      destinationDepartment: filters.destinationDepartment || null,
+    });
     list.value = res.data.data ?? [];
     totalPages.value = res.data.pagination?.totalPages || 1;
-  } catch (e) {
-    console.error(e);
+  } catch (error) {
+    console.error("Error loading exports:", error);
     errorAlert("حدث خطأ أثناء تحميل البيانات");
   } finally {
     loading.value = false;
   }
 };
 
+const openAdvancedSearchModal = () => {
+  advancedSearchModalInstance.show();
+};
+
+const closeAdvancedSearchModal = () => {
+  advancedSearchModalInstance.hide();
+};
+
+const applyAdvancedSearch = () => {
+  page.value = 1; // يرجع لأول صفحة
+  closeAdvancedSearchModal();
+  load();
+};
+
+const reset = () => {
+  filters.exportNumber = "";
+  filters.exportDate = "";
+  filters.destinationDepartment = "";
+  page.value = 1;
+  load();
+};
+
+// ====== Add ======
 const openAdd = () => {
   isEdit.value = false;
   currentId.value = null;
@@ -464,6 +551,7 @@ const openAdd = () => {
   modalInstance.show();
 };
 
+// ====== Edit ======
 const openEdit = (item) => {
   isEdit.value = true;
   currentId.value = item.id;
@@ -478,10 +566,15 @@ const openEdit = (item) => {
   modalInstance.show();
 };
 
-const closeModal = () => modalInstance.hide();
+// ====== Close ======
+const closeModal = () => {
+  modalInstance.hide();
+};
 
+// ====== Save ======
 const save = async () => {
   if (isSaving.value) return;
+
   isSaving.value = true;
 
   try {
@@ -496,15 +589,17 @@ const save = async () => {
     modalInstance.hide();
     await load();
   } catch (e) {
-    console.error(e);
     errorAlert("فشلت العملية، حاول مرة أخرى");
+    console.error(e);
   } finally {
     isSaving.value = false;
   }
 };
 
+// ====== Delete ======
 const remove = async (id) => {
   const result = await confirmDelete();
+
   if (!result.isConfirmed) return;
 
   try {
@@ -512,11 +607,11 @@ const remove = async (id) => {
     successAlert("تم الحذف بنجاح");
     await load();
   } catch (e) {
-    console.error(e);
     errorAlert("فشل الحذف");
   }
 };
 
+// ====== Pagination ======
 const changePage = (newPage) => {
   if (newPage >= 1 && newPage <= totalPages.value && newPage !== page.value) {
     page.value = newPage;
@@ -524,53 +619,59 @@ const changePage = (newPage) => {
   }
 };
 
-// ===== Archive =====
-const openArchive = (item) => {
-  currentExportId.value = item.id;
+const currentIncomingId = ref("");
+// ====== Archive Functions ======
+const openArchive = async (item) => {
+  console.log("EXPORT ITEM =", item);
+  console.log("incomingId =", item.incomingId);
 
-  archiveFiles.value = item.archiveExportFiles || [];
+  currentIncomingId.value = item.incomingId;
 
-  archiveModalInstance.show();
+  try {
+    const res = await getIncomingArchive(item.incomingId);
+    // عدّل حسب شكل Response عندك
+    archiveFiles.value = res.data.data ?? res.data ?? [];
+    archiveModalInstance.show();
+  } catch (e) {
+    console.error(e);
+    archiveFiles.value = [];
+    errorAlert("فشل جلب المرفقات");
+  }
 };
-
-const closeArchiveModal = () => archiveModalInstance.hide();
+const openFile = (url) => {
+  window.open(url, "_blank");
+};
 
 const openArchiveUploadFromView = () => {
   archiveModalInstance.hide();
   archiveUploadModalInstance.show();
 };
-const closeArchiveUpload = () => archiveUploadModalInstance.hide();
+
+const closeArchiveUpload = () => {
+  archiveUploadModalInstance.hide();
+};
 
 const onArchiveFilesSelected = (event, index) => {
   archiveInputs.value[index].files = Array.from(event.target.files);
 };
 
-const isUploadingArchive = ref(false);
 const submitArchiveUpload = async () => {
-  if (isUploadingArchive.value) return;
-
   const allFiles = archiveInputs.value.flatMap((x) => x.files);
 
-  if (!currentExportId.value) return errorAlert("لا يوجد صادر محدد");
-  if (!allFiles.length) return errorAlert("يرجى اختيار ملفات");
-
-  isUploadingArchive.value = true;
+  if (!currentIncomingId.value) return errorAlert("لا يوجد وارد مرتبط");
+  if (allFiles.length === 0) return errorAlert("يرجى اختيار ملفات");
 
   try {
-    await uploadExportArchive(currentExportId.value, allFiles);
+    await uploadIncomingArchive(currentIncomingId.value, allFiles);
     successAlert("تم رفع المرفقات بنجاح");
-
     archiveInputs.value = [{ files: [] }];
     archiveUploadModalInstance.hide();
-    await load();
 
-    const updatedRow = list.value.find((x) => x.id === currentExportId.value);
-    if (updatedRow) openArchive(updatedRow);
+    // رجّع افتح العرض بعد الرفع
+    await openArchive({ incomingId: currentIncomingId.value });
   } catch (e) {
     console.error(e);
     errorAlert("فشل رفع المرفقات");
-  } finally {
-    isUploadingArchive.value = false;
   }
 };
 
@@ -582,8 +683,7 @@ const addArchiveInput = () => {
   archiveInputs.value.push({ files: [] });
 };
 
-const openFile = (url) => window.open(url, "_blank");
-
+// ====== Helpers ======
 const resetForm = () => {
   form.value = {
     typeExport: 1,
@@ -604,6 +704,30 @@ const formatDate = (d) => {
   const day = String(dt.getDate()).padStart(2, "0");
   return `${year}/${month}/${day}`;
 };
+
+onMounted(() => {
+  modalInstance = new bootstrap.Modal(modalEl.value, {
+    backdrop: "static",
+    keyboard: false,
+  });
+  modalInstance = new bootstrap.Modal(modalEl.value, {
+    backdrop: "static",
+    keyboard: false,
+  });
+  archiveModalInstance = new bootstrap.Modal(archiveModalEl.value, {
+    backdrop: "static",
+    keyboard: false,
+  });
+  archiveUploadModalInstance = new bootstrap.Modal(archiveUploadModal.value, {
+    backdrop: "static",
+    keyboard: false,
+  });
+  advancedSearchModalInstance = new bootstrap.Modal(advancedSearchModal.value, {
+    backdrop: "static",
+    keyboard: false,
+  });
+  load();
+});
 </script>
 
 <style scoped>

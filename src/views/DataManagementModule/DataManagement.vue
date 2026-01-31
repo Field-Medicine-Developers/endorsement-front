@@ -32,16 +32,16 @@
   <!-- Search Bar -->
   <div class="card shadow-sm border-0 mb-3 p-3">
     <div class="row g-3">
-      <!-- رقم المذكرة -->
       <div class="col-md-6">
-        <!-- <label class="form-label">رقم المذكرة</label> -->
+        <!-- <label class="form-label">اسم الجريح</label> -->
         <input
-          v-model="filters.memoNumber"
+          v-model="filters.injuredName"
           class="form-control"
-          placeholder="بحث عن رقم المذكرة"
+          placeholder="بحث عن اسم الجريح"
           @keyup.enter="load"
         />
       </div>
+
       <div class="col-md-6 d-flex justify-content-end gap-2 align-items-end">
         <button class="btn-search" @click="load()">بحث</button>
         <button class="btn-advanced" @click="openAdvanced()">بحث متقدم</button>
@@ -79,12 +79,15 @@
                   </label>
                 </th>
                 <th>#</th>
+                <th>أسماء الجرحى</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
                 <th>رقم الكتاب</th>
+                <th>تاريخ الكتاب</th>
                 <!-- <th>تاريخ الإدخال</th> -->
                 <th>حالة المعاملة</th>
                 <th>هامش مسؤول الشعبة</th>
+                <th>هامش المدير القسم</th>
                 <!-- <th>تاريخ الاستلام</th> -->
                 <!-- <th>سبب الرفض</th> -->
                 <!-- <th>تاريخ الرفض</th> -->
@@ -109,10 +112,27 @@
                 </td>
                 <!-- رقم تسلسلي -->
                 <td>{{ (page - 1) * pageSize + i + 1 }}</td>
+                <td>
+                  <div class="injured-cell">
+                    <div class="injured-main">
+                      {{ m.injuredNames?.[0] || "—" }}
+                    </div>
+
+                    <div
+                      v-if="m.injuredNames && m.injuredNames.length > 1"
+                      class="show-more"
+                      @click="openNamesModal(m.injuredNames)"
+                    >
+                      عرض الكل ({{ m.injuredNames.length }})
+                    </div>
+                  </div>
+                </td>
+
                 <!-- incoming -->
                 <td>{{ m.incomingBookNumber ?? "-" }}</td>
                 <td>{{ formatDate(m.incomingDate) }}</td>
-                <td>{{ m.incomingBookNumber ?? "-" }}</td>
+                <td>{{ m.bookCount ?? "-" }}</td>
+                <td>{{ formatDate(m.bookDate) }}</td>
                 <!-- createdAt -->
                 <!-- <td>{{ formatDate(m.createdAt) }}</td> -->
                 <td>
@@ -128,7 +148,23 @@
                     <i class="bi bi-x-circle-fill"></i> مرفوض
                   </span>
                 </td>
-                <td>{{ m.marginNoteDivision }}</td>
+                <td>
+                  <button
+                    class="btn btn-search btn-sm"
+                    @click="openDivisionNoteModal(m.marginNoteDivision)"
+                  >
+                    عرض الهامش شعبة ({{ m.marginNoteDivision ? 1 : 0 }})
+                  </button>
+                </td>
+                <td>
+                  <button
+                    class="btn btn-search btn-sm"
+                    @click="openManagerNotes(m.managerNotes || [])"
+                  >
+                    عرض الهوامش ({{ m.managerNotes?.length || 0 }})
+                  </button>
+                </td>
+
                 <!-- تواريخ إضافية -->
                 <!-- <td>{{ formatDate(m.receiveDate) }}</td> -->
                 <!-- <td>{{ m.rejectionReason ?? "-" }}</td> -->
@@ -580,13 +616,13 @@
         <div class="modal-body">
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label">اسم الجريح</label>
-              <input v-model="filters.injuredName" class="form-control" />
+              <label class="form-label">رقم المذكرة</label>
+              <input v-model="filters.memoNumber" class="form-control" />
             </div>
 
             <div class="col-md-6">
-              <label class="form-label">رقم المذكرة</label>
-              <input v-model="filters.memoNumber" class="form-control" />
+              <label class="form-label">عدد الكتاب</label>
+              <input v-model="filters.bookCount" class="form-control" />
             </div>
 
             <div class="col-md-6">
@@ -785,6 +821,101 @@
       </div>
     </div>
   </div>
+
+  <!-- Names Modal – عرض كل أسماء الجرحى -->
+  <div class="modal fade" tabindex="-1" ref="namesModalEl">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">أسماء الجرحى</h5>
+        </div>
+
+        <div class="modal-body">
+          <div
+            v-for="(name, i) in allNames"
+            :key="i"
+            class="name-item border-bottom py-2"
+          >
+            • {{ name }}
+          </div>
+
+          <div v-if="!allNames.length" class="text-muted text-center py-3">
+            لا توجد أسماء
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeNamesModal()">
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manager Notes Modal -->
+  <div class="modal fade" tabindex="-1" ref="managerNotesModalEl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">هوامش مدير القسم</h5>
+        </div>
+
+        <div class="modal-body">
+          <div v-if="selectedManagerNotes.length">
+            <div
+              v-for="(n, i) in selectedManagerNotes"
+              :key="i"
+              class="border-bottom py-3"
+            >
+              <div class="fw-bold mb-1">{{ i + 1 }}. هامش مدير القسم</div>
+
+              <div class="text-muted small mb-2">
+                {{ formatDate(n.noteDate) }}
+              </div>
+
+              <div class="note-box">
+                {{ n.managerNote || "—" }}
+              </div>
+            </div>
+          </div>
+
+          <p v-else class="text-muted text-center">لا توجد هوامش</p>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeManagerNotes">
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Division Note Modal -->
+  <div class="modal fade" tabindex="-1" ref="divisionNoteModalEl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">هامش مسؤول الشعبة</h5>
+        </div>
+
+        <div class="modal-body">
+          <div v-if="divisionNoteText" class="note-box">
+            {{ divisionNoteText }}
+          </div>
+
+          <p v-else class="text-muted text-center">لا يوجد هامش</p>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeDivisionNoteModal">
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -887,7 +1018,6 @@ const load = async () => {
   loading.value = true;
 
   try {
-    // تجهيز فلتر hasOriginalFile
     let hasOriginal = null;
     if (filters.hasOriginalFile === "true") hasOriginal = true;
     else if (filters.hasOriginalFile === "false") hasOriginal = false;
@@ -898,6 +1028,7 @@ const load = async () => {
       injuredName: filters.injuredName || null,
       marginNoteId: filters.marginNoteId || null,
       memoNumber: filters.memoNumber || null,
+      bookCount: filters.bookCount || null,
       memoDateFrom: filters.memoDateFrom || null,
       memoDateTo: filters.memoDateTo || null,
       hasOriginalFile: hasOriginal,
@@ -907,32 +1038,6 @@ const load = async () => {
     list.value = res.data.data || [];
     totalPages.value = res.data.pagination?.totalPages ?? 1;
 
-    // ================================
-    // دمج memoNumber + memoDate (اختياري)
-    // ================================
-    await Promise.all(
-      list.value.map(async (row) => {
-        if (!row.id) return;
-
-        try {
-          const landaRes = await getLandaViwe({
-            marginNoteId: row.id,
-            pageNumber: 1,
-            pageSize: 1,
-          });
-
-          const landa = landaRes.data.data?.[0];
-          if (landa) {
-            row.memoNumber = landa.memoNumber;
-            row.memoDate = landa.memoDate;
-          }
-        } catch (err) {
-          console.error("خطأ في دمج بيانات Landa:", err);
-        }
-      })
-    );
-
-    // Reset selections when data is reloaded
     selectedDepartmentIds.value = [];
     selectAll.value = false;
   } catch (e) {
@@ -1351,6 +1456,52 @@ const openFile = (url) => {
   window.open(url, "_blank");
 };
 
+const allNames = ref([]);
+const namesModalEl = ref(null);
+let namesModal = null;
+
+const openNamesModal = (names) => {
+  allNames.value = names || [];
+  namesModal.show();
+};
+
+const closeNamesModal = () => {
+  namesModal.hide();
+};
+
+// ==============================
+// Manager Notes Modal
+// ==============================
+const selectedManagerNotes = ref([]);
+const managerNotesModalEl = ref(null);
+let managerNotesModal = null;
+
+const openManagerNotes = (notes = []) => {
+  selectedManagerNotes.value = Array.isArray(notes) ? notes : [];
+  managerNotesModal?.show();
+};
+
+const closeManagerNotes = () => {
+  managerNotesModal?.hide();
+};
+
+// ==============================
+// Division Note Modal
+// ==============================
+const divisionNoteModalEl = ref(null);
+let divisionNoteModal = null;
+
+const divisionNoteText = ref("");
+
+const openDivisionNoteModal = (text) => {
+  divisionNoteText.value = text || "";
+  divisionNoteModal.show();
+};
+
+const closeDivisionNoteModal = () => {
+  divisionNoteModal.hide();
+};
+
 onMounted(() => {
   modal = new Modal(modalEl.value);
   transferModal = new Modal(transferModalEl.value);
@@ -1358,6 +1509,9 @@ onMounted(() => {
   viewModal = new Modal(viewModalEl.value);
   archiveModal = new Modal(archiveModalEl.value);
   archiveUploadModal = new Modal(archiveUploadModalEl.value);
+  namesModal = new Modal(namesModalEl.value);
+  managerNotesModal = new Modal(managerNotesModalEl.value);
+  divisionNoteModal = new Modal(divisionNoteModalEl.value);
   load();
   loadDepartments();
 });

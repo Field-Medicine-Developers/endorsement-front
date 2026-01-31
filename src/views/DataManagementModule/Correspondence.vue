@@ -18,23 +18,23 @@
   </div>
 
   <!-- Search Bar -->
-  <div class="card shadow-sm border-0 mb-3 p-3">
-    <div class="row g-3">
-      <!-- بحث بالاسم -->
+   <div class="card shadow-sm border-0 mb-3 p-3">
+    <div class="row g-3 align-items-end">
+      <!-- بحث سريع بالاسم فقط -->
       <div class="col-md-6">
         <input
           v-model="filters.injuredName"
           class="form-control"
-          placeholder="بحث بالاسم..."
-          @keyup.enter="load"
+          placeholder="بحث باسم الجريح..."
+          @keyup.enter="searchQuick"
         />
       </div>
 
-      <div class="col-md-6 d-flex justify-content-end gap-2 align-items-end">
-        <button class="btn-search" @click="load()">بحث</button>
-        <button class="btn-advanced" @click="resetFilters()">
-          إعادة تعيين
-        </button>
+      <!-- الأزرار -->
+      <div class="col-md-6 d-flex justify-content-end gap-2">
+        <button class="btn-search" @click="searchQuick">بحث</button>
+        <button class="btn-advanced" @click="openAdvanced">بحث متقدم</button>
+        <button class="btn-advanced" @click="resetFilters">إعادة تعيين</button>
       </div>
     </div>
   </div>
@@ -56,13 +56,15 @@
             <thead>
               <tr>
                 <th>#</th>
-                <!-- <th>القسم المحوَّل إليه</th> -->
+                <th>اسم الجريح</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
-                <!-- <th>موضوع الوارد</th> -->
-                <th>اسم الجريح</th>
-                <!-- <th>تاريخ التحويل</th> -->
-                <!-- <th>تاريخ التسليم</th> -->
+                <th>عدد الكتاب</th>
+                <th>تاريخ الكتاب</th>
+                <th>القيادة / التشكيل</th>
+                <th>هامش مسؤول القسم</th>
+                <th>الموضوع</th>
+                <th>المحتوى</th>
                 <th>تاريخ الاستلام</th>
                 <th>حالة المعاملة</th>
                 <th>سبب الرفض</th>
@@ -74,29 +76,65 @@
             <tbody>
               <tr v-for="(m, i) in list" :key="m.id">
                 <td>{{ (page - 1) * pageSize + i + 1 }}</td>
-                <!-- <td>{{ m.departmentName }}</td> -->
-                <td>{{ m.incomingBookNumber }}</td>
-                <td>{{ formatDate(m.incomingDate) }}</td>
-
-                <!-- موضوع الوارد -->
-                <!-- <td>{{ m.incomingSubject }}</td> -->
-
                 <!-- اسم الجريح -->
                 <td>
-                  <div>
-                    <div>{{ m.injuredNames[0] }}</div>
+                  <div v-if="m.injuredNames && m.injuredNames.length">
+                    <div
+                      v-for="(name, i) in m.injuredNames.slice(0, 2)"
+                      :key="i"
+                    >
+                      • {{ name }}
+                    </div>
 
                     <div
-                      v-if="m.injuredNames.length > 1"
+                      v-if="m.injuredNames.length > 2"
                       class="show-more"
                       @click="openNamesModal(m.injuredNames)"
                     >
                       عرض الكل ({{ m.injuredNames.length }})
                     </div>
                   </div>
+
+                  <span v-else class="text-muted">—</span>
                 </td>
-                <!-- <td>{{ formatDate(m.createdAt) }}</td> -->
-                <!-- <td>{{ formatDate(m.deliveryDate) }}</td> -->
+                <td>{{ m.incomingBookNumber }}</td>
+                <td>{{ formatDate(m.incomingDate) }}</td>
+                <td>{{ m.bookCount || "-" }}</td>
+                <td>{{ formatDate(m.bookDate) }}</td>
+                <td>
+                  <div class="fw-bold">{{ m.commandName || "—" }}</div>
+                  <small class="text-muted">
+                    {{ m.formationName || "—" }}</small
+                  >
+                </td>
+                   <!-- الهوامش -->
+                   <td>
+                  <button
+                    class="btn btn-search btn-sm"
+                    @click="openManagerNotes(m.managerNotes || [])"
+                  >
+                    عرض الهوامش ({{ m.managerNotes?.length || 0 }})
+                  </button>
+                </td>
+
+                <td>
+                  <button
+                    class="btn btn-search btn-sm"
+                    @click="openTextModal('الموضوع', m.subject)"
+                  >
+                    عرض الموضوع ({{ m.subject ? 1 : 0 }})
+                  </button>
+                </td>
+
+                <td>
+                  <button
+                    class="btn btn-search btn-sm"
+                    @click="openTextModal('المحتوى', m.content)"
+                  >
+                    عرض المحتوى ({{ m.content ? 1 : 0 }})
+                  </button>
+                </td>
+
                 <td>{{ formatDate(m.incomingReceiveDate) }}</td>
                 <td>
                   <span v-if="m.status === 0" class="badge bg-secondary">
@@ -257,12 +295,224 @@
       </form>
     </div>
   </div>
+
+  <!-- Names Modal -->
+  <div class="modal fade" tabindex="-1" ref="namesModalEl">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">أسماء الجرحى</h5>
+        </div>
+
+        <div class="modal-body">
+          <div
+            v-for="(name, i) in allNames"
+            :key="i"
+            class="name-item border-bottom py-2"
+          >
+            • {{ name }}
+          </div>
+
+          <div v-if="allNames.length === 0" class="text-muted text-center">
+            لا توجد أسماء
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeNamesModal">إغلاق</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Text Modal (Subject / Content) -->
+  <div class="modal fade" tabindex="-1" ref="textModalEl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">
+            {{ textModal.title }}
+          </h5>
+        </div>
+
+        <div class="modal-body">
+          <div v-if="textModal.value" class="note-box">
+            {{ textModal.value }}
+          </div>
+
+          <p v-else class="text-muted text-center">لا توجد بيانات</p>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeTextModal">إغلاق</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- Advanced Search Modal -->
+    <div class="modal fade" tabindex="-1" ref="advancedModal">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">البحث المتقدم</h5>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-3">
+
+            <div class="col-md-6">
+  <label class="form-label">اسم الجريح</label>
+  <input
+    type="text"
+    v-model="filters.injuredName"
+    class="form-control"
+  />
+</div>
+
+            <div class="col-md-6">
+              <label class="form-label">رقم الوارد</label>
+              <input
+                type="number"
+                v-model.number="filters.incomingBookNumber"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">تاريخ الوارد</label>
+              <input
+                type="date"
+                v-model="filters.incomingDate"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">عدد الكتاب</label>
+              <input
+                type="number"
+                v-model.number="filters.bookCount"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">تاريخ الكتاب</label>
+              <input
+                type="date"
+                v-model="filters.bookDate"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">الموضوع</label>
+              <input
+                type="text"
+                v-model="filters.subject"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">المحتوى</label>
+              <input
+                type="text"
+                v-model="filters.content"
+                class="form-control"
+              />
+            </div>
+
+            <!-- Command -->
+            <div class="col-md-6">
+              <div class="custom-vue-select-container">
+                <label class="form-label">القيادة</label>
+                <VueSelect
+                  v-model="filters.commandId"
+                  :options="commands"
+                  label="label"
+                  :reduce="(o) => o.value"
+                  placeholder="الكل"
+                  clearable
+                  searchable
+                />
+              </div>
+            </div>
+
+            <!-- Formation -->
+            <div class="col-md-6">
+              <div class="custom-vue-select-container">
+                <label class="form-label">التشكيل</label>
+                <VueSelect
+                  v-model="filters.formationId"
+                  :options="formations"
+                  label="name"
+                  :reduce="(o) => o.id"
+                  placeholder="الكل"
+                  clearable
+                  searchable
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeAdvanced">إلغاء</button>
+          <button class="btn btn-primary" @click="applyAdvanced">بحث</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- Manager Notes Modal -->
+    <div class="modal fade" tabindex="-1" ref="managerNotesModalEl">
+    <div
+      class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"
+    >
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">هوامش مسؤول الشعبة</h5>
+        </div>
+
+        <div class="modal-body">
+          <div v-if="selectedManagerNotes.length">
+            <div
+              v-for="(n, i) in selectedManagerNotes"
+              :key="i"
+              class="border-bottom py-3"
+            >
+              <div class="fw-bold mb-1">{{ i + 1 }}. هامش</div>
+
+              <div class="text-muted small mb-2">
+                {{ formatDate(n.noteDate) }}
+              </div>
+
+              <div class="note-box">
+                {{ n.managerNote || "—" }}
+              </div>
+            </div>
+          </div>
+
+          <p v-else class="text-muted text-center">لا توجد هوامش</p>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeManagerNotes">
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, computed } from "vue";
 import { Modal } from "bootstrap";
-
+import VueSelect from "vue3-select";
+import "vue3-select/dist/vue3-select.css";
 import {
   getLanda,
   getLandaViwe,
@@ -270,7 +520,7 @@ import {
   changeLandaStatus,
 } from "@/services/Data-management.service.js";
 import { successAlert, errorAlert } from "@/utils/alert.js";
-
+import { getFormations,getCommands} from "@/services/formations.service.js";
 const list = ref([]);
 const loading = ref(false);
 
@@ -279,17 +529,22 @@ const pageSize = 10;
 const totalPages = ref(1);
 
 const filters = reactive({
-  injuredName: "",
-  incomingId: "",
-  managerNote: "",
-  createdByUserId: "",
-  createdAtFrom: "",
-  createdAtTo: "",
-  memoNumber: "",
-  memoDateFrom: "",
-  memoDateTo: "",
-  hasOriginalFile: "",
+
+injuredName: "",
+
+formationId: null,
+commandId: null,
+
+bookCount: null,
+bookDate: null,
+
+incomingBookNumber: null,
+incomingDate: null,
+
+subject: "",
+content: "",
 });
+
 
 const visiblePages = computed(() => {
   const arr = [];
@@ -306,48 +561,111 @@ const visiblePages = computed(() => {
   return arr;
 });
 
+
+
+
 const load = async () => {
   loading.value = true;
 
   try {
     const res = await getLandaTransfers({
+
+      // ====== Pagination
       pageNumber: page.value,
       pageSize,
+
+      // ====== Filters (بنفس ترتيب Swagger)
       injuredName: filters.injuredName || null,
+      formationId: filters.formationId || null,
+      commandId: filters.commandId || null,
+      bookCount: filters.bookCount || null,
+
+      bookDate: filters.bookDate
+        ? new Date(filters.bookDate).toISOString()
+        : null,
+
+      incomingBookNumber: filters.incomingBookNumber || null,
+
+      incomingDate: filters.incomingDate
+        ? new Date(filters.incomingDate).toISOString()
+        : null,
+
+      subject: filters.subject || null,
+      content: filters.content || null,
     });
 
-    list.value = res.data.data.map((item) => ({
+    list.value = (res?.data?.data || []).map((item) => ({
       ...item,
-      injuredNames: item.injuredName
-        ? item.injuredName.split(",").map((n) => n.trim())
+
+      // توحيد بسيط فقط حتى لا يظهر undefined بالواجهة
+      injuredNames: Array.isArray(item.injuredNames)
+        ? item.injuredNames
         : [],
+
+      subject: item.subject ?? "",
+      content: item.content ?? "",
+      bookCount: item.bookCount ?? "",
+      bookDate: item.bookDate ?? null,
+
+      rejectionReason: item.rejectionReason ?? null,
+      rejectionDate: item.rejectionDate ?? null,
     }));
 
-    totalPages.value = res.data.pagination?.totalPages ?? 1;
-  } catch (err) {
-    console.error(err);
+    totalPages.value = res?.data?.pagination?.totalPages ?? 1;
+
+  } catch (e) {
+    console.error(e);
     errorAlert("فشل في جلب البيانات");
+    list.value = [];
+    totalPages.value = 1;
   } finally {
     loading.value = false;
   }
 };
 
-const resetFilters = () => {
-  Object.assign(filters, {
-    injuredName: "",
-    incomingId: "",
-    managerNote: "",
-    createdByUserId: "",
-    createdAtFrom: "",
-    createdAtTo: "",
-    memoNumber: "",
-    memoDateFrom: "",
-    memoDateTo: "",
-    hasOriginalFile: "",
-  });
+const formations = ref([]);
+const commands = ref([]);
 
-  load();
+
+const loadFormations = async () => {
+  try {
+    const res = await getFormations();
+    formations.value = (res?.data?.data || []).map(f => ({
+      id: f.id,
+      name: f.name
+    }));
+  } catch {
+    formations.value = [];
+  }
 };
+
+const loadCommands = async () => {
+  try {
+    const res = await getCommands();
+    commands.value = (res?.data?.data || []).map(c => ({
+      value: c.id,
+      label: c.name
+    }));
+  } catch {
+    commands.value = [];
+  }
+};
+
+
+const resetFilters = () => {
+filters.injuredName = "";
+filters.formationId = null;
+filters.commandId = null;
+filters.bookCount = null;
+filters.bookDate = null;
+filters.incomingBookNumber = null;
+filters.incomingDate = null;
+filters.subject = "";
+filters.content = "";
+page.value = 1;
+load();
+};
+
 
 const changePage = (p) => {
   page.value = p;
@@ -438,6 +756,79 @@ const approve = async (row) => {
   }
 };
 
+const namesModalEl = ref(null);
+const allNames = ref([]);
+let namesModal = null;
+
+const openNamesModal = (names = []) => {
+  allNames.value = Array.isArray(names) ? names : [];
+  namesModal.show();
+};
+
+const closeNamesModal = () => {
+  namesModal.hide();
+};
+
+const textModalEl = ref(null);
+let textModalInstance = null;
+
+const textModal = reactive({
+  title: "",
+  value: "",
+});
+
+const openTextModal = (title, value) => {
+  textModal.title = title;
+  textModal.value = value || "";
+  textModalInstance.show();
+};
+
+const closeTextModal = () => {
+  textModalInstance.hide();
+};
+
+
+const advancedModal = ref(null);
+let modalAdvancedInstance = null;
+
+const openAdvanced = () => {
+  if (!modalAdvancedInstance) {
+    modalAdvancedInstance = new Modal(advancedModal.value);
+  }
+  modalAdvancedInstance.show();
+};
+
+const closeAdvanced = () => {
+  modalAdvancedInstance?.hide();
+};
+
+const applyAdvanced = () => {
+  page.value = 1;
+  load();
+  closeAdvanced();
+};
+
+
+const searchQuick = () => {
+  page.value = 1;
+  load();
+};
+
+
+// ==========  managerNotesModal ==========
+const selectedManagerNotes = ref([]);
+const managerNotesModalEl = ref(null);
+let managerNotesModal = null;
+const openManagerNotes = (notes = []) => {
+  selectedManagerNotes.value = Array.isArray(notes) ? notes : [];
+  managerNotesModal.show();
+};
+
+const closeManagerNotes = () => {
+  managerNotesModal.hide();
+};
+
+
 const formatDate = (d) => {
   if (!d) return "-";
   const dt = new Date(d);
@@ -452,6 +843,11 @@ const formatDate = (d) => {
 
 onMounted(() => {
   rejectModal = new Modal(rejectModalEl.value);
+  namesModal = new Modal(namesModalEl.value);
+  textModalInstance = new Modal(textModalEl.value);
+  managerNotesModal = new Modal(managerNotesModalEl.value);
+  loadFormations();
+  loadCommands();
   load();
 });
 </script>

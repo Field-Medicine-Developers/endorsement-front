@@ -25,7 +25,7 @@ body {
 }
 
 /* ===============================
-   🖥 Desktop Large (>= 1400px)
+    Desktop Large (>= 1400px)
 ================================ */
 @media (min-width: 2000px) {
   .container,
@@ -38,7 +38,6 @@ body {
     font-size: 16.5px;
   }
 }
-
 
 /* -------------------------------------------------------------
  الهيدر الرئيسي (Appbar)
@@ -2168,6 +2167,82 @@ pagination
   box-shadow: 0 4px 10px rgba(255, 255, 255, 0.2);
 }
 
+
+/* ================================
+   Mobile (New Layout)
+================================ */
+@media (max-width: 768px) {
+  .flow-nav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .left-side {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .center-links {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap;
+    padding: 6px 6px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .center-links::-webkit-scrollbar {
+    height: 0;
+  }
+
+  .flow-nav .nav-item {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 9px 16px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.14);
+    scroll-snap-align: center;
+    font-size: 0.95rem;
+  }
+
+  .flow-nav .nav-item::after {
+    display: none;
+  }
+
+  .flow-nav .nav-item.active {
+    background: #fff;
+    color: #000;
+  }
+}
+
+/* ================================
+   Extra Small Mobile
+================================ */
+@media (max-width: 420px) {
+  .title-badge {
+    font-size: 0.9rem;
+    padding: 6px 10px;
+  }
+
+  .left-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .flow-nav .nav-item {
+    padding: 8px 14px;
+    font-size: 0.9rem;
+  }
+}
+
+
 /* -----------------------------------------------------------
      status
 ----------------------------------------------------------- */
@@ -2261,6 +2336,18 @@ pagination
     align-items: center;
     padding: 40px 0;
   }
+
+  .spinner-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    pointer-events: none;
+    backdrop-filter: blur(1px);
+  }
+  
   
   .btn-saving {
     background-color: #12b1d1 !important;
@@ -2595,4 +2682,321 @@ pagination
     border: 1px solid #e0e0e0;
     flex-shrink: 0;          
   }
+
   
+  
+
+  /* =========================================================
+    Responsive Pack — Mobile / Tablet / Laptop / Desktop
+========================================================= */
+
+
+
+
+
+/* =========================================================
+    Laptop (992px - 1199px)
+========================================================= */
+@media (max-width: 1199.98px) {
+  :host {
+    padding: 1.5rem;
+  }
+
+  .appbar {
+    padding: 1rem 1.2rem !important;
+  }
+
+  .appbar-icon {
+    width: 46px;
+    height: 46px;
+    font-size: 1.2rem;
+  }
+
+  .appbar h2 {
+    font-size: 1.25rem;
+  }
+
+  /* الكروت تبقى مرتبة */
+  .card {
+    border-radius: 14px;
+  }
+
+  /* الإحصائيات */
+  .stats-row {
+    gap: 12px;
+  }
+
+  .stats-box {
+    height: 72px;
+    min-width: 220px;
+  }
+
+  .text strong {
+    font-size: 1.35rem;
+  }
+}
+
+/* =========================================================
+    Tablet (768px - 991px) — أهم جزء عندك
+========================================================= */
+@media (max-width: 420px) {
+  :host {
+    padding: 1.2rem;
+  }
+
+  /* ---------- Appbar ---------- */
+  .appbar {
+    padding: 0.9rem 1rem !important;
+    justify-content: flex-start !important;
+  }
+
+  .appbar .d-flex.gap-2 {
+    flex: 1;
+    min-width: 100%;
+  }
+
+  .appbar h2 {
+    font-size: 1.2rem;
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn-primary,
+  .btn-add,
+  .btn-light,
+  .btn-search,
+  .btn-advanced {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* إذا عندك أزرار متعددة جنب بعض */
+  .appbar .d-flex.gap-2 {
+    flex-wrap: wrap;
+  }
+
+  /* ---------- Stats ---------- */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .stats-box {
+    min-width: auto;
+    height: 74px;
+  }
+
+  .text strong {
+    font-size: 1.25rem;
+  }
+
+  .icon {
+    font-size: 1.8rem;
+  }
+
+  /* ---------- Forms ---------- */
+  .form-control,
+  .form-select {
+    font-size: 0.95rem !important;
+    padding: 0.65rem 0.9rem !important;
+  }
+
+  /* vue-select */
+  .vs__dropdown-toggle {
+    min-height: 44px;
+  }
+
+  /* ---------- Tables ---------- */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .custom-table {
+    font-size: 0.9rem;
+  }
+
+  .custom-table th,
+  .custom-table td {
+    padding: 10px 10px;
+  }
+
+  /* ---------- Pagination ---------- */
+  .page-btn,
+  .page-number {
+    width: 38px;
+    height: 38px;
+    font-size: 14px;
+  }
+
+  /* ---------- Nav ---------- */
+  .flow-nav {
+    padding: 10px 14px;
+    border-radius: 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .center-links {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin: 0;
+  }
+
+  .flow-nav .nav-item {
+    padding: 6px 12px;
+  }
+
+  /* ---------- مودال ---------- */
+  .modal-dialog {
+    margin: 14px;
+  }
+
+  .file-iframe {
+    height: 60vh;
+  }
+}
+
+/* =========================================================
+    Mobile (<= 767px)
+========================================================= */
+@media (max-width: 767.98px) {
+  :host {
+    padding: 1rem;
+  }
+
+  /* Appbar */
+  .appbar {
+    padding: 0.85rem 0.9rem !important;
+    gap: 10px;
+  }
+
+  .appbar-icon {
+    width: 42px;
+    height: 42px;
+    font-size: 1.15rem;
+  }
+
+  .appbar h2 {
+    font-size: 1.05rem;
+  }
+
+  .appbar small {
+    font-size: 0.9rem;
+    opacity: 0.85;
+  }
+
+  /* Stats: عمود واحد */
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-box {
+    width: 100%;
+    height: 74px;
+  }
+
+  /* أزرار العمليات (الدائرية) */
+  .button,
+  .button-edit,
+  .button-send,
+  .button-add,
+  .button-accept,
+  .button-reject,
+  .button-transfer,
+  .button-view,
+  .button-archive {
+    width: 42px;
+    height: 42px;
+  }
+
+  /* Pagination */
+  .circle-pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* جدول: خلي النص أصغر شوي */
+  .custom-table {
+    font-size: 0.85rem;
+  }
+
+  /* Attachments */
+  .file-iframe {
+    height: 55vh;
+  }
+}
+
+/* =========================================================
+    Small Mobile (<= 480px)
+========================================================= */
+@media (max-width: 480px) {
+  :host {
+    padding: 0.8rem;
+  }
+
+  .btn-primary,
+  .btn-add,
+  .btn-light,
+  .btn-search,
+  .btn-advanced {
+    font-size: 0.9rem;
+    padding: 10px 14px;
+  }
+
+  .page-btn,
+  .page-number {
+    width: 34px;
+    height: 34px;
+    font-size: 13px;
+  }
+
+  .custom-table th,
+  .custom-table td {
+    padding: 8px 8px;
+  }
+}
+
+
+/* فقط للتابلت + الموبايل: خلي أزرار الإجراءات بسطر واحد */
+@media (max-width: 991.98px) {
+
+  /* هذا هو نفس الـ div الموجود عندك */
+  td .d-flex.justify-content-center.gap-2 {
+    flex-wrap: nowrap !important;      
+    white-space: nowrap !important;
+    overflow-x: auto !important;       
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    padding: 4px 6px;
+    max-width: 220px;                 
+    margin: 0 auto;
+  }
+
+  /* سكرول ناعم */
+  td .d-flex.justify-content-center.gap-2::-webkit-scrollbar {
+    height: 5px;
+  }
+
+  td .d-flex.justify-content-center.gap-2::-webkit-scrollbar-thumb {
+    background: #12b1d1;
+    border-radius: 10px;
+  }
+
+  /* تصغير موحد للأزرار */
+  td .d-flex.justify-content-center.gap-2 .button,
+  td .d-flex.justify-content-center.gap-2 .button-edit,
+  td .d-flex.justify-content-center.gap-2 .button-send,
+  td .d-flex.justify-content-center.gap-2 .button-add,
+  td .d-flex.justify-content-center.gap-2 .button-accept,
+  td .d-flex.justify-content-center.gap-2 .button-reject,
+  td .d-flex.justify-content-center.gap-2 .button-transfer,
+  td .d-flex.justify-content-center.gap-2 .button-view,
+  td .d-flex.justify-content-center.gap-2 .button-archive {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 auto;
+  }
+}

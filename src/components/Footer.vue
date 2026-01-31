@@ -1,6 +1,8 @@
 <template>
-  <div class="border-top py-3 d-flex justify-content-between align-items-center">
-   <section class="d-flex">
+  <div
+    class="border-top py-3 d-flex justify-content-between align-items-center"
+  >
+    <!-- <section class="d-flex">
       <a href="#" @click="(event) => changeTheme(event)" class="text-decoration-none">
         <div v-if="themeToggler" class="d-flex justify-content-between align-items-center">
           <small class="me-1">Light Up</small>
@@ -11,18 +13,23 @@
           </svg>
         </div>
       </a>
-    </section>
-    <div style="color:#12b1d1;"> لجنة البرمجة والتطوير</div>
-   
+    </section> -->
+    <div style="color: #12b1d1">لجنة البرمجة والتطوير</div>
+
+    <div class="text-muted">
+      V :
+      <strong>{{ appVersion }}</strong>
+    </div>
   </div>
 </template>
-  
+
 <script lang="ts" setup>
 import { ref, type Ref } from "vue";
-import Refs from "@/components/Refs.vue";
 
 const themeToggler: Ref<boolean> = ref(false);
 const docElm = document.documentElement;
+
+const appVersion = import.meta.env.VITE_APP_VERSION; 
 
 const changeTheme = (e: Event) => {
   e.preventDefault();

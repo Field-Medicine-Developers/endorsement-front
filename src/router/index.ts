@@ -55,8 +55,8 @@ export const routes = [
     children: [
       {
         path: "",
-        name: "مدير القسم",
-        component: () => import("@/views/Margin/MarginTabs.vue"),
+        name: " الهوامش والمراسلات",
+        component: () => import("@/views/Margin/MarginNote.vue"),
       },
     ],
   },

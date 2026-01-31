@@ -155,7 +155,7 @@
                 <label class="form-label">تاريخ الاسترجاع</label>
                 <input
                   type="datetime-local"
-                  v-model="form.ReturnDate"
+                  v-model="form.receiveDate"
                   class="form-control"
                 />
               </div>
@@ -215,7 +215,7 @@ const form = reactive({
   incomingSubject: "",
   ReceiveDate: "",
   ReturnPercentage: "",
-  ReturnDate: "",
+  receiveDate: "",
   notes: "",
   files: [],
 });
@@ -246,7 +246,7 @@ const openAdd = (row) => {
     incomingSubject: row.incomingSubject,
     ReceiveDate: "",
     ReturnPercentage: "",
-    ReturnDate: "",
+    receiveDate: "",
     notes: "",
     files: [],
   });
@@ -263,7 +263,7 @@ const save = async () => {
     fd.append("Date", form.Date);
     fd.append("ReceiveDate", form.ReceiveDate);
     fd.append("ReturnPercentage", form.ReturnPercentage);
-    fd.append("ReturnDate", form.ReturnDate);
+    fd.append("receiveDate", form.receiveDate);
     fd.append("Notes", form.notes);
 
     form.files.forEach((f) => fd.append("files", f));

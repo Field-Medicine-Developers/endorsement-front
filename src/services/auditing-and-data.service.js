@@ -3,8 +3,31 @@ import axios from "./services";
 import api from "./services.js";
 
 
-export const getAuditingAndData = (params) => {
-  return axios.get("/AuditingAndData", { params });
+export const getAuditingAndData = (params = {}) => {
+  return axios.get("/AuditingAndData", {
+    params,
+    paramsSerializer: (params) => {
+      const q = new URLSearchParams();
+
+      Object.entries(params).forEach(([key, value]) => {
+        if (value === null || value === undefined || value === "") return;
+
+        if (Array.isArray(value)) {
+          // ✅ مهم: بدون []
+          value.forEach((v) => q.append(key, v));
+        } else {
+          q.append(key, value);
+        }
+      });
+
+      return q.toString();
+    },
+  });
+};
+
+
+export const getAuditingAndDataById = (id) => {
+  return api.get(`/AuditingAndData/${id}`);
 };
 
 export const addAuditingAndData = (data) => {

@@ -37,7 +37,7 @@
     <!-- منجز -->
     <div class="stats-box stat-green">
       <div class="text">
-        <span class="title">مكتب السيد المعاون</span>
+        <span class="title">مكتب المعاون</span>
         <strong>{{ stats.additionalData.completedCount }}</strong>
       </div>
       <i class="bi bi-check-circle icon"></i>
@@ -82,7 +82,7 @@
     <!-- غير معاد -->
     <div class="stats-box stat-blue">
       <div class="text">
-        <span class="title">غير معاد</span>
+        <span class="title">غير مسترجع</span>
         <strong>{{ stats.additionalData.isReturnFalseCount }}</strong>
       </div>
       <i class="bi bi-arrow-repeat icon"></i>
@@ -91,7 +91,7 @@
     <!-- معاد -->
     <div class="stats-box stat-purple">
       <div class="text">
-        <span class="title">معاد</span>
+        <span class="title">استرجاع</span>
         <strong>{{ stats.additionalData.isReturnTrueCount }}</strong>
       </div>
       <i class="bi bi-arrow-counterclockwise icon"></i>
@@ -142,8 +142,9 @@
                 <th>أسماء الجرحى</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
-                <th>رقم الكتاب</th>
+                <th>عدد الكتاب</th>
                 <th>القيادة / التشكيل</th>
+                <th>هامش مدير القسم</th>
                 <th>استلام المعاملة</th>
                 <th>تسليم المعاملة</th>
                 <th>استلام الطبيب</th>
@@ -154,34 +155,40 @@
                 <th>تسليم المدير</th>
                 <th>المواقف</th>
                 <th>الملاحظات</th>
-                <th>الحالة</th>
-                <!-- <th>سبب الرفض</th> -->
-                <!-- <th>تاريخ الرفض</th> -->
+                <!-- <th>الحالة</th> -->
                 <th>حالة التدقيق</th>
                 <th>الحالة النهائية</th>
-                <th>إرجاع</th>
-                <!-- <th>سبب الإرجاع</th> -->
-                <!-- <th>تاريخ الإرجاع</th> -->
-                <!-- <th>أضيف بواسطة</th> -->
+                <!-- <th>الاسترجاع</th> -->
+                <th>موقف النهائي</th>
+                <th>تاريخ الاسترجاع</th>
                 <th>تاريخ الإضافة</th>
                 <th>الإجراءات</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(item, idx) in list" :key="item.id">
-                <td>{{ idx + 1 }}</td>
+                <td>{{ (page - 1) * pageSize + idx + 1 }}</td>
                 <!-- أسماء الجرحى -->
 
                 <td>{{ item.injuredName }}</td>
                 <td>{{ item.incomingBookNumber || "-" }}</td>
                 <td>{{ formatDate(item.incomingDate) }}</td>
-                <td>{{ item.incomingBookNumber || "-" }}</td>
+                <td>{{ item.bookCount || "-" }}</td>
 
                 <td>
                   <div class="fw-bold">{{ item.command?.name || "—" }}</div>
                   <small class="text-muted">
                     {{ item.formation?.name || "—" }}</small
                   >
+                </td>
+
+                <td>
+                  <button
+                    class="btn btn-search"
+                    @click="openManagerNotes(item.managerNotes || [])"
+                  >
+                    عرض الهوامش ({{ item.managerNotes?.length || 0 }})
+                  </button>
                 </td>
 
                 <td>{{ formatDate(item.transactionReceiveDate) }}</td>
@@ -194,7 +201,12 @@
                 <td>{{ formatDate(item.directorpprovalReceive) }}</td>
                 <td>
                   <button class="btn btn-search" @click="openSituations(item)">
-                    عرض المواقف ({{ item.situations?.length || 0 }})
+                    عرض المواقف ({{
+                      item.situations?.filter(
+                        (s) =>
+                          s.situationNumber?.trim() && s.situationName?.trim()
+                      ).length || 0
+                    }})
                   </button>
                 </td>
 
@@ -202,7 +214,7 @@
                   {{ item.notes || "-" }}
                 </td>
                 <!-- الحالة -->
-                <td>
+                <!-- <td>
                   <span v-if="item.status === 0" class="badge bg-secondary">
                     <i class="bi bi-hourglass-split"></i>
                     قيد الانتظار
@@ -217,48 +229,41 @@
                     <i class="bi bi-x-circle-fill"></i>
                     مرفوض
                   </span>
-                </td>
-                <!-- سبب الرفض -->
-                <!-- <td>{{ item.rejectionReason || "-" }}</td> -->
-                <!-- تاريخ الرفض -->
-                <!-- <td>{{ formatDate(item.rejectionDate) }}</td> -->
+                </td> -->
                 <td>
-                  <span
-                    class="badge"
-                    :class="{
-                      'bg-warning': item.verificationStatus === 0,
-                      'bg-primary': item.verificationStatus === 1,
-                      'bg-danger': item.verificationStatus === 2,
-                    }"
-                  >
+                  <span class="badge badge-main">
                     {{ verificationStatusText(item.verificationStatus) }}
                   </span>
                 </td>
 
                 <td>
-                  <span
-                    class="badge"
-                    :class="{
-                      'bg-secondary': item.finalStatus === 0,
-                      'bg-success': item.finalStatus === 1,
-                      'bg-warning': item.finalStatus === 3,
-                      'bg-danger': item.finalStatus === 4,
-                    }"
-                  >
+                  <span class="badge badge-main">
                     {{ finalStatusText(item.finalStatus) }}
                   </span>
                 </td>
 
-                <td>
-                  <span v-if="item.isReturn === 1" class="badge bg-warning"
-                    >معاد</span
-                  >
-                  <span v-else class="badge bg-success">غير معاد</span>
-                </td>
-                <!-- <td>{{ item.returnPercentage || "-" }}</td> -->
-                <!-- <td>{{ formatDate(item.returnDate) }}</td> -->
+                <!-- <td>
+                       <span class="badge badge-main">
+                         {{ item.isReturn === 1 ? "مسترجع" : "غير مسترجع" }}
+                       </span>
+                     </td> -->
 
-                <!-- <td>{{ item.createdByUserName }}</td> -->
+                <td>
+                  <span
+                    v-if="item.finalStatus === FinalStatusType.Apology"
+                    class="badge badge-main"
+                  >
+                    {{ finalPositionText(item.finalPosition) }}
+                  </span>
+                  <span v-else class="text-muted">-</span>
+                </td>
+
+                <td>
+                  <span>
+                    {{ formatDate(item.receiveDate) }}
+                  </span>
+                </td>
+
                 <td>{{ formatDate(item.createdAt) }}</td>
                 <td>
                   <div class="d-flex justify-content-center gap-2">
@@ -293,7 +298,7 @@
 
                     <!-- تعديل -->
                     <button
-                      v-role="[0]"
+                      v-role="[0, 2]"
                       class="button-edit"
                       @click="openEdit(item)"
                     >
@@ -348,13 +353,13 @@
                       <svg class="svgIcon" viewBox="0 0 512 512">
                         <path
                           d="M424.4 214.7L253.1 386c-35.2 35.2-92.3 35.2-127.5 0
-         s-35.2-92.3 0-127.5L300.3 83.9c23.4-23.4 61.4-23.4
-         84.9 0s23.4 61.4 0 84.9L224.6 329.4c-11.7 11.7-30.7
-         11.7-42.4 0s-11.7-30.7 0-42.4L318.1 151c6.2-6.2
-         6.2-16.4 0-22.6s-16.4-6.2-22.6 0L159.6 264.3
-         c-23.4 23.4-23.4 61.4 0 84.9s61.4 23.4 84.9 0
-         l160.6-160.6c35.2-35.2 35.2-92.3 0-127.5
-         s-92.3-35.2-127.5 0L106.3 232.4"
+                             s-35.2-92.3 0-127.5L300.3 83.9c23.4-23.4 61.4-23.4
+                             84.9 0s23.4 61.4 0 84.9L224.6 329.4c-11.7 11.7-30.7
+                             11.7-42.4 0s-11.7-30.7 0-42.4L318.1 151c6.2-6.2
+                             6.2-16.4 0-22.6s-16.4-6.2-22.6 0L159.6 264.3
+                             c-23.4 23.4-23.4 61.4 0 84.9s61.4 23.4 84.9 0
+                             l160.6-160.6c35.2-35.2 35.2-92.3 0-127.5
+                             s-92.3-35.2-127.5 0L106.3 232.4"
                         />
                       </svg>
                     </button>
@@ -560,8 +565,11 @@
                 </div>
               </div>
 
-              <div class="col-md-6">
-                <label class="form-label">هل معاد؟</label>
+              <div
+                class="col-md-6"
+                v-if="form.finalStatus !== FinalStatusType.Apology"
+              >
+                <label class="form-label">هل مسترجع ؟</label>
                 <div class="custom-vue-select-container mb-3">
                   <VueSelect
                     v-model="form.isReturn"
@@ -573,20 +581,31 @@
                 </div>
               </div>
 
-              <div class="col-md-6" v-if="form.isReturn === 1">
-                <label class="form-label">سبب الإرجاع</label>
-                <input
-                  v-model="form.returnPercentage"
-                  class="form-control"
-                  :disabled="!editMode && step !== 3"
-                />
+              <div
+                class="col-md-6"
+                v-if="form.finalStatus === FinalStatusType.Apology"
+              >
+                <label class="form-label">مواقف النهائي</label>
+
+                <div class="custom-vue-select-container mb-3">
+                  <VueSelect
+                    v-model="form.finalPosition"
+                    :options="finalPositionOptions"
+                    label="label"
+                    :reduce="(o) => o.value"
+                    :disabled="!editMode && step !== 3"
+                  />
+                </div>
               </div>
 
-              <div class="col-md-6" v-if="form.isReturn === 1">
-                <label class="form-label">تاريخ الإرجاع</label>
+              <div
+                class="col-md-6"
+                v-if="form.finalStatus === FinalStatusType.Apology"
+              >
+                <label class="form-label">تاريخ الاسترجاع</label>
                 <input
                   type="date"
-                  v-model="form.returnDate"
+                  v-model="form.receiveDate"
                   class="form-control"
                   :disabled="!editMode && step !== 3"
                 />
@@ -838,16 +857,19 @@
               <label class="form-label">حالة الإرجاع</label>
               <input
                 class="form-control"
-                :value="selected.isReturn === 1 ? 'نعم' : 'لا'"
+                :value="selected.isReturn === 1 ? 'لا' : 'نعم'"
                 disabled
               />
             </div>
 
-            <div class="col-md-6" v-if="selected.isReturn === 1">
-              <label class="form-label">نسبة الإرجاع</label>
+            <div
+              class="col-md-6"
+              v-if="selected.finalStatus === FinalStatusType.Apology"
+            >
+              <label class="form-label">المواقف النهائي</label>
               <input
                 class="form-control"
-                :value="selected.returnPercentage"
+                :value="finalPositionText(selected.finalPosition)"
                 disabled
               />
             </div>
@@ -856,7 +878,7 @@
               <label class="form-label">تاريخ الإرجاع</label>
               <input
                 class="form-control"
-                :value="formatDate(selected.returnDate)"
+                :value="formatDate(selected.receiveDate)"
                 disabled
               />
             </div>
@@ -979,15 +1001,112 @@
 
         <div class="modal-body">
           <div class="row g-3">
-            <!-- <div class="col-md-6">
-              <label class="form-label">موضوع الوارد</label>
-              <input
-                v-model="filters.incomingId"
-                class="form-control"
-                placeholder="بحث بواسطة موضوع"
-              />
-            </div> -->
+            <!-- اسم الجريح -->
+            <div class="col-md-6">
+              <label class="form-label">اسم الجريح</label>
+              <input v-model="filters.injuredName" class="form-control" />
+            </div>
 
+            <!-- incomingBookNumber -->
+            <div class="col-md-6">
+              <label class="form-label">عدد الوارد</label>
+              <input
+                v-model.number="filters.incomingBookNumber"
+                type="number"
+                class="form-control"
+              />
+            </div>
+
+            <!-- bookCount -->
+            <div class="col-md-6">
+              <label class="form-label">عدد الكتاب</label>
+              <input
+                v-model.number="filters.bookCount"
+                type="number"
+                class="form-control"
+              />
+            </div>
+
+            <!-- subject -->
+            <div class="col-md-6">
+              <label class="form-label">الموضوع</label>
+              <input v-model="filters.subject" class="form-control" />
+            </div>
+
+            <!-- content -->
+            <div class="col-md-6">
+              <label class="form-label">المحتوى</label>
+              <input v-model="filters.content" class="form-control" />
+            </div>
+
+            <!-- incomingDate -->
+            <div class="col-md-6">
+              <label class="form-label">تاريخ الوارد</label>
+              <input
+                v-model="filters.incomingDate"
+                type="date"
+                class="form-control"
+              />
+            </div>
+
+            <!-- incomingBookDate -->
+            <div class="col-md-6">
+              <label class="form-label">تاريخ الكتاب</label>
+              <input
+                v-model="filters.incomingBookDate"
+                type="date"
+                class="form-control"
+              />
+            </div>
+
+            <!-- Command -->
+            <div class="col-md-6">
+              <div class="custom-vue-select-container">
+                <label class="form-label">القيادة</label>
+                <VueSelect
+                  v-model="filters.commandId"
+                  :options="commands"
+                  label="label"
+                  :reduce="(o) => o.value"
+                  placeholder="الكل"
+                  clearable
+                  searchable
+                />
+              </div>
+            </div>
+
+            <!-- Formation -->
+            <div class="col-md-6">
+              <div class="custom-vue-select-container">
+                <label class="form-label">التشكيل</label>
+                <VueSelect
+                  v-model="filters.formationId"
+                  :options="formations"
+                  label="name"
+                  :reduce="(o) => o.id"
+                  placeholder="الكل"
+                  clearable
+                  searchable
+                />
+              </div>
+            </div>
+
+            <!-- marginNote -->
+            <div class="col-md-6">
+              <label class="form-label">الهامش</label>
+              <input v-model="filters.marginNote" class="form-control" />
+            </div>
+
+            <!-- marginNoteDivisions -->
+            <div class="col-md-6">
+              <label class="form-label">هامش الشعبة</label>
+              <input
+                v-model="filters.marginNoteDivisions"
+                class="form-control"
+              />
+            </div>
+
+            <!-- transactionReceiveDateFrom -->
             <div class="col-md-6">
               <label class="form-label">من تاريخ استلام المعاملة</label>
               <input
@@ -997,6 +1116,7 @@
               />
             </div>
 
+            <!-- transactionReceiveDateTo -->
             <div class="col-md-6">
               <label class="form-label">إلى تاريخ استلام المعاملة</label>
               <input
@@ -1006,8 +1126,24 @@
               />
             </div>
 
+            <!-- actionType -->
             <div class="col-md-6">
-              <div class="custom-vue-select-container mb-3">
+              <div class="custom-vue-select-container">
+                <label class="form-label">نوع الإجراء</label>
+                <VueSelect
+                  v-model="filters.actionType"
+                  :options="actionTypeOptions"
+                  label="label"
+                  :reduce="(o) => o.value"
+                  placeholder="الكل"
+                  clearable
+                />
+              </div>
+            </div>
+
+            <!-- finalStatusType -->
+            <div class="col-md-6">
+              <div class="custom-vue-select-container">
                 <label class="form-label">الحالة النهائية</label>
                 <VueSelect
                   v-model="filters.finalStatusType"
@@ -1020,8 +1156,9 @@
               </div>
             </div>
 
+            <!-- verificationStatus -->
             <div class="col-md-6">
-              <div class="custom-vue-select-container mb-3">
+              <div class="custom-vue-select-container">
                 <label class="form-label">حالة التدقيق</label>
                 <VueSelect
                   v-model="filters.verificationStatus"
@@ -1034,8 +1171,9 @@
               </div>
             </div>
 
+            <!-- isReturn -->
             <div class="col-md-6">
-              <div class="custom-vue-select-container mb-3">
+              <div class="custom-vue-select-container">
                 <label class="form-label">معادة</label>
                 <VueSelect
                   v-model="filters.isReturn"
@@ -1047,22 +1185,12 @@
                 />
               </div>
             </div>
-
-            <!-- <div class="col-md-6">
-              <label class="form-label">أضيف بواسطة</label>
-              <select v-model="filters.createdByUserId" class="form-select">
-                <option value="">الكل</option>
-                <option v-for="u in users" :key="u.id" :value="u.id">
-                  {{ u.fullName }}
-                </option>
-              </select>
-            </div> -->
           </div>
         </div>
 
         <div class="modal-footer">
           <button class="btn btn-light" @click="closeAdvanced()">إغلاق</button>
-          <button class="btn btn-add" @click="applyAdvanced()">تطبيق</button>
+          <button class="btn btn-add" @click="applyAdvanced()">بحث</button>
         </div>
       </div>
     </div>
@@ -1254,6 +1382,47 @@
       </div>
     </div>
   </div>
+
+  <!-- Manager Notes Modal -->
+  <div class="modal fade" tabindex="-1" ref="managerNotesModalEl">
+    <div
+      class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"
+    >
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">هوامش مدير القسم</h5>
+        </div>
+
+        <div class="modal-body">
+          <div v-if="selectedManagerNotes.length">
+            <div
+              v-for="(n, i) in selectedManagerNotes"
+              :key="i"
+              class="border-bottom py-3"
+            >
+              <div class="fw-bold mb-1">{{ i + 1 }}. هامش</div>
+
+              <div class="text-muted small mb-2">
+                {{ formatDate(n.noteDate) }}
+              </div>
+
+              <div class="note-box">
+                {{ n.managerNote || "—" }}
+              </div>
+            </div>
+          </div>
+
+          <p v-else class="text-muted text-center">لا توجد هوامش</p>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeManagerNotes">
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -1268,34 +1437,43 @@ import {
   updateAuditingAndData,
   deleteAuditingAndData,
   transferAuditingAndData,
+  getAuditingAndDataById,
 } from "@/services/auditing-and-data.service.js";
 import { getIncomings } from "@/services/incoming.service.js";
 import { getDepartments } from "@/services/departments.service.js";
 import { successAlert, errorAlert, confirmDelete } from "@/utils/alert.js";
 import { uploadIncomingArchive } from "@/services/incoming-archive.service.js";
+import { getFormations, getCommands } from "@/services/formations.service.js";
+
 const route = useRoute();
 const incomingIdFromRoute = route.query.injuredPersonIds || null;
 const list = ref([]);
 const loading = ref(false);
 
-// ===== الفلاتر =====
+// ===== filters =====
 const filters = reactive({
-  injuredName: "", // موجود خارج المودال
+  injuredName: "",
   incomingId: "",
+  incomingBookNumber: null,
+  bookCount: null,
+  incomingDate: "",
+  incomingBookDate: "",
+  subject: "",
+  content: "",
+  formationId: null,
+  commandId: null,
+  marginNote: "",
+  marginNoteDivisions: "",
   transactionReceiveDateFrom: "",
   transactionReceiveDateTo: "",
   createdByUserId: "",
-
+  actionType: null,
   finalStatusType: null,
   verificationStatus: null,
   isReturn: null,
-
-  pageNumber: 1,
-  pageSize: 10,
 });
 
 /* ---------------- ENUMS ---------------- */
-/* FinalStatusType enum */
 const FinalStatusType = {
   Defult: 0,
   Completed: 1,
@@ -1332,6 +1510,79 @@ const isReturnOptions = [
   { value: IsReturnEnum.True, label: "نعم" },
 ];
 
+const FinalPosition = {
+  Default: 0,
+  SendingAlRazi: 1,
+  HealthOfIssuance: 2,
+  RequestPriorities: 3,
+  Authentication: 4,
+};
+
+const finalPositionOptions = [
+  { value: FinalPosition.Default, label: "بدون" },
+  { value: FinalPosition.SendingAlRazi, label: "إرسال الرازي" },
+  { value: FinalPosition.HealthOfIssuance, label: "صحة صدور" },
+  { value: FinalPosition.RequestPriorities, label: "طلب أوليات" },
+  { value: FinalPosition.Authentication, label: "المصادقة" },
+];
+
+const ActionTypeEnum = {
+  Default: 0,
+  Receive: 1,
+  Send: 2,
+  Transfer: 3,
+};
+
+const actionTypeOptions = [
+  { value: ActionTypeEnum.Default, label: "بدون" },
+  { value: ActionTypeEnum.Receive, label: "استلام" },
+  { value: ActionTypeEnum.Send, label: "إرسال" },
+  { value: ActionTypeEnum.Transfer, label: "ترحيل" },
+];
+
+const getDefaultForm = () => ({
+  id: "",
+  incomingId: "",
+  injuredPersonIds: [],
+  transactionReceiveDate: "",
+  transactionDeliveryDate: "",
+  militaryDoctorReceive: "",
+  militaryDoctorDelivery: "",
+  verificationReceive: "",
+  verificationSendDate: "",
+  directorpprovalSendDate: "",
+  directorpprovalReceive: "",
+  notes: "",
+  finalStatus: 0,
+  verificationStatus: 0,
+  isReturn: 0,
+  receiveDate: "",
+  finalPosition: 0,
+  situations: [{ situationNumber: "1", situationName: "" }],
+});
+
+const commands = ref([]);
+
+const loadCommands = async () => {
+  const res = await getCommands();
+  commands.value = res.data.data.map((c) => ({
+    label: c.name,
+    value: c.id,
+    formations: c.formations || [],
+  }));
+};
+
+const formations = ref([]);
+
+const loadFormations = async () => {
+  const res = await getFormations({
+    pageNumber: 1,
+    pageSize: 5000, // خليها رقم كبير حسب بياناتك
+  });
+
+  formations.value = res.data.data || [];
+};
+
 // ===== Pagination =====
 const page = ref(1);
 const pageSize = 10;
@@ -1362,33 +1613,10 @@ let transferModal = null;
 let viewModal = null;
 const editMode = ref(false);
 
-const form = reactive({
-  id: "",
-  injuredPersonIds: incomingIdFromRoute,
-  transactionReceiveDate: "",
-  transactionDeliveryDate: "",
-  militaryDoctorReceive: "",
-  militaryDoctorDelivery: "",
-  verificationReceive: "",
-  verificationSendDate: "",
-  directorpprovalSendDate: "",
-  directorpprovalReceive: "",
-  notes: "",
-  finalStatus: 0,
-  verificationStatus: 0,
-  isReturn: 0,
-  returnPercentage: "",
-  returnDate: "",
-  situations: [
-    {
-      situationNumber: "1",
-      situationName: "",
-    },
-  ],
-  statusAuditHistory: null,
-  finalStatusDate: "",
-  injuredNames: [],
-});
+const form = reactive(getDefaultForm());
+const resetForm = () => {
+  Object.assign(form, getDefaultForm());
+};
 
 const transferForm = reactive({
   auditingAndDataId: "",
@@ -1416,15 +1644,14 @@ const load = async () => {
     });
 
     const res = await getAuditingAndData(params);
-
     const rawList = res.data.data ?? [];
 
     list.value = rawList.map((item) => ({
       ...item,
       injuredName: item.injuredPersonName || "-",
+      managerNotes: item.managerNotes || [],
       verificationStatus:
         item.verificationStatus ?? item.verificationStatusType ?? 0,
-
       finalStatus: item.finalStatus ?? item.finalStatusType ?? 0,
     }));
     totalPages.value = res.data.pagination?.totalPages ?? 1;
@@ -1443,10 +1670,15 @@ const resetFilters = () => {
     transactionReceiveDateFrom: "",
     transactionReceiveDateTo: "",
     createdByUserId: "",
-
     finalStatusType: null,
     verificationStatus: null,
     isReturn: null,
+    bookCount: "",
+    incomingBookNumber: "",
+    subject: "",
+    content: "",
+    marginNote: "",
+    marginNoteDivisions: "",
   });
   load();
 };
@@ -1473,7 +1705,6 @@ const loadInjuredPersonIdsFromIncoming = async (incomingId) => {
     pageSize: 1,
     incomingId: incomingId,
   });
-
   const item = res.data.data?.[0];
 
   return Array.isArray(item?.injuredPersonIds)
@@ -1481,45 +1712,104 @@ const loadInjuredPersonIdsFromIncoming = async (incomingId) => {
     : [];
 };
 
-const openAdd = async (row) => {
-  editMode.value = false;
-  const injuredIds = await loadInjuredPersonIdsFromIncoming(row.incomingId);
-  if (!Array.isArray(injuredIds) || injuredIds.length === 0) {
-    errorAlert("لا يمكن إضافة تدقيق بدون تحديد جريح");
-    return;
-  }
-  Object.assign(form, {
-    id: "",
-    incomingId: row.incomingId,
-    injuredPersonIds: [row.injuredPersonId],
-    incomingBookNumber: row.incomingBookNumber || "",
-    incomingSubject: row.incomingSubject || "",
-    injuredPersonIds: injuredIds,
-    transactionReceiveDate: "",
-    transactionDeliveryDate: "",
-    militaryDoctorReceive: "",
-    militaryDoctorDelivery: "",
-    verificationReceive: "",
-    verificationSendDate: "",
-    directorpprovalSendDate: "",
-    directorpprovalReceive: "",
-    verificationStatus: 0,
-    finalStatus: 0,
-    isReturn: 0,
-    returnPercentage: "",
-    returnDate: "",
-    notes: "",
-    situations: [{ situationNumber: "1", situationName: "" }],
+const getLastAuditingFromListByInjured = (injuredId) => {
+  if (!injuredId) return null;
+  const items = list.value.filter((x) => x.injuredPersonId === injuredId);
+
+  if (!items.length) return null;
+
+  items.sort((a, b) => {
+    const da = new Date(a.transactionReceiveDate || a.createdAt || 0).getTime();
+    const db = new Date(b.transactionReceiveDate || b.createdAt || 0).getTime();
+    return db - da;
   });
 
-  step.value = 1;
+  return items[0];
+};
+
+const openAdd = async (row) => {
+  editMode.value = false;
+  resetForm();
+
+  const injuredId = row.injuredPersonId || row.injuredPersonIds?.[0];
+
+  form.incomingId = row.incomingId;
+  form.injuredPersonIds = injuredId ? [injuredId] : [];
+
   modal.show();
-  // loadExistingAuditing(row);
-  loadExistingAuditing(row.injuredPersonId);
+
+  if (!injuredId) {
+    form.transactionReceiveDate = today();
+    return;
+  }
+
+  const last = getLastAuditingFromListByInjured(injuredId);
+
+  if (last?.id) {
+    await loadExistingAuditing(last.id);
+    form.id = "";
+    editMode.value = false;
+  } else {
+    form.transactionReceiveDate = today();
+  }
+};
+
+const getLastAuditingByInjuredId = async (injuredPersonId) => {
+  const res = await getAuditingAndData({
+    injuredPersonIds: [injuredPersonId],
+    pageNumber: 1,
+    pageSize: 1,
+  });
+
+  return res.data.data?.[0] || null;
+};
+
+const fillFormFromAuditing = (existing, { keepId = true } = {}) => {
+  if (!existing) return;
+
+  Object.assign(form, {
+    ...(keepId ? { id: existing.id } : { id: "" }),
+
+    incomingId: form.incomingId || existing.incomingId,
+
+    injuredPersonIds: form.injuredPersonIds?.length
+      ? form.injuredPersonIds
+      : existing.injuredPersonId
+      ? [existing.injuredPersonId]
+      : [],
+
+    transactionReceiveDate: existing.transactionReceiveDate?.slice(0, 10) || "",
+    transactionDeliveryDate:
+      existing.transactionDeliveryDate?.slice(0, 10) || "",
+
+    militaryDoctorReceive: existing.militaryDoctorReceive?.slice(0, 10) || "",
+    militaryDoctorDelivery: existing.militaryDoctorDelivery?.slice(0, 10) || "",
+
+    verificationReceive: existing.verificationReceive?.slice(0, 10) || "",
+    verificationSendDate: existing.verificationSendDate?.slice(0, 10) || "",
+
+    directorpprovalSendDate:
+      existing.directorpprovalSendDate?.slice(0, 10) || "",
+    directorpprovalReceive: existing.directorpprovalReceive?.slice(0, 10) || "",
+
+    verificationStatus: existing.verificationStatus ?? 0,
+    finalStatus: existing.finalStatus ?? 0,
+    isReturn: existing.isReturn ?? 0,
+    receiveDate: existing.receiveDate?.slice(0, 10) || "",
+    finalPosition: existing.finalPosition ?? 0,
+
+    notes: existing.notes || "",
+
+    situations: existing.situations?.length
+      ? JSON.parse(JSON.stringify(existing.situations))
+      : [{ situationNumber: "1", situationName: "" }],
+  });
 };
 
 const openEdit = async (row) => {
   editMode.value = true;
+  resetForm();
+
   const injuredIds = await loadInjuredPersonIdsFromIncoming(
     row.incomingId || row.id
   );
@@ -1542,7 +1832,8 @@ const openEdit = async (row) => {
     finalStatus: row.finalStatus ?? 0,
     isReturn: row.isReturn ?? 0,
     returnPercentage: row.returnPercentage || "",
-    returnDate: row.returnDate?.slice(0, 10) || "",
+    receiveDate: row.receiveDate?.slice(0, 10) || "",
+    finalPosition: row.finalPosition ?? 0,
     notes: row.notes || "",
     situations: row.situations?.map((s, i) => ({
       situationNumber: s.situationNumber || String(i + 1),
@@ -1551,7 +1842,7 @@ const openEdit = async (row) => {
   });
 
   modal.show();
-  loadExistingAuditing(row.injuredPersonId);
+  await loadExistingAuditing(row.id);
 };
 
 const addSituationRow = () => {
@@ -1572,6 +1863,9 @@ const verificationStatusText = (v) =>
 const finalStatusText = (v) =>
   finalStatusOptions.find((x) => x.value === v)?.label ?? "-";
 
+const finalPositionText = (v) =>
+  finalPositionOptions.find((x) => x.value === v)?.label ?? "-";
+
 const save = async () => {
   const data = {
     injuredPersonIds: form.injuredPersonIds,
@@ -1585,7 +1879,7 @@ const save = async () => {
     verificationStatus: form.verificationStatus,
     isReturn: form.isReturn,
     returnPercentage: form.isReturn === 1 ? form.returnPercentage : null,
-    returnDate: form.isReturn === 1 ? form.returnDate : null,
+    receiveDate: form.isReturn === 1 ? form.receiveDate : null,
     finalStatus: form.finalStatus,
     situations: form.situations
       .filter((s) => s.situationName || s.situationNumber)
@@ -1625,13 +1919,10 @@ const remove = async (id) => {
   }
 };
 
-
-
 const close = () => {
   resetFilters();
   modal.hide();
 };
-
 
 const openTransfer = (row) => {
   transferForm.auditingAndDataId = row.id;
@@ -1811,9 +2102,10 @@ const buildPayload = () => {
     verificationStatus: form.verificationStatus,
     finalStatus: form.finalStatus,
     isReturn: form.isReturn,
-    returnPercentage: form.isReturn === 1 ? form.returnPercentage : null,
-    returnDate: form.isReturn === 1 ? form.returnDate : null,
-
+    // returnPercentage: form.isReturn === 1 ? form.returnPercentage : null,
+    receiveDate: form.isReturn === 1 ? form.receiveDate : null,
+    finalPosition:
+      form.finalStatus === FinalStatusType.Apology ? form.finalPosition : 0,
     notes: form.notes || null,
     situations: form.situations
       .filter((s) => s.situationName || s.situationNumber)
@@ -1830,22 +2122,22 @@ const saveStep = async () => {
   if (isSending.value) return;
   isSending.value = true;
 
-  const payload = buildPayload();
-
   try {
-    if (form.id) {
+    const payload = buildPayload();
+
+    if (editMode.value && form.id) {
       await updateAuditingAndData(form.id, payload);
     } else {
       const res = await addAuditingAndData(payload);
-      form.id = res.data.id;
+      form.id = res?.data?.id || form.id;
     }
 
     modal.hide();
     await load();
-    successAlert("تم إرسال بنجاح");
+    successAlert("تم الحفظ بنجاح ");
   } catch (e) {
     console.error(e);
-    errorAlert("حدث خطأ أثناء الإرسال");
+    errorAlert("حدث خطأ أثناء الحفظ");
   } finally {
     isSending.value = false;
   }
@@ -1853,45 +2145,49 @@ const saveStep = async () => {
 
 const loadingExisting = ref(false);
 
-const loadExistingAuditing = async (injuredPersonId) => {
+const lastLoadToken = ref(0);
+
+const loadExistingAuditing = async (id) => {
+  const token = ++lastLoadToken.value;
   loadingExisting.value = true;
 
-  const res = await getAuditingAndData({
-    injuredPersonIds: [injuredPersonId],
-    pageNumber: 1,
-    pageSize: 1,
-  });
+  try {
+    const res = await getAuditingAndDataById(id);
+    if (token !== lastLoadToken.value) return;
 
-  const existing = res.data.data?.[0];
-  if (!existing) {
-    loadingExisting.value = false;
-    return;
+    const existing = res.data.data;
+    if (!existing) return;
+
+    Object.assign(form, {
+      id: existing.id,
+      transactionReceiveDate:
+        existing.transactionReceiveDate?.slice(0, 10) || "",
+      transactionDeliveryDate:
+        existing.transactionDeliveryDate?.slice(0, 10) || "",
+      militaryDoctorReceive: existing.militaryDoctorReceive?.slice(0, 10) || "",
+      militaryDoctorDelivery:
+        existing.militaryDoctorDelivery?.slice(0, 10) || "",
+      verificationReceive: existing.verificationReceive?.slice(0, 10) || "",
+      verificationSendDate: existing.verificationSendDate?.slice(0, 10) || "",
+      directorpprovalSendDate:
+        existing.directorpprovalSendDate?.slice(0, 10) || "",
+      directorpprovalReceive:
+        existing.directorpprovalReceive?.slice(0, 10) || "",
+      verificationStatus: existing.verificationStatus ?? 0,
+      finalStatus: existing.finalStatus ?? 0,
+      isReturn: existing.isReturn ?? 0,
+      receiveDate: existing.receiveDate?.slice(0, 10) || "",
+      finalPosition: existing.finalPosition ?? 0,
+      notes: existing.notes || "",
+      situations: existing.situations?.length
+        ? JSON.parse(JSON.stringify(existing.situations))
+        : [{ situationNumber: "1", situationName: "" }],
+    });
+  } finally {
+    if (token === lastLoadToken.value) {
+      loadingExisting.value = false;
+    }
   }
-
-  Object.assign(form, {
-    id: existing.id,
-    transactionReceiveDate: existing.transactionReceiveDate?.slice(0, 10) || "",
-    transactionDeliveryDate:
-      existing.transactionDeliveryDate?.slice(0, 10) || "",
-    militaryDoctorReceive: existing.militaryDoctorReceive?.slice(0, 10) || "",
-    militaryDoctorDelivery: existing.militaryDoctorDelivery?.slice(0, 10) || "",
-    verificationReceive: existing.verificationReceive?.slice(0, 10) || "",
-    verificationSendDate: existing.verificationSendDate?.slice(0, 10) || "",
-    directorpprovalSendDate:
-      existing.directorpprovalSendDate?.slice(0, 10) || "",
-    directorpprovalReceive: existing.directorpprovalReceive?.slice(0, 10) || "",
-    verificationStatus: existing.verificationStatus ?? 0,
-    finalStatus: existing.finalStatus ?? 0,
-    isReturn: existing.isReturn ?? 0,
-    returnPercentage: existing.returnPercentage || "",
-    returnDate: existing.returnDate?.slice(0, 10) || "",
-    notes: existing.notes || "",
-    situations: existing.situations?.length
-      ? JSON.parse(JSON.stringify(existing.situations))
-      : [{ situationNumber: "1", situationName: "" }],
-  });
-
-  loadingExisting.value = false;
 };
 
 // ==============================
@@ -1926,10 +2222,10 @@ const stats = ref({
 });
 
 const totalFromAdditional = computed(() => {
-  const a = stats.value.additionalData;
-  return (
-    a.completedCount + a.apologyCount + a.notCompletedCount + a.waitingCount
-  );
+  const a = stats.value.additionalData || {};
+  return Object.values(a).reduce((sum, v) => {
+    return sum + (typeof v === "number" ? v : 0);
+  }, 0);
 });
 
 const loadStats = async () => {
@@ -1968,6 +2264,25 @@ watch(
   },
   { immediate: true }
 );
+
+watch(
+  () => form.finalStatus,
+  (val) => {
+    if (val === FinalStatusType.Apology) {
+      form.isReturn = 1;
+      if (!form.receiveDate) form.receiveDate = today();
+      if (form.finalPosition === null || form.finalPosition === undefined) {
+        form.finalPosition = 0;
+      }
+    } else {
+      // إذا غير استرجاع يرجع طبيعي
+      form.finalPosition = 0;
+      form.receiveDate = "";
+      if (form.isReturn === 1) form.isReturn = 0;
+    }
+  },
+  { immediate: true }
+);
 // ==============================
 // Archive Incoming (مرفقات الوارد)
 // ==============================
@@ -1986,10 +2301,7 @@ const openFile = (url) => window.open(url, "_blank");
 
 const openArchive = (row) => {
   const incomingId =
-    row.incomingId ||
-    row.incoming?.id ||
-    row.incoming?.incomingId ||
-    row.id;
+    row.incomingId || row.incoming?.id || row.incoming?.incomingId || row.id;
 
   if (!incomingId) {
     return errorAlert("incomingId غير موجود داخل هذا السطر");
@@ -1999,7 +2311,6 @@ const openArchive = (row) => {
   archiveFiles.value = row.archiveIncoming?.items ?? [];
   modalArchive.show();
 };
-
 
 const closeArchive = () => modalArchive.hide();
 
@@ -2055,14 +2366,26 @@ const submitArchiveUpload = async () => {
   }
 };
 
+const selectedManagerNotes = ref([]);
+const managerNotesModalEl = ref(null);
+let managerNotesModal = null;
+
+const openManagerNotes = (notes) => {
+  selectedManagerNotes.value = notes || [];
+  managerNotesModal?.show();
+};
+
+const closeManagerNotes = () => {
+  managerNotesModal?.hide();
+};
+
 const today = () => {
   const d = new Date();
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`; 
+  return `${y}-${m}-${day}`;
 };
-
 
 // ===== INIT =====
 onMounted(() => {
@@ -2073,9 +2396,15 @@ onMounted(() => {
   namesModalInstance = new Modal(namesModal.value);
   modalArchive = new Modal(archiveModal.value);
   modalArchiveUpload = new Modal(archiveUploadModal.value);
+  managerNotesModal = new Modal(managerNotesModalEl.value, {
+    backdrop: "static",
+    keyboard: false,
+  });
   load();
   loadDepartments();
   loadStats();
+  loadCommands();
+  loadFormations();
 });
 </script>
 
@@ -2302,5 +2631,39 @@ onMounted(() => {
   font-size: 0.95rem;
   line-height: 1.6;
   color: #333;
+}
+
+.badge-main {
+  background: linear-gradient(135deg, #12b1d1, #12b1d1) !important;
+  color: #fff !important;
+
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+
+  box-shadow: 0 6px 16px rgba(18, 177, 209, 0.35), 0 2px 6px rgba(0, 0, 0, 0.08);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  transition: all 0.2s ease-in-out;
+  cursor: default;
+}
+
+/* Hover */
+.badge-main:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(18, 177, 209, 0.45),
+    0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Active Click */
+.badge-main:active {
+  transform: scale(0.98);
 }
 </style>

@@ -48,6 +48,9 @@
 
       <div class="col-md-6 d-flex justify-content-end gap-2 align-items-end">
         <button class="btn-search" @click="load">بحث</button>
+        <button class="btn-advanced" @click="openAdvancedSearchModal">
+          بحث متقدم
+        </button>
         <button class="btn-advanced" @click="reset">إعادة تعيين</button>
       </div>
     </div>
@@ -84,7 +87,10 @@
                 <th>موضوع الوارد</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
+                <th>عدد الكتاب</th>
                 <th>هامش مدير القسم</th>
+                <th>الموضوع</th>
+                <th>المحتوى</th>
                 <th>هامش مسوؤل الشعبة</th>
                 <th>الإجراءات</th>
               </tr>
@@ -104,33 +110,30 @@
                 </td>
                 <td>{{ (page - 1) * pageSize + i + 1 }}</td>
                 <td>
-                  <div>
+                  <div v-if="item.injuredNames?.length">
                     <div
-                      v-for="(name, i) in item.injuredName
-                        .split(',')
-                        .slice(0, 3)"
+                      v-for="(name, i) in item.injuredNames.slice(0, 3)"
                       :key="i"
                     >
-                      • {{ name.trim() }}
+                      • {{ name }}
                     </div>
 
                     <div
-                      v-if="item.injuredName.split(',').length > 2"
+                      v-if="item.injuredNames.length > 3"
                       class="show-more"
-                      @click="
-                        openNamesModal(
-                          item.injuredName.split(',').map((n) => n.trim())
-                        )
-                      "
+                      @click="openNamesModal(item.injuredNames)"
                     >
-                      عرض الكل ({{ item.injuredName.split(",").length }})
+                      عرض الكل ({{ item.injuredNames.length }})
                     </div>
                   </div>
+
+                  <span v-else class="text-muted">—</span>
                 </td>
 
-                <td>{{ item.incomingSubject }}</td>
+                <td>{{ item.subject || "-" }}</td>
                 <td>{{ item.incomingBookNumber }}</td>
                 <td>{{ formatDate(item.incomingDate) }}</td>
+                <td>{{ item.bookCount ?? "-" }}</td>
                 <td>
                   <button
                     class="btn btn-search btn-sm"
@@ -143,7 +146,36 @@
                     }})
                   </button>
                 </td>
-                <td>{{ item.marginNoteDivision || "-" }}</td>
+
+                <!-- الموضوع -->
+                <td>
+                  <button
+                    class="btn btn-search btn-sm"
+                    @click="openTextModal('الموضوع', item.subject)"
+                  >
+                    عرض الموضوع ({{ item.subject ? 1 : 0 }})
+                  </button>
+                </td>
+
+                <!-- المحتوى -->
+                <td>
+                  <button
+                    class="btn btn-search btn-sm"
+                    @click="openTextModal('المحتوى', item.content)"
+                  >
+                    عرض المحتوى ({{ item.content ? 1 : 0 }})
+                  </button>
+                </td>
+
+                <td>
+                  <button
+                    class="btn btn-search btn-sm"
+                    @click="openDivisionNote(item.marginNoteDivision)"
+                  >
+                    عرض الهامش الشعبة ({{ item.marginNoteDivision ? 1 : 0 }})
+                  </button>
+                </td>
+
                 <td>
                   <div class="d-flex justify-content-center gap-2">
                     <button
@@ -414,6 +446,7 @@
       </div>
     </div>
   </div>
+
   <!-- Names Modal -->
   <div class="modal fade" tabindex="-1" ref="namesModal">
     <div class="modal-dialog modal-dialog-centered">
@@ -439,6 +472,7 @@
     </div>
   </div>
 
+  <!-- Names ManagerNotes -->
   <div class="modal fade" tabindex="-1" ref="managerNotesModalEl">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
@@ -476,6 +510,134 @@
       </div>
     </div>
   </div>
+
+  <!-- Division Note Modal -->
+  <div class="modal fade" tabindex="-1" ref="divisionNoteModalEl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">هامش مسؤول الشعبة</h5>
+        </div>
+
+        <div class="modal-body">
+          <div v-if="divisionNote" class="note-box">
+            {{ divisionNote }}
+          </div>
+
+          <p v-else class="text-muted text-center">لا يوجد هامش</p>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeDivisionNote">
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Advanced Search Modal -->
+  <div class="modal fade" tabindex="-1" ref="advancedSearchModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">بحث متقدم</h5>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-3">
+            <!-- بحث بالهامش -->
+            <div class="col-md-6">
+              <label class="form-label"> بالهامش</label>
+              <input
+                v-model="filters.managerNote"
+                class="form-control"
+                placeholder="بحث بالهامش..."
+              />
+            </div>
+
+            <!-- عدد الكتاب -->
+            <div class="col-md-6">
+              <label class="form-label">عدد الكتاب</label>
+              <input
+                v-model.number="filters.bookCount"
+                type="number"
+                class="form-control"
+                placeholder="عدد الكتاب..."
+              />
+            </div>
+
+            <!-- من تاريخ -->
+            <div class="col-md-6">
+              <label class="form-label">من تاريخ</label>
+              <input
+                v-model="filters.createdAtFrom"
+                type="date"
+                class="form-control"
+              />
+            </div>
+
+            <!-- إلى تاريخ -->
+            <div class="col-md-6">
+              <label class="form-label">إلى تاريخ</label>
+              <input
+                v-model="filters.createdAtTo"
+                type="date"
+                class="form-control"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-light"
+            @click="closeAdvancedSearchModal"
+          >
+            إغلاق
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            @click="
+              page = 1;
+              load();
+              closeAdvancedSearchModal();
+            "
+          >
+            بحث
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Text Modal -->
+  <div class="modal fade" tabindex="-1" ref="textModalEl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">
+            {{ textModal.title }}
+          </h5>
+        </div>
+
+        <div class="modal-body">
+          <div v-if="textModal.value" class="note-box">
+            {{ textModal.value }}
+          </div>
+
+          <p v-else class="text-muted text-center">لا توجد بيانات</p>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeTextModal">إغلاق</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -508,7 +670,14 @@ const totalPages = ref(1);
 const filters = reactive({
   injuredName: "",
   managerNote: "",
+  bookCount: null,
+  createdAtFrom: "",
+  createdAtTo: "",
 });
+
+// Advanced search
+const advancedSearchModal = ref(null);
+let advancedSearchModalInstance = null;
 
 // Add state for bulk selection
 const selectedDepartmentIds = ref([]);
@@ -523,6 +692,9 @@ const load = async () => {
       pageSize,
       injuredName: filters.injuredName || null,
       managerNote: filters.managerNote || null,
+      bookCount: filters.bookCount || null,
+      createdAtFrom: filters.createdAtFrom || null,
+      createdAtTo: filters.createdAtTo || null,
     });
     list.value = res.data.data ?? [];
     totalPages.value = res.data.pagination?.totalPages ?? 1;
@@ -537,6 +709,10 @@ const load = async () => {
 const reset = () => {
   filters.injuredName = "";
   filters.managerNote = "";
+  filters.bookCount = null;
+  filters.id = "";
+  filters.createdAtFrom = "";
+  filters.createdAtTo = "";
   selectedDepartmentIds.value = [];
   selectAll.value = false;
   load();
@@ -834,12 +1010,60 @@ const closeManagerNotes = () => {
   managerNotesModal.hide();
 };
 
+const openAdvancedSearchModal = () => {
+  advancedSearchModalInstance.show();
+};
+
+const closeAdvancedSearchModal = () => {
+  advancedSearchModalInstance.hide();
+};
+
+/* -------- Division Note Modal -------- */
+const divisionNoteModalEl = ref(null);
+let divisionNoteModal = null;
+
+const divisionNote = ref("");
+
+const openDivisionNote = (note) => {
+  divisionNote.value = note || "";
+  divisionNoteModal.show();
+};
+
+const closeDivisionNote = () => {
+  divisionNoteModal.hide();
+};
+
+// ===============================
+// Text Modal
+// ===============================
+
+const textModalEl = ref(null);
+let textModalInstance = null;
+
+const textModal = reactive({
+  title: "",
+  value: "",
+});
+
+const openTextModal = (title, value) => {
+  textModal.title = title;
+  textModal.value = value || "";
+  textModalInstance.show();
+};
+
+const closeTextModal = () => {
+  textModalInstance.hide();
+};
+
 /* ---------------- Init ------------------ */
 onMounted(async () => {
   modal = new Modal(modalEl.value);
   transferModal = new Modal(transferModalEl.value);
   bulkTransferModal = new Modal(bulkTransferModalEl.value);
   managerNotesModal = new Modal(managerNotesModalEl.value);
+  advancedSearchModalInstance = new Modal(advancedSearchModal.value);
+  divisionNoteModal = new Modal(divisionNoteModalEl.value);
+  textModalInstance = new Modal(textModalEl.value);
   await load();
   const res = await getDepartments({ pageNumber: 1, pageSize: 200 });
   departments.value = res.data.data;

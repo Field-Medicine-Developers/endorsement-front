@@ -1,12 +1,11 @@
 <template>
   <div class="containe">
     <nav class="navbar navbar-expand-lg mb-4 shadow-sm bg-white rounded-3 px-3">
-      <router-link
-        :to="routes[0].path"
+      <span
         class="navbar-brand fw-bold d-flex align-items-center gap-2 text-decoration-none me-3 fs-4"
       >
         <span class="brand-title" style="color: #12b1d1">نظام التأييدات</span>
-      </router-link>
+      </span>
 
       <!-- Mobile / Tablet controls -->
       <div class="d-flex align-items-center gap-2 d-lg-none">
@@ -14,7 +13,7 @@
         <div class="profile-btn d-lg-none" @click="toggleProfile">
           <i class="bi bi-person-fill"></i>
         </div>
-        
+
         <button
           class="navbar-toggler border-0 shadow-none"
           type="button"

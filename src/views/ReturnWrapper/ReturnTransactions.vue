@@ -80,7 +80,7 @@
                 <!-- <td>{{ item.injuredName }}</td> -->
                 <td>{{ item.formationName }}</td>
                 <td>{{ item.bookNumber }}</td>
-                <td>{{ formatDate(item.returnDate) }}</td>
+                <td>{{ formatDate(item.receiveDate) }}</td>
                 <td>
                   <button class="btn-view-files" @click="viewFiles(item.files)">
                     <i class="bi bi-paperclip me-1"></i>
@@ -236,7 +236,7 @@
               <div class="col-md-6">
                 <label class="form-label">تاريخ الاسترجاع</label>
                 <input
-                  v-model="form.returnDate"
+                  v-model="form.receiveDate"
                   type="datetime-local"
                   class="form-control"
                 />
@@ -364,7 +364,7 @@
             <div class="col-md-6">
               <label class="form-label">من تاريخ الاسترجاع</label>
               <input
-                v-model="filters.returnDateFrom"
+                v-model="filters.receiveDateFrom"
                 type="date"
                 class="form-control"
               />
@@ -373,7 +373,7 @@
             <div class="col-md-6">
               <label class="form-label">إلى تاريخ الاسترجاع</label>
               <input
-                v-model="filters.returnDateTo"
+                v-model="filters.receiveDateTo"
                 type="date"
                 class="form-control"
               />
@@ -515,8 +515,8 @@ const filters = reactive({
   injuredName: "",
   bookNumber: "",
   formation: "",
-  returnDateFrom: "",
-  returnDateTo: "",
+  receiveDateFrom: "",
+  receiveDateTo: "",
 });
 
 const modalEl = ref(null);
@@ -536,7 +536,7 @@ const form = reactive({
   returnPercentage: "",
   date: "",
   receiveDate: "",
-  returnDate: "",
+  receiveDate: "",
   files: [], // New files to upload
   existingFiles: [], // Existing files for display in edit mode
 });
@@ -566,8 +566,8 @@ const load = async () => {
       injuredName: filters.injuredName || null,
       bookNumber: filters.bookNumber || null,
       formation: filters.formation || null,
-      returnDateFrom: filters.returnDateFrom || null,
-      returnDateTo: filters.returnDateTo || null,
+      receiveDateFrom: filters.receiveDateFrom || null,
+      receiveDateTo: filters.receiveDateTo || null,
     });
 
     list.value = res.data.data;
@@ -611,7 +611,7 @@ const openEdit = (item) => {
   form.returnPercentage = item.returnPercentage;
   form.date = formatDateTimeForInput(item.date);
   form.receiveDate = formatDateTimeForInput(item.receiveDate);
-  form.returnDate = formatDateTimeForInput(item.returnDate);
+  form.receiveDate = formatDateTimeForInput(item.receiveDate);
   form.existingFiles = item.files || []; // Store existing files for display
   modal.show();
 };
@@ -627,7 +627,7 @@ const save = async () => {
     formData.append("ReturnPercentage", form.returnPercentage);
     formData.append("Date", form.date);
     formData.append("ReceiveDate", form.receiveDate);
-    formData.append("ReturnDate", form.returnDate);
+    formData.append("receiveDate", form.receiveDate);
     form.files.forEach((file) => {
       formData.append("Files", file);
     });
@@ -670,7 +670,7 @@ const resetForm = () => {
   form.returnPercentage = "";
   form.date = "";
   form.receiveDate = "";
-  form.returnDate = "";
+  form.receiveDate = "";
   form.files = [];
   form.existingFiles = [];
 };

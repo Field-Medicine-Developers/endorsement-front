@@ -11,7 +11,7 @@
       </span>
       <div>
         <h2 class="h5 fw-bold m-2">إضافات الهامش</h2>
-        <small class="text-muted">إضافة رقم الكتاب – التاريخ – الأصل</small>
+        <small class="text-muted">إضافة هوامش - ترحيل</small>
       </div>
     </div>
     <div class="d-flex gap-2">
@@ -59,11 +59,11 @@
     </div>
 
     <div class="card-body">
-      <div v-if="loading" class="spinner-wrapper">
+      <div v-if="loading" class="spinner-overlay">
         <div class="spinner"></div>
       </div>
 
-      <div v-else class="card inner-card">
+      <div class="card inner-card">
         <div class="table-responsive">
           <table class="table custom-table align-middle text-center mb-0">
             <thead>
@@ -81,13 +81,14 @@
                 <th>#</th>
                 <th>تاريح استلام المعاملة</th>
                 <th>أسماء الجرحى</th>
+                <th>القيادة / التشكيل</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
+                <th>عدد الكتاب</th>
+                <th>تاريخ الكتاب</th>
                 <th>هامش مدير القسم</th>
-                <th>هامش مسوؤل شعبة</th>
-                <th>تاريخ هامش المسؤول</th>
-                <!-- <th>تاريخ الكتاب</th> -->
-                <!-- <th>ملف الأصل</th> -->
+                <!-- <th>هامش مسوؤل شعبة</th> -->
+                <!-- <th>تاريخ هامش المسؤول</th> -->
                 <th>الإجراءات</th>
               </tr>
             </thead>
@@ -119,8 +120,15 @@
                   </div>
                 </td>
 
+                <td>
+                  <div class="fw-bold">{{ m.command.name || "—" }}</div>
+                  <small class="text-muted"> {{ m.formation.name }}</small>
+                </td>
+
                 <td>{{ m.incomingBookNumber }}</td>
                 <td>{{ formatDate(m.incomingDate) }}</td>
+                <td>{{ m.bookCount }}</td>
+                <td>{{ formatDate(m.bookDate) }}</td>
                 <td>
                   <button
                     class="btn btn-search"
@@ -130,15 +138,8 @@
                   </button>
                 </td>
 
-                <td>{{ m.managerNoteDivision || "—" }}</td>
-                <!-- <td>{{ formatDate(m.createdAt) }}</td> -->
-                <!-- <td>
-                  <span v-if="m.hasOriginalFile" class="badge bg-success"
-                    >نعم</span
-                  >
-                  <span v-else class="badge bg-secondary">لا</span>
-                </td> -->
-                <td>{{ formatDate(m.noteDate) }}</td>
+                <!-- <td>{{ m.managerNoteDivision || "—" }}</td> -->
+                <!-- <td>{{ formatDate(m.noteDate) }}</td> -->
                 <td>
                   <div class="d-flex justify-content-center gap-2">
                     <!-- زر إضافة هامش -->
@@ -217,7 +218,7 @@
               </tr>
 
               <tr v-if="list.length === 0">
-                <td colspan="10" class="py-4 text-muted">
+                <td colspan="12" class="py-4 text-muted">
                   <i class="bi bi-inboxes fs-1 d-block mb-2"></i>
                   لا توجد بيانات
                 </td>
@@ -228,8 +229,12 @@
       </div>
 
       <!-- Pagination -->
-      <nav class="circle-pagination d-flex justify-content-center mt-4">
+      <nav
+        ref="paginationRef"
+        class="circle-pagination d-flex justify-content-center mt-4"
+      >
         <button
+          type="button"
           class="page-btn"
           :disabled="page === 1"
           @click="changePage(page - 1)"
@@ -238,6 +243,7 @@
         </button>
 
         <button
+          type="button"
           class="page-number"
           v-for="p in visiblePages"
           :key="p"
@@ -248,6 +254,7 @@
         </button>
 
         <button
+          type="button"
           class="page-btn"
           :disabled="page === totalPages"
           @click="changePage(page + 1)"
@@ -442,7 +449,7 @@
                 <label class="form-label">إرسال إلى الوحدة:</label>
                 <div class="custom-vue-select-container">
                   <VueSelect
-                    v-model="bulkTransfer.departmentId"
+                    v-model="bulkTransferForm.departmentId"
                     :options="departments"
                     label="name"
                     :reduce="(d) => d.id"
@@ -507,6 +514,11 @@
             <div class="col-12">
               <label class="form-label"> هامش المدير</label>
               <input v-model="filters.managerNote" class="form-control" />
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">عدد الكتاب</label>
+              <input v-model="filters.bookCount" class="form-control" />
             </div>
 
             <div class="col-12">
@@ -614,11 +626,11 @@
         <!-- Header -->
         <div class="modal-header">
           <h5 class="modal-title fw-bold primary">تفاصيل الوارد</h5>
-          <button
+          <!-- <button
             type="button"
             class="btn-close"
             @click="closeIncomingDetails"
-          ></button>
+          ></button> -->
         </div>
 
         <!-- Body -->
@@ -757,7 +769,7 @@ import { Modal } from "bootstrap";
 import { useRoute, useRouter } from "vue-router";
 import VueSelect from "vue3-select";
 import "vue3-select/dist/vue3-select.css";
-
+import { nextTick } from "vue";
 import {
   getMarginNotes,
   addMarginNote,
@@ -774,7 +786,6 @@ import {
 import { getDepartments } from "@/services/departments.service.js";
 
 const route = useRoute();
-const router = useRouter();
 
 // Values ​​from the inbox page
 const incomingId = ref(route.query.incomingId || null);
@@ -786,7 +797,7 @@ const loading = ref(false);
 
 // ===== Pagination =====
 const page = ref(1);
-const pageSize = 10;
+const pageSize = ref(10);
 const totalPages = ref(1);
 const visiblePages = ref([1]);
 
@@ -821,18 +832,23 @@ const load = async () => {
   try {
     const res = await getMarginNotes({
       pageNumber: page.value,
-      pageSize: pageSize,
+      pageSize: pageSize.value,
       incomingId: incomingId.value || null,
       injuredName: filters.injuredName || null,
       managerNote: filters.managerNote || null,
+      bookCount:
+        filters.bookCount !== "" && filters.bookCount !== null
+          ? Number(filters.bookCount)
+          : null,
+
       createdAtFrom: filters.createdAtFrom || null,
       createdAtTo: filters.createdAtTo || null,
     });
 
     list.value = res.data.data.map((item) => {
-      console.log("Incoming ID:", item.incomingId);
-      console.log("Manager Notes:", item.managerNotes);
-      console.log("Incoming Data Full:", item);
+      // console.log("Incoming ID:", item.incomingId);
+      // console.log("Manager Notes:", item.managerNotes);
+      // console.log("Incoming Data Full:", item);
 
       return {
         ...item,
@@ -841,13 +857,45 @@ const load = async () => {
     });
 
     totalPages.value = res.data.pagination.totalPages;
-
+    buildVisiblePages();
     // Reset selections when data is reloaded
     selectedDepartmentIds.value = [];
     selectAll.value = false;
   } finally {
     loading.value = false;
   }
+};
+
+const changePage = async (p) => {
+  if (p < 1 || p > totalPages.value) return;
+
+  page.value = p;
+
+  await load(); // انتظر التحميل يخلص
+  await focusPagination(); // رجع التركيز للباجنيشن
+};
+
+const paginationRef = ref(null);
+
+const focusPagination = async () => {
+  await nextTick();
+  paginationRef.value?.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
+};
+
+const buildVisiblePages = () => {
+  const total = totalPages.value;
+  const current = page.value;
+  const range = 2; // عدد الصفحات يمين ويسار
+  const start = Math.max(1, current - range);
+  const end = Math.min(total, current + range);
+
+  const pages = [];
+  for (let i = start; i <= end; i++) pages.push(i);
+
+  visiblePages.value = pages;
 };
 
 // ===== Download departments =====
@@ -1106,7 +1154,6 @@ const bulkTransfer = async () => {
     selectedDepartmentIds.value = [];
     selectAll.value = false;
     load();
-    س;
   } catch (error) {
     console.error("Unexpected error in bulk transfer:", error);
     errorAlert("فشل الترحيل");
@@ -1137,6 +1184,7 @@ const applyAdvanced = () => {
 const filters = reactive({
   injuredName: "",
   managerNote: "",
+  bookCount: "",
   createdAtFrom: "",
   createdAtTo: "",
 });
@@ -1144,6 +1192,7 @@ const filters = reactive({
 const resetFilters = () => {
   filters.injuredName = "";
   filters.managerNote = "";
+  filters.bookCount = "";
   filters.createdAtFrom = "";
   filters.createdAtTo = "";
   load();

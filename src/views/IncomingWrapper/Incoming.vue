@@ -9,7 +9,7 @@
         <i class="bi bi-inbox"></i>
       </span>
       <div>
-        <h2 class="h5 fw-bold m-2">سجل الوارد</h2>
+        <h2 class="h5 fw-bold m-2">الوارد</h2>
         <small class="text-muted">عرض وإدارة معاملات الوارد</small>
       </div>
     </div>
@@ -18,14 +18,14 @@
       <button type="button" class="btn btn-primary" @click="openAdd()">
         إضافة وارد جديد
       </button>
-      <button
+      <!-- <button
         type="button"
         class="btn btn-primary"
         :disabled="selectedDepartmentIds.length === 0"
         @click="openBulkTransfer"
       >
         ترحيل المحدد ({{ selectedDepartmentIds.length }})
-      </button>
+      </button> -->
     </div>
   </div>
 
@@ -58,16 +58,16 @@
     </div>
 
     <div class="card-body">
-      <div v-if="loading" class="spinner-wrapper">
+      <div v-if="loading" class="spinner-overlay">
         <div class="spinner"></div>
       </div>
 
-      <div v-else class="card inner-card">
+      <div class="card inner-card">
         <div class="table-responsive">
           <table class="table custom-table align-middle text-center mb-0">
             <thead>
               <tr>
-                <th>
+                <!-- <th>
                   <label class="custom-checkbox">
                     <input
                       type="checkbox"
@@ -76,7 +76,7 @@
                     />
                     <span></span>
                   </label>
-                </th>
+                </th> -->
                 <th>#</th>
                 <th>اسم الجريح</th>
                 <th>عدد الوارد</th>
@@ -90,14 +90,13 @@
                 <!-- <th>تاريخ هامش مدير القسم</th> -->
                 <th>هامش مسوؤل الشعبة</th>
                 <th>الملحقات الطبية</th>
-                <th>عدد صفحات المرفقات</th>
                 <th>الإجراءات</th>
               </tr>
             </thead>
 
             <tbody>
               <tr v-for="(inc, idx) in incomingList" :key="inc.id">
-                <td>
+                <!-- <td>
                   <label class="custom-checkbox">
                     <input
                       type="checkbox"
@@ -106,7 +105,7 @@
                     />
                     <span></span>
                   </label>
-                </td>
+                </td> -->
                 <td>{{ (page - 1) * pageSize + idx + 1 }}</td>
                 <td>
                   <div>
@@ -134,8 +133,26 @@
                   <div class="fw-bold">{{ inc.commandName || "—" }}</div>
                   <small class="text-muted"> {{ inc.formationName }}</small>
                 </td>
-                <td>{{ inc.subject || "—" }}</td>
-                <td>{{ inc.content || "—" }}</td>
+                <!-- الموضوع -->
+                <td>
+                  <button
+                    class="btn btn-search btn-sm"
+                    @click="openTextModal('الموضوع', inc.subject)"
+                  >
+                    عرض الموضوع ({{ inc.subject ? 1 : 0 }})
+                  </button>
+                </td>
+
+                <!-- المحتوى -->
+                <td>
+                  <button
+                    class="btn btn-search btn-sm"
+                    @click="openTextModal('المحتوى', inc.content)"
+                  >
+                    عرض المحتوى ({{ inc.content ? 1 : 0 }})
+                  </button>
+                </td>
+
                 <td>
                   <button
                     class="btn btn-search btn-sm"
@@ -146,7 +163,20 @@
                 </td>
 
                 <!-- <td>{{ formatDate(inc.managerNoteDate) }}</td> -->
-                <td>{{ inc.managerNoteDivision || "—" }}</td>
+                <!-- هامش مسؤول الشعبة -->
+                <td>
+                  <button
+                    class="btn btn-search btn-sm"
+                    @click="
+                      openTextModal(
+                        'هامش مسؤول الشعبة',
+                        inc.managerNoteDivision
+                      )
+                    "
+                  >
+                    عرض هامش الشعبة ({{ inc.managerNoteDivision ? 1 : 0 }})
+                  </button>
+                </td>
                 <td>
                   <div class="accessories-row">
                     <span
@@ -160,8 +190,6 @@
                     </span>
                   </div>
                 </td>
-
-                <td>{{ inc.archiveIncoming?.paginationCount ?? "—" }}</td>
                 <td>
                   <div class="d-flex justify-content-center gap-2">
                     <!-- تعديل -->
@@ -200,7 +228,7 @@
                       </svg>
                     </button>
                     <!-- ترحيل -->
-                    <button class="button-transfer" @click="openTransfer(inc)">
+                    <!-- <button class="button-transfer" @click="openTransfer(inc)">
                       <svg class="svgIcon" viewBox="0 0 512 512">
                         <path
                           d="M492.7 273.4L400 366.1c-15 15-41 4.5-41-17V320H208c-22.1 
@@ -211,7 +239,7 @@
                            32-41 17L20 273.4c-9.4-9.4-9.4-24.6 0-34.1z"
                         />
                       </svg>
-                    </button>
+                    </button> -->
 
                     <button class="button-view" @click="openView(inc)">
                       <svg class="svgIcon" viewBox="0 0 576 512">
@@ -261,7 +289,7 @@
               </tr>
 
               <tr v-if="incomingList.length === 0">
-                <td colspan="14" class="py-5 text-muted">
+                <td colspan="13" class="py-5 text-muted">
                   <i class="bi bi-inboxes fs-1 d-block mb-2"></i>
                   لا توجد بيانات
                 </td>
@@ -273,7 +301,10 @@
     </div>
   </div>
 
-  <nav class="circle-pagination d-flex justify-content-center mt-4">
+  <nav
+    ref="paginationRef"
+    class="circle-pagination d-flex justify-content-center mt-4"
+  >
     <button
       class="page-btn"
       :disabled="page === 1"
@@ -553,9 +584,94 @@
               <input v-model="filters.injuredName" class="form-control" />
             </div>
 
+            <!-- <div class="col-md-6">
+              <label class="form-label">رقم الجريح (ID)</label>
+              <input v-model="filters.injuredPersonId" class="form-control" />
+            </div> -->
+
             <div class="col-md-6">
               <label class="form-label">الموضوع</label>
               <input v-model="filters.subject" class="form-control" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">المصدر</label>
+              <input v-model="filters.source" class="form-control" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">المحتوى</label>
+              <input v-model="filters.content" class="form-control" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">هامش الشعبة</label>
+              <input v-model="filters.marginNote" class="form-control" />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">هامش مسؤول الشعبة</label>
+              <input
+                v-model="filters.managerNoteDivision"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">عدد الكتاب</label>
+              <input
+                v-model.number="filters.bookCount"
+                type="number"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">عدد الوارد</label>
+              <input
+                v-model.number="filters.incomingBookNumber"
+                type="number"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">تاريخ الكتاب</label>
+              <input
+                v-model="filters.bookDate"
+                type="date"
+                class="form-control"
+              />
+            </div>
+
+            <!-- <div class="col-md-6">
+              <label class="form-label">الملحقات الطبية</label>
+              <select
+                v-model.number="filters.medicalAccessories"
+                class="form-select"
+              >
+                <option :value="null">الكل</option>
+                <option :value="0">بدون</option>
+                <option :value="1">أشعة</option>
+                <option :value="2">رنين</option>
+                <option :value="3">سونار</option>
+                <option :value="4">قرص CD</option>
+              </select>
+            </div> -->
+
+            <div class="col-md-6">
+              <label class="form-label">القيادة</label>
+              <div class="custom-vue-select-container">
+                <VueSelect
+                  v-model="filters.commandId"
+                  :options="commands"
+                  label="label"
+                  :reduce="(c) => c.value"
+                  placeholder="اختر القيادة..."
+                  searchable
+                  clearable
+                />
+              </div>
             </div>
 
             <div class="col-md-6">
@@ -566,15 +682,11 @@
                   :options="formations"
                   label="name"
                   :reduce="(f) => f.id"
-                  searchable
                   placeholder="اختر التشكيل..."
+                  searchable
+                  clearable
                 />
               </div>
-            </div>
-
-            <div class="col-md-6">
-              <label class="form-label">عدد الكتاب</label>
-              <input v-model="filters.bookcount" class="form-control" />
             </div>
 
             <div class="col-md-6">
@@ -599,7 +711,7 @@
 
         <div class="modal-footer">
           <button class="btn btn-light" @click="closeAdvanced()">إغلاق</button>
-          <button class="btn btn-add" @click="applyAdvanced()">تطبيق</button>
+          <button class="btn btn-add" @click="applyAdvanced()">بحث</button>
         </div>
       </div>
     </div>
@@ -961,6 +1073,27 @@
       </div>
     </div>
   </div>
+
+  <!-- Text Modal (Subject / Content / ManagerNoteDivision) -->
+  <div class="modal fade" tabindex="-1" ref="textModalEl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">{{ textModalData.title }}</h5>
+        </div>
+
+        <div class="modal-body">
+          <div class="note-box">
+            {{ textModalData.value || "—" }}
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeTextModal">إغلاق</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -987,8 +1120,8 @@ import {
   transferIncoming,
 } from "@/services/incoming.service.js";
 import { uploadIncomingArchive } from "@/services/incoming-archive.service.js";
-
 const router = useRouter();
+
 /* Pagination */
 const visiblePages = computed(() => {
   const pages = [];
@@ -1012,24 +1145,43 @@ const totalPages = ref(1);
 const pageSize = 10;
 const commands = ref([]);
 const bookDateText = ref("");
+
 /* Filters */
 const filters = reactive({
   injuredName: "",
+  // injuredPersonId: "",
+  formationId: null,
+  commandId: null,
+  incomingBookNumber: null,
+  bookDate: "",
   subject: "",
+  source: "",
+  content: "",
+  marginNote: "",
+  managerNoteDivision: "",
+  medicalAccessories: null,
+  incomingDateFrom: "",
+  incomingDateTo: "",
 });
 
 /* Reset Filters */
 const resetFilters = () => {
-  filters.name = "";
-  filters.id = "";
+  filters.bookCount = null;
   filters.injuredName = "";
+  // filters.injuredPersonId = "";
   filters.formationId = null;
-  filters.formationName = "";
+  filters.commandId = null;
+  filters.incomingBookNumber = null;
+  filters.bookDate = "";
   filters.subject = "";
+  filters.source = "";
   filters.content = "";
-  filters.incomingDate = "";
-  filters.incomingBookNumber = "";
-  filters.bookcount = "";
+  filters.marginNote = "";
+  filters.managerNoteDivision = "";
+  filters.medicalAccessories = null;
+  filters.incomingDateFrom = "";
+  filters.incomingDateTo = "";
+  page.value = 1;
   load();
 };
 
@@ -1074,14 +1226,21 @@ const load = async () => {
     const res = await getIncomings({
       pageNumber: page.value,
       pageSize,
+      bookCount: filters.bookCount ?? null,
       injuredName: filters.injuredName || null,
-      subject: filters.subject || null,
+      // injuredPersonId: filters.injuredPersonId || null,
       formationId: filters.formationId || null,
-      formationName: filters.formationName || null,
-      bookcount: filters.bookcount || null,
+      commandId: filters.commandId || null,
+      incomingBookNumber: filters.incomingBookNumber ?? null,
+      bookDate: filters.bookDate || null,
+      subject: filters.subject || null,
+      source: filters.source || null,
+      content: filters.content || null,
+      marginNote: filters.marginNote || null,
+      managerNoteDivision: filters.managerNoteDivision || null,
+      medicalAccessories: filters.medicalAccessories ?? null,
       incomingDateFrom: filters.incomingDateFrom || null,
       incomingDateTo: filters.incomingDateTo || null,
-      createdByUserId: filters.createdByUserId || null,
     });
     incomingList.value = res.data.data;
     totalPages.value = res.data.pagination.totalPages;
@@ -1162,7 +1321,6 @@ const openEdit = async (item) => {
   form.id = item.id;
   form.injuredNames = item.injuredNames || [];
   form.commandId = item.commandId || null;
-
   await nextTick();
   form.formationId = item.formationId || null;
 
@@ -1170,27 +1328,22 @@ const openEdit = async (item) => {
   form.incomingDate = item.incomingDate
     ? item.incomingDate.substring(0, 10)
     : null;
-
   incomingDateText.value = item.incomingDate
     ? `${item.incomingDate.substring(8, 10)}/${item.incomingDate.substring(
         5,
         7
       )}/${item.incomingDate.substring(0, 4)}`
     : "";
-
   form.subject = item.subject;
   form.content = item.content;
-
   form.departmentIds = item.departmentIds || [];
   form.medicalAccessories = Array.isArray(item.medicalAccessories)
     ? item.medicalAccessories
     : item.medicalAccessories != null
     ? [item.medicalAccessories]
     : [];
-
   form.bookCount = item.bookCount;
   form.bookDate = item.bookDate ? item.bookDate.split("T")[0] : null;
-
   bookDateText.value = form.bookDate
     ? `${form.bookDate.substring(8, 10)}/${form.bookDate.substring(
         5,
@@ -1257,7 +1410,22 @@ const remove = async (id) => {
   }
 };
 
-const changePage = (p) => ((page.value = p), load());
+const changePage = async (p) => {
+  if (p < 1 || p > totalPages.value) return;
+  page.value = p;
+
+  await load();
+  await focusPagination();
+};
+
+const paginationRef = ref(null);
+const focusPagination = async () => {
+  await nextTick();
+  paginationRef.value?.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
+};
 
 /* Reset Form */
 const reset = () => {
@@ -1494,26 +1662,20 @@ const onArchiveFilesSelected = (event, index) => {
 const isUploadingArchive = ref(false);
 const submitArchiveUpload = async () => {
   if (isUploadingArchive.value) return;
-
   if (!currentIncomingId.value) {
     return errorAlert("معاملة غير محددة");
   }
-
   const allFiles = archiveInputs.value.flatMap((x) => x.files);
-
   if (allFiles.length === 0) {
     return errorAlert("يرجى اختيار ملفات");
   }
-
   isUploadingArchive.value = true;
 
   try {
     await uploadIncomingArchive(currentIncomingId.value, allFiles);
-
     successAlert("تم رفع المرفقات بنجاح");
     archiveInputs.value = [{ files: [] }];
     currentIncomingId.value = "";
-
     modalArchiveUpload.hide();
     load();
   } catch (e) {
@@ -1538,9 +1700,7 @@ const openFile = (url) => {
 
 const medicalAccessoriesText = (value) => {
   if (!value || value.length === 0) return "—";
-
   const arr = Array.isArray(value) ? value : [value];
-
   const map = {
     0: "لا شي",
     1: "اشعة",
@@ -1548,7 +1708,6 @@ const medicalAccessoriesText = (value) => {
     3: "سونار",
     4: "قرص (CD)",
   };
-
   return arr.map((x) => map[x] ?? "غير معروف").join(" , ");
 };
 
@@ -1583,18 +1742,15 @@ const parseDateNoLeadingZero = (text) => {
   if (parts.length !== 3) return null;
 
   const [dayStr, monthStr, yearStr] = parts;
-
   const day = Number(dayStr);
   const month = Number(monthStr);
   const year = Number(yearStr);
-
   if (
     !Number.isInteger(day) ||
     !Number.isInteger(month) ||
     !Number.isInteger(year)
   )
     return null;
-
   if (
     day < 1 ||
     day > 31 ||
@@ -1604,7 +1760,6 @@ const parseDateNoLeadingZero = (text) => {
     year > 2100
   )
     return null;
-
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(
     2,
     "0"
@@ -1685,7 +1840,6 @@ const openBulkTransfer = async () => {
   );
 
   if (!confirm.isConfirmed) return;
-
   isBulkTransfer.value = true;
   transfer.incomingId = "";
   transfer.departmentId = null;
@@ -1710,6 +1864,27 @@ const closeManagerNotes = () => {
   managerNotesModal?.hide();
 };
 
+// ==============================
+// Text Modal (Subject / Content / ManagerNoteDivision)
+// ==============================
+const textModalEl = ref(null);
+let textModalInstance = null;
+
+const textModalData = reactive({
+  title: "",
+  value: "",
+});
+
+const openTextModal = (title, value) => {
+  textModalData.title = title;
+  textModalData.value = value || "";
+  textModalInstance?.show();
+};
+
+const closeTextModal = () => {
+  textModalInstance?.hide();
+};
+
 onMounted(() => {
   const tooltipTriggerList = [].slice.call(
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
@@ -1724,6 +1899,9 @@ onMounted(() => {
   modalArchiveUpload = new Modal(archiveUploadModal.value);
   if (managerNotesModalEl.value) {
     managerNotesModal = new Modal(managerNotesModalEl.value);
+  }
+  if (textModalEl.value) {
+    textModalInstance = new Modal(textModalEl.value);
   }
   load();
   loadDepartments();

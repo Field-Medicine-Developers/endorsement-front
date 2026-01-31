@@ -80,13 +80,13 @@
         <div class="icon-card text-center">
           <i class="bi bi-envelope-paper"></i>
           <h6>الهامش الإداري</h6>
-          <span>{{ stats.marginNotesCount }}</span>
+          <span>{{ stats.marginNotesCount.totalCount }}</span>
         </div>
 
         <div class="icon-card text-center">
           <i class="bi bi-diagram-3"></i>
           <h6>الإدارة</h6>
-          <span>{{ stats.landaCount }}</span>
+          <span>{{ stats.landaCount.totalCount }}</span>
         </div>
 
         <div class="icon-card text-center">
@@ -98,7 +98,7 @@
         <div class="icon-card text-center">
           <i class="bi bi-shield-check"></i>
           <h6>التدقيق والبيانات</h6>
-          <span>{{ stats.auditingAndDataCount }}</span>
+          <span>{{ stats.auditingAndDataCount.totalCount }}</span>
         </div>
 
         <div class="icon-card text-center">
@@ -132,7 +132,7 @@
       <div class="modal-content">
         <!-- Header -->
         <div class="modal-header">
-          <h5 class="modal-title">تفاصيل تتبع الوارد</h5>
+          <h5 class="modal-title fw-bold primary">تفاصيل تتبع الوارد</h5>
         </div>
 
         <div class="modal-body track-modal-body">
@@ -155,9 +155,9 @@
               </div>
 
               <div class="info-item">
-  <span>الجهة المرسلة</span>
-  <strong>{{ trackResult?.createdByUserName || "—" }}</strong>
-</div>
+                <span>الجهة المرسلة</span>
+                <strong>{{ trackResult?.createdByUserName || "—" }}</strong>
+              </div>
               <div class="info-item">
                 <span>الجهة الاصابة</span>
                 <strong>{{ trackResult.subject }}</strong>
@@ -215,7 +215,7 @@
           <div v-if="trackResult.actions.length" class="info-card">
             <div class="info-header">
               <i class="bi bi-lightning"></i>
-              <h6>الإجراءات</h6>
+              <h6>هامش مسؤول القسم</h6>
             </div>
 
             <ul class="timeline-modern actions">
@@ -294,9 +294,7 @@
     tabindex="-1"
     aria-hidden="true"
   >
-    <div
-      class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
-    >
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
       <div class="modal-content">
         <!-- Header -->
         <div class="modal-header">
@@ -420,10 +418,27 @@ let chart = null;
 
 const stats = ref({
   incomingsCount: 0,
-  marginNotesCount: 0,
-  landaCount: 0,
+
+  marginNotesCount: {
+    withMarginNotesCount: 0,
+    withoutMarginNotesCount: 0,
+    totalCount: 0,
+  },
+
+  landaCount: {
+    withMemoNumberCount: 0,
+    withoutMemoNumberCount: 0,
+    totalCount: 0,
+  },
+
   returnTransactionsCount: 0,
-  auditingAndDataCount: 0,
+
+  auditingAndDataCount: {
+    verifiedCount: 0,
+    notVerifiedCount: 0,
+    totalCount: 0,
+  },
+
   actionTypeCount: 0,
   finalStatusTypeCount: 0,
   pendingIncomingsAfterTwoDaysCount: 0,
@@ -446,8 +461,8 @@ const renderChart = () => {
           label: "الإحصائيات",
           data: [
             stats.value.incomingsCount,
-            stats.value.marginNotesCount,
-            stats.value.auditingAndDataCount,
+            stats.value.marginNotesCount.totalCount,
+            stats.value.auditingAndDataCount.totalCount,
             stats.value.returnTransactionsCount,
           ],
           borderColor: "#12b1d1",
@@ -505,11 +520,8 @@ const track = async () => {
       createdByUserName: data.createdByUserName || "",
       content: data.content || "",
       formationName: data.formationName || "",
-
       injuredNames: Array.isArray(data.injuredNames) ? data.injuredNames : [],
-
       transfers: Array.isArray(data.transfers) ? data.transfers : [],
-
       actions: Array.isArray(data.actions) ? data.actions : [],
     };
 

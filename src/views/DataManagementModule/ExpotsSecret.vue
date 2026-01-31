@@ -17,6 +17,29 @@
     <!-- <button class="btn btn-primary" @click="openAdd">إضافة صادر جديد</button> -->
   </div>
 
+   <!-- Search -->
+   <div class="card shadow-sm border-0 mb-3 p-3">
+    <div class="row g-3">
+      <div class="col-md-6">
+  <input
+    v-model="filters.exportNumber"
+    class="form-control"
+    placeholder="بحث عن رقم الصادر..."
+    @keyup.enter="load"
+  />
+</div>
+
+<div class="col-md-6 d-flex justify-content-end gap-2 align-items-end">
+  <button class="btn-search" @click="load">بحث</button>
+  <button class="btn-advanced" @click="openAdvancedSearchModal">
+    بحث متقدم
+  </button>
+  <button class="btn-advanced" @click="reset">إعادة تعيين</button>
+</div>
+
+    </div>
+  </div>
+
   <!-- Table -->
   <div class="card shadow-sm border-0 mb-4">
     <div class="card-header custom-card-header">
@@ -358,10 +381,68 @@
       </div>
     </div>
   </div>
+
+    <!-- Advanced Search Modal -->
+<div class="modal fade" tabindex="-1" ref="advancedSearchModal">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">بحث متقدم</h5>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <!-- رقم الصادر -->
+          <div class="col-md-6">
+            <label class="form-label">رقم الصادر</label>
+            <input
+              v-model="filters.exportNumber"
+              class="form-control"
+              placeholder="أدخل رقم الصادر..."
+            />
+          </div>
+
+          <!-- تاريخ الصادر -->
+          <div class="col-md-6">
+            <label class="form-label">تاريخ الصادر</label>
+            <input
+              v-model="filters.exportDate"
+              type="date"
+              class="form-control"
+            />
+          </div>
+
+          <!-- الجهة المرسل إليها -->
+          <div class="col-md-12">
+            <label class="form-label">الجهة المرسل إليها</label>
+            <input
+              v-model="filters.destinationDepartment"
+              class="form-control"
+              placeholder="أدخل اسم الجهة..."
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" @click="closeAdvancedSearchModal">
+          إغلاق
+        </button>
+
+        <button
+          class="btn btn-primary"
+          @click="applyAdvancedSearch"
+        >
+          بحث
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import * as bootstrap from "bootstrap";
 import {
   getExportsSecret,
@@ -409,6 +490,13 @@ const form = ref({
   content: "",
 });
 
+const filters = reactive({
+  exportNumber: "",
+  exportDate: "",
+  destinationDepartment: "",
+});
+
+
 // Modals
 const modalEl = ref(null);
 const archiveModalEl = ref(null);
@@ -423,36 +511,23 @@ const archiveFiles = ref([]);
 const currentExportId = ref("");
 const archiveInputs = ref([{ files: [] }]);
 
-// ========== lifecycle ==========
-onMounted(() => {
-  modalInstance = new bootstrap.Modal(modalEl.value, {
-    backdrop: "static",
-    keyboard: false,
-  });
-  archiveModalInstance = new bootstrap.Modal(archiveModalEl.value, {
-    backdrop: "static",
-    keyboard: false,
-  });
-  archiveUploadModalInstance = new bootstrap.Modal(archiveUploadModal.value, {
-    backdrop: "static",
-    keyboard: false,
-  });
-
-  load();
-});
 
 // ========== functions ==========
 const load = async () => {
   loading.value = true;
 
   try {
-    const res = await getExportsSecret({ pageNumber: page.value, pageSize });
+    const res = await getExportsSecret({
+  pageNumber: page.value,
+  pageSize,
+  exportNumber: filters.exportNumber || null,
+  exportDate: filters.exportDate ? new Date(filters.exportDate).toISOString() : null,
+  destinationDepartment: filters.destinationDepartment || null,
+});
 
-    list.value = Array.isArray(res.data?.data?.items)
-      ? res.data.data.items
-      : [];
+list.value = res.data?.data ?? [];  // ✅ هنا التعديل
 
-    totalPages.value = res.data?.data?.pagination?.totalPages ?? 1;
+totalPages.value = res.data?.pagination?.totalPages || 1;
   } catch (e) {
     console.error(e);
     errorAlert("حدث خطأ أثناء تحميل البيانات");
@@ -460,6 +535,32 @@ const load = async () => {
     loading.value = false;
   }
 };
+
+const advancedSearchModal = ref(null);
+let advancedSearchModalInstance = null;
+
+const openAdvancedSearchModal = () => {
+  advancedSearchModalInstance.show();
+};
+
+const closeAdvancedSearchModal = () => {
+  advancedSearchModalInstance.hide();
+};
+
+const applyAdvancedSearch = () => {
+  page.value = 1; // يرجع لأول صفحة
+  closeAdvancedSearchModal();
+  load();
+};
+
+const reset = () => {
+  filters.exportNumber = "";
+  filters.exportDate = "";
+  filters.destinationDepartment = "";
+  page.value = 1;
+  load();
+};
+
 
 const openAdd = () => {
   isEdit.value = false;
@@ -607,6 +708,28 @@ const formatDate = (d) => {
   const day = String(dt.getDate()).padStart(2, "0");
   return `${year}/${month}/${day}`;
 };
+
+// ========== lifecycle ==========
+onMounted(() => {
+  modalInstance = new bootstrap.Modal(modalEl.value, {
+    backdrop: "static",
+    keyboard: false,
+  });
+  archiveModalInstance = new bootstrap.Modal(archiveModalEl.value, {
+    backdrop: "static",
+    keyboard: false,
+  });
+  archiveUploadModalInstance = new bootstrap.Modal(archiveUploadModal.value, {
+    backdrop: "static",
+    keyboard: false,
+  });
+  advancedSearchModalInstance = new bootstrap.Modal(advancedSearchModal.value, {
+    backdrop: "static",
+    keyboard: false,
+  });
+  load();
+});
+
 </script>
 
 <style scoped>

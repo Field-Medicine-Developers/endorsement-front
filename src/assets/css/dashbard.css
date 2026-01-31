@@ -111,7 +111,7 @@
   right: 14px;
   transform: translateY(-50%);
   color: #12b1d1;
-  font-size: 1.1rem;
+  font-size: 1.4rem;
 }
 
 .search-field input {
@@ -379,4 +379,172 @@
   color: #12b1d1;
   margin-top: 4px;
 }
+
+/* =========================================================
+Dashboard Responsive (Tablet + Mobile Only)
+   ضع هذا آخر ملف CSS
+========================================================= */
+
+/* ===========================
+ Tablet & Mobile (<= 991px)
+=========================== */
+@media (max-width: 991.98px) {
+
+
+  .icons-box {
+    padding: 1.2rem !important;
+  }
+
+
+  .icon-card {
+    flex: 1 1 45% !important; 
+    margin: 0.5rem !important;
+    padding: 1.1rem 0.8rem !important;
+    border-radius: 14px;
+  }
+
+  .icon-card i {
+    font-size: 2.1rem;
+  }
+
+  .icon-card span {
+    font-size: 1.1rem;
+  }
+
+
+  .chart-card {
+    height: 240px;
+  }
+
+  .track-search-modern {
+    grid-template-columns: 1fr !important; 
+    gap: 10px;
+  }
+
+  .btn-track {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 16px;
+    border-radius: 14px;
+  }
+
+
+  .info-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px;
+  }
+
+  .info-card {
+    padding: 16px 16px;
+    border-radius: 16px;
+  }
+
+  /*  injured badges */
+  .injured-tags {
+    gap: 8px;
+  }
+
+  .injured-badge {
+    font-size: 0.82rem;
+    padding: 6px 12px;
+  }
+
+  /*  Timeline */
+  .timeline-modern li {
+    gap: 12px;
+  }
+
+  .timeline-card {
+    padding: 12px 14px;
+  }
+
+  .timeline-status {
+    font-size: 13px;
+  }
+
+  /* Achievements Cards */
+  .achievement-card {
+    padding: 16px 14px;
+    border-radius: 16px;
+    gap: 12px;
+  }
+
+  .achievement-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    font-size: 1.35rem;
+  }
+
+  .achievement-title {
+    font-size: 0.9rem;
+  }
+
+  .achievement-value {
+    font-size: 1.6rem;
+  }
+}
+
+
+/* ===========================
+    Mobile (<= 576px)
+=========================== */
+@media (max-width: 576px) {
+
+  .icons-box {
+    padding: 1rem !important;
+  }
+
+  .icon-card {
+    flex: 1 1 100% !important;
+    margin: 0.4rem 0 !important;
+    padding: 1rem 0.8rem !important;
+  }
+
+  .icon-card i {
+    font-size: 2rem;
+  }
+
+  .icon-card h6 {
+    font-size: 0.95rem;
+  }
+
+  .icon-card span {
+    font-size: 1.05rem;
+  }
+
+  .chart-card {
+    height: 220px;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* timeline */
+  .timeline-modern li {
+    margin-bottom: 14px;
+  }
+
+  .timeline-dot {
+    margin-top: 8px;
+  }
+
+  .timeline-meta {
+    font-size: 0.75rem;
+  }
+
+  /*  achievements */
+  .achievement-card {
+    flex-direction: row;
+    align-items: center;
+    padding: 14px 12px;
+  }
+
+  .achievement-value {
+    font-size: 1.45rem;
+  }
+}
+
+
 
