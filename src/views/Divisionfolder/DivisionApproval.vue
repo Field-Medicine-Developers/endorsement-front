@@ -93,7 +93,7 @@
                 <td>
                   <div class="fw-bold">{{ m.commandName || "—" }}</div>
                   <small class="text-muted">
-                    {{ m.formationName  || "—" }}</small
+                    {{ m.formationName || "—" }}</small
                   >
                 </td>
 
@@ -216,38 +216,38 @@
         </div>
       </div>
     </div>
-    <!-- Pagination -->
-    <nav
-      v-if="totalPages > 1"
-      class="circle-pagination d-flex justify-content-center mt-4"
-    >
-      <button
-        class="page-btn"
-        :disabled="page === 1"
-        @click="changePage(page - 1)"
-      >
-        <i class="bi bi-chevron-right"></i>
-      </button>
-
-      <button
-        class="page-number"
-        v-for="p in visiblePages"
-        :key="p"
-        :class="{ active: p === page }"
-        @click="changePage(p)"
-      >
-        {{ p }}
-      </button>
-
-      <button
-        class="page-btn"
-        :disabled="page === totalPages"
-        @click="changePage(page + 1)"
-      >
-        <i class="bi bi-chevron-left"></i>
-      </button>
-    </nav>
   </div>
+  <!-- Pagination -->
+  <nav
+    ref="paginationRef"
+    class="circle-pagination d-flex justify-content-center mt-4"
+  >
+    <button
+      class="page-btn"
+      :disabled="page === 1"
+      @click="changePage(page - 1)"
+    >
+      <i class="bi bi-chevron-right"></i>
+    </button>
+
+    <button
+      v-for="p in visiblePages"
+      :key="p"
+      class="page-number"
+      :class="{ active: p === page }"
+      @click="changePage(p)"
+    >
+      {{ p }}
+    </button>
+
+    <button
+      class="page-btn"
+      :disabled="page === totalPages"
+      @click="changePage(page + 1)"
+    >
+      <i class="bi bi-chevron-left"></i>
+    </button>
+  </nav>
 
   <!-- Reject Modal -->
   <div class="modal fade" tabindex="-1" ref="rejectModalEl">
@@ -450,7 +450,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from "vue";
+import { ref, reactive, onMounted, computed, nextTick } from "vue";
 import { Modal } from "bootstrap";
 import VueSelect from "vue3-select";
 import "vue3-select/dist/vue3-select.css";
@@ -471,24 +471,38 @@ const pageSize = 10;
 const totalPages = ref(1);
 
 const visiblePages = computed(() => {
-  const pages = [];
-  let start = page.value - 1;
-  if (start < 1) start = 1;
-
-  let end = start + 2;
-  if (end > totalPages.value) {
-    end = totalPages.value;
-    start = Math.max(1, end - 2);
+  const total = totalPages.value;
+  const current = page.value;
+  if (total <= 5) {
+    return Array.from({ length: total }, (_, i) => i + 1);
   }
+  const pages = new Set();
+  pages.add(1);
+  for (let i = current - 1; i <= current + 1; i++) {
+    if (i > 1 && i < total) {
+      pages.add(i);
+    }
+  }
+  pages.add(total);
 
-  for (let i = start; i <= end; i++) pages.push(i);
-  return pages;
+  return [...pages].sort((a, b) => a - b);
 });
 
-const changePage = (p) => {
+const changePage = async (p) => {
   if (p < 1 || p > totalPages.value) return;
   page.value = p;
-  load();
+
+  await load();
+  await focusPagination();
+};
+
+const paginationRef = ref(null);
+const focusPagination = async () => {
+  await nextTick();
+  paginationRef.value?.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
 };
 
 const filters = reactive({

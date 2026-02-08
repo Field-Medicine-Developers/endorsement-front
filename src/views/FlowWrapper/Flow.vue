@@ -15,8 +15,7 @@
     </div>
   </div>
 
-  <div class="stats-row">
-    <!-- الكل -->
+  <!-- <div class="stats-row">
     <div class="stats-box stat-blue">
       <div class="text">
         <span class="title">الكل</span>
@@ -25,7 +24,6 @@
       <i class="bi bi-files icon"></i>
     </div>
 
-    <!-- قيد الانتظار -->
     <div class="stats-box stat-dark">
       <div class="text">
         <span class="title">قيد الانتظار</span>
@@ -34,7 +32,6 @@
       <i class="bi bi-hourglass-split icon"></i>
     </div>
 
-    <!-- منجز -->
     <div class="stats-box stat-green">
       <div class="text">
         <span class="title">مكتب المعاون</span>
@@ -43,7 +40,6 @@
       <i class="bi bi-check-circle icon"></i>
     </div>
 
-    <!-- اعتذار -->
     <div class="stats-box stat-warning">
       <div class="text">
         <span class="title">اعتذار</span>
@@ -52,7 +48,6 @@
       <i class="bi bi-exclamation-circle icon"></i>
     </div>
 
-    <!-- غير منجز -->
     <div class="stats-box stat-danger">
       <div class="text">
         <span class="title">غير منجز</span>
@@ -61,7 +56,6 @@
       <i class="bi bi-x-circle icon"></i>
     </div>
 
-    <!-- مدقق -->
     <div class="stats-box stat-info">
       <div class="text">
         <span class="title">مدقق</span>
@@ -70,7 +64,6 @@
       <i class="bi bi-shield-check icon"></i>
     </div>
 
-    <!-- غير مدقق -->
     <div class="stats-box stat-secondary">
       <div class="text">
         <span class="title">غير مدقق</span>
@@ -79,7 +72,6 @@
       <i class="bi bi-shield-x icon"></i>
     </div>
 
-    <!-- غير معاد -->
     <div class="stats-box stat-blue">
       <div class="text">
         <span class="title">غير مسترجع</span>
@@ -88,7 +80,6 @@
       <i class="bi bi-arrow-repeat icon"></i>
     </div>
 
-    <!-- معاد -->
     <div class="stats-box stat-purple">
       <div class="text">
         <span class="title">استرجاع</span>
@@ -96,7 +87,7 @@
       </div>
       <i class="bi bi-arrow-counterclockwise icon"></i>
     </div>
-  </div>
+  </div> -->
 
   <!-- Search Bar -->
   <div class="card shadow-sm border-0 mb-3 p-3">
@@ -249,13 +240,9 @@
                      </td> -->
 
                 <td>
-                  <span
-                    v-if="item.finalStatus === FinalStatusType.Apology"
-                    class="badge badge-main"
-                  >
-                    {{ finalPositionText(item.finalPosition) }}
-                  </span>
-                  <span v-else class="text-muted">-</span>
+                  <!-- <span class="badge badge-main"> -->
+                    {{ item.finalPosition || "-" }}
+                  <!-- </span> -->
                 </td>
 
                 <td>
@@ -380,7 +367,10 @@
     </div>
   </div>
   <!-- Pagination -->
-  <nav class="circle-pagination d-flex justify-content-center mt-4">
+  <nav
+    ref="paginationRef"
+    class="circle-pagination d-flex justify-content-center mt-4"
+  >
     <button
       class="page-btn"
       :disabled="page === 1"
@@ -390,9 +380,9 @@
     </button>
 
     <button
-      class="page-number"
       v-for="p in visiblePages"
       :key="p"
+      class="page-number"
       :class="{ active: p === page }"
       @click="changePage(p)"
     >
@@ -585,28 +575,23 @@
                 class="col-md-6"
                 v-if="form.finalStatus === FinalStatusType.Apology"
               >
-                <label class="form-label">مواقف النهائي</label>
-
-                <div class="custom-vue-select-container mb-3">
-                  <VueSelect
-                    v-model="form.finalPosition"
-                    :options="finalPositionOptions"
-                    label="label"
-                    :reduce="(o) => o.value"
-                    :disabled="!editMode && step !== 3"
-                  />
-                </div>
-              </div>
-
-              <div
-                class="col-md-6"
-                v-if="form.finalStatus === FinalStatusType.Apology"
-              >
                 <label class="form-label">تاريخ الاسترجاع</label>
                 <input
                   type="date"
                   v-model="form.receiveDate"
                   class="form-control"
+                  :disabled="!editMode && step !== 3"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">الموقف النهائي</label>
+
+                <input
+                  v-model="form.finalPosition"
+                  type="text"
+                  class="form-control"
+                  placeholder="أدخل الموقف النهائي..."
                   :disabled="!editMode && step !== 3"
                 />
               </div>
@@ -869,7 +854,7 @@
               <label class="form-label">المواقف النهائي</label>
               <input
                 class="form-control"
-                :value="finalPositionText(selected.finalPosition)"
+                :value="selected.finalPosition || '-'"
                 disabled
               />
             </div>
@@ -1444,6 +1429,9 @@ import { getDepartments } from "@/services/departments.service.js";
 import { successAlert, errorAlert, confirmDelete } from "@/utils/alert.js";
 import { uploadIncomingArchive } from "@/services/incoming-archive.service.js";
 import { getFormations, getCommands } from "@/services/formations.service.js";
+import { nextTick } from "vue";
+
+
 
 const route = useRoute();
 const incomingIdFromRoute = route.query.injuredPersonIds || null;
@@ -1476,9 +1464,12 @@ const filters = reactive({
 /* ---------------- ENUMS ---------------- */
 const FinalStatusType = {
   Defult: 0,
-  Completed: 1,
-  Apology: 3,
-  NotCompleted: 4,
+  Completed: 1, // مكتب السيد المعاون
+  SendingAlRazi: 2, // إرسال الرازي
+  HealthOfIssuance: 3, // صحة صدور
+  RequestPriorities: 4, // طلب أوليات
+  Authentication: 5, // المصادقة
+  Apology: 6, // استرجاع
 };
 
 const VerificationStatus = {
@@ -1490,8 +1481,11 @@ const VerificationStatus = {
 const finalStatusOptions = [
   { value: FinalStatusType.Defult, label: "بدون" },
   { value: FinalStatusType.Completed, label: "مكتب السيد المعاون" },
+  { value: FinalStatusType.SendingAlRazi, label: "إرسال الرازي" },
+  { value: FinalStatusType.HealthOfIssuance, label: "صحة صدور" },
+  { value: FinalStatusType.RequestPriorities, label: "طلب أوليات" },
+  { value: FinalStatusType.Authentication, label: "المصادقة" },
   { value: FinalStatusType.Apology, label: "استرجاع" },
-  // { value: FinalStatusType.NotCompleted, label: "غير منجز" },
 ];
 
 const verificationStatusOptions = [
@@ -1510,21 +1504,21 @@ const isReturnOptions = [
   { value: IsReturnEnum.True, label: "نعم" },
 ];
 
-const FinalPosition = {
-  Default: 0,
-  SendingAlRazi: 1,
-  HealthOfIssuance: 2,
-  RequestPriorities: 3,
-  Authentication: 4,
-};
+// const FinalPosition = {
+//   Default: 0,
+//   SendingAlRazi: 1,
+//   HealthOfIssuance: 2,
+//   RequestPriorities: 3,
+//   Authentication: 4,
+// };
 
-const finalPositionOptions = [
-  { value: FinalPosition.Default, label: "بدون" },
-  { value: FinalPosition.SendingAlRazi, label: "إرسال الرازي" },
-  { value: FinalPosition.HealthOfIssuance, label: "صحة صدور" },
-  { value: FinalPosition.RequestPriorities, label: "طلب أوليات" },
-  { value: FinalPosition.Authentication, label: "المصادقة" },
-];
+// const finalPositionOptions = [
+//   { value: FinalPosition.Default, label: "بدون" },
+//   { value: FinalPosition.SendingAlRazi, label: "إرسال الرازي" },
+//   { value: FinalPosition.HealthOfIssuance, label: "صحة صدور" },
+//   { value: FinalPosition.RequestPriorities, label: "طلب أوليات" },
+//   { value: FinalPosition.Authentication, label: "المصادقة" },
+// ];
 
 const ActionTypeEnum = {
   Default: 0,
@@ -1557,7 +1551,7 @@ const getDefaultForm = () => ({
   verificationStatus: 0,
   isReturn: 0,
   receiveDate: "",
-  finalPosition: 0,
+  finalPosition: "",
   situations: [{ situationNumber: "1", situationName: "" }],
 });
 
@@ -1589,19 +1583,31 @@ const pageSize = 10;
 const totalPages = ref(1);
 
 const visiblePages = computed(() => {
-  const pages = [];
-  let start = page.value - 1;
-  if (start < 1) start = 1;
+  const total = totalPages.value;
+  const current = page.value;
 
-  let end = start + 2;
-  if (end > totalPages.value) {
-    end = totalPages.value;
-    start = Math.max(1, end - 2);
+  if (total <= 5) {
+    return Array.from({ length: total }, (_, i) => i + 1);
   }
 
-  for (let i = start; i <= end; i++) pages.push(i);
-  return pages;
+  const pages = new Set();
+
+  // أول صفحة
+  pages.add(1);
+
+  // الصفحات حول الحالية
+  for (let i = current - 1; i <= current + 1; i++) {
+    if (i > 1 && i < total) {
+      pages.add(i);
+    }
+  }
+
+  // آخر صفحة
+  pages.add(total);
+
+  return [...pages].sort((a, b) => a - b);
 });
+
 
 const departments = ref([]);
 const departmentsSelect = ref([]);
@@ -1796,7 +1802,7 @@ const fillFormFromAuditing = (existing, { keepId = true } = {}) => {
     finalStatus: existing.finalStatus ?? 0,
     isReturn: existing.isReturn ?? 0,
     receiveDate: existing.receiveDate?.slice(0, 10) || "",
-    finalPosition: existing.finalPosition ?? 0,
+    finalPosition: existing.finalPosition || "",
 
     notes: existing.notes || "",
 
@@ -1833,7 +1839,7 @@ const openEdit = async (row) => {
     isReturn: row.isReturn ?? 0,
     returnPercentage: row.returnPercentage || "",
     receiveDate: row.receiveDate?.slice(0, 10) || "",
-    finalPosition: row.finalPosition ?? 0,
+    finalPosition: row.finalPosition || "",
     notes: row.notes || "",
     situations: row.situations?.map((s, i) => ({
       situationNumber: s.situationNumber || String(i + 1),
@@ -1998,9 +2004,21 @@ const formatDate = (d) => {
   return `${year}/${month}/${day}`;
 };
 
-const changePage = (p) => {
+const changePage = async (p) => {
+  if (p < 1 || p > totalPages.value) return;
   page.value = p;
-  load();
+
+  await load();
+  await focusPagination();
+};
+
+const paginationRef = ref(null);
+const focusPagination = async () => {
+  await nextTick();
+  paginationRef.value?.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
 };
 
 const situationsModalEl = ref(null);
@@ -2104,8 +2122,7 @@ const buildPayload = () => {
     isReturn: form.isReturn,
     // returnPercentage: form.isReturn === 1 ? form.returnPercentage : null,
     receiveDate: form.isReturn === 1 ? form.receiveDate : null,
-    finalPosition:
-      form.finalStatus === FinalStatusType.Apology ? form.finalPosition : 0,
+    finalPosition: form.finalPosition || null,
     notes: form.notes || null,
     situations: form.situations
       .filter((s) => s.situationName || s.situationNumber)
@@ -2177,7 +2194,7 @@ const loadExistingAuditing = async (id) => {
       finalStatus: existing.finalStatus ?? 0,
       isReturn: existing.isReturn ?? 0,
       receiveDate: existing.receiveDate?.slice(0, 10) || "",
-      finalPosition: existing.finalPosition ?? 0,
+      finalPosition: existing.finalPosition || "",
       notes: existing.notes || "",
       situations: existing.situations?.length
         ? JSON.parse(JSON.stringify(existing.situations))
@@ -2271,18 +2288,14 @@ watch(
     if (val === FinalStatusType.Apology) {
       form.isReturn = 1;
       if (!form.receiveDate) form.receiveDate = today();
-      if (form.finalPosition === null || form.finalPosition === undefined) {
-        form.finalPosition = 0;
-      }
     } else {
-      // إذا غير استرجاع يرجع طبيعي
-      form.finalPosition = 0;
       form.receiveDate = "";
       if (form.isReturn === 1) form.isReturn = 0;
     }
   },
   { immediate: true }
 );
+
 // ==============================
 // Archive Incoming (مرفقات الوارد)
 // ==============================

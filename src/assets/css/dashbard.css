@@ -548,3 +548,154 @@ Dashboard Responsive (Tablet + Mobile Only)
 
 
 
+.mini-tabs{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  margin-top:6px;
+  padding:3px;
+  border-radius:999px;
+  background:linear-gradient(
+    180deg,
+    rgba(18,177,209,.10),
+    rgba(18,177,209,.04)
+  );
+}
+
+/* زر التب */
+.mini-tab{
+  border:none;
+  background:transparent;
+  color:#0f6c88;
+  font-size:0.72rem;
+  font-weight:700;
+  padding:4px 14px;
+  border-radius:999px;
+  cursor:pointer;
+  transition:all .25s ease;
+  position:relative;
+}
+
+/* active */
+.mini-tab.active{
+  background:linear-gradient(135deg,#12b1d1,#19c1df);
+  color:#fff;
+  box-shadow:0 4px 10px rgba(18,177,209,.35);
+}
+
+/* hover */
+.mini-tab:not(.active):hover{
+  background:rgba(18,177,209,.12);
+}
+
+/* body */
+.mini-tab-body{
+  margin-top:6px;
+}
+
+/* الرقم الرئيسي */
+.stat-main{
+  font-size:1.3rem;
+  font-weight:800;
+  color:#12b1d1;
+  letter-spacing:.3px;
+}
+
+/* التفاصيل */
+.mini-details{
+  display:flex;
+  justify-content:center;
+  gap:18px;
+  margin-top:2px;
+}
+
+.mini-details > div{
+  text-align:center;
+}
+
+.mini-details small{
+  display:block;
+  font-size:.68rem;
+  color:#7a8f96;
+}
+
+.mini-details strong{
+  display:block;
+  font-size:1.1rem;
+  font-weight:800;
+  color:#12b1d1;
+}
+
+
+
+/* ===============================
+   Appbar – Responsive
+================================ */
+
+.appbar{
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* القسم الأيسر (الأيقونة + العنوان) */
+/* .appbar > .d-flex{
+  flex: 1 1 auto;
+  min-width: 0;
+} */
+
+/* زر الإحصائيات */
+.appbar .btn-wrapper{
+  flex-shrink: 0;
+}
+
+
+/* ===============================
+   Tablet & Mobile
+================================ */
+@media (max-width: 991.98px){
+
+  .appbar{
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .appbar > .d-flex{
+    justify-content: flex-start;
+  }
+
+  .appbar .btn-wrapper{
+    width: 100%;
+  }
+
+  .appbar .btn-wrapper button{
+    width: 100%;
+  }
+
+}
+
+
+/* ===============================
+   Mobile
+================================ */
+@media (max-width: 576px){
+
+  .appbar{
+    padding: 14px !important;
+  }
+
+  .appbar h2{
+    font-size: 1rem;
+    margin: 0;
+  }
+
+  .appbar small{
+    font-size: .75rem;
+  }
+
+  .appbar-icon{
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+}

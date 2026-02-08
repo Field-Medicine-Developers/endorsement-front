@@ -68,45 +68,159 @@
     <!-- Content -->
     <div v-else>
       <!-- Cards Row -->
+      <!-- Cards Row -->
       <div
-        class="icons-box p-4 border rounded-4 d-flex justify-content-around align-items-center flex-wrap"
-      >
-        <div class="icon-card text-center">
-          <i class="bi bi-inbox"></i>
-          <h6>الوارد</h6>
-          <span>{{ stats.incomingsCount }}</span>
+      class="icons-box p-4 border rounded-4 d-flex justify-content-around align-items-stretch flex-wrap"
+    >
+      <!-- الوارد -->
+      <div class="icon-card text-center">
+        <i class="bi bi-inbox"></i>
+        <h6>الوارد</h6>
+        <span>{{ stats.incomingsCount }}</span>
+      </div>
+
+      <!-- الهامش الإداري -->
+      <div class="icon-card text-center stat-details-card">
+        <i class="bi bi-envelope-paper"></i>
+        <h6>الهامش الإداري</h6>
+        <hr />
+        <!-- Tabs -->
+        <div class="mini-tabs">
+          <button
+            class="mini-tab"
+            :class="{ active: activeMarginTab === 'total' }"
+            @click="activeMarginTab = 'total'"
+          >
+            الكل
+          </button>
+
+          <button
+            class="mini-tab"
+            :class="{ active: activeMarginTab === 'details' }"
+            @click="activeMarginTab = 'details'"
+          >
+            التفاصيل
+          </button>
         </div>
 
-        <div class="icon-card text-center">
-          <i class="bi bi-envelope-paper"></i>
-          <h6>الهامش الإداري</h6>
-          <span>{{ stats.marginNotesCount.totalCount }}</span>
-        </div>
+        <!-- Content -->
+        <div class="mini-tab-body">
+          <!-- total -->
+          <div v-if="activeMarginTab === 'total'" class="stat-main">
+            {{ stats.marginNotesCount.totalCount }}
+          </div>
 
-        <div class="icon-card text-center">
-          <i class="bi bi-diagram-3"></i>
-          <h6>الإدارة</h6>
-          <span>{{ stats.landaCount.totalCount }}</span>
-        </div>
+          <!-- details -->
+          <div v-else class="mini-details">
+            <div>
+              <small>منجز</small>
+              <strong>{{ stats.marginNotesCount.withMarginNotesCount }}</strong>
+            </div>
 
-        <div class="icon-card text-center">
-          <i class="bi bi-arrow-counterclockwise"></i>
-          <h6>الاسترجاع</h6>
-          <span>{{ stats.returnTransactionsCount }}</span>
-        </div>
-
-        <div class="icon-card text-center">
-          <i class="bi bi-shield-check"></i>
-          <h6>التدقيق والبيانات</h6>
-          <span>{{ stats.auditingAndDataCount.totalCount }}</span>
-        </div>
-
-        <div class="icon-card text-center">
-          <i class="bi bi-info-circle"></i>
-          <h6>الإجراءات</h6>
-          <span>{{ stats.actionTypeCount }}</span>
+            <div>
+              <small> غير منجز</small>
+              <strong>{{
+                stats.marginNotesCount.withoutMarginNotesCount
+              }}</strong>
+            </div>
+          </div>
         </div>
       </div>
+
+      <!-- شعبة الإدارة -->
+      <div class="icon-card text-center stat-details-card">
+        <i class="bi bi-diagram-3"></i>
+        <h6>شعبة الإدارة</h6>
+        <hr />
+
+        <div class="mini-tabs">
+          <button
+            class="mini-tab"
+            :class="{ active: activeLandaTab === 'total' }"
+            @click="activeLandaTab = 'total'"
+          >
+            الكل
+          </button>
+
+          <button
+            class="mini-tab"
+            :class="{ active: activeLandaTab === 'details' }"
+            @click="activeLandaTab = 'details'"
+          >
+            التفاصيل
+          </button>
+        </div>
+
+        <div class="mini-tab-body">
+          <div v-if="activeLandaTab === 'total'" class="stat-main">
+            {{ stats.landaCount.totalCount }}
+          </div>
+
+          <div v-else class="mini-details">
+            <div>
+              <small>منجز</small>
+              <strong>{{ stats.landaCount.withMemoNumberCount }}</strong>
+            </div>
+
+            <div>
+              <small>غير منجز</small>
+              <strong>{{ stats.landaCount.withoutMemoNumberCount }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- التدقيق والبيانات -->
+      <div class="icon-card text-center stat-details-card">
+        <i class="bi bi-shield-check"></i>
+        <h6>التدقيق والبيانات</h6>
+        <hr />
+
+        <div class="mini-tabs">
+          <button
+            class="mini-tab"
+            :class="{ active: activeAuditTab === 'total' }"
+            @click="activeAuditTab = 'total'"
+          >
+            الكل
+          </button>
+
+          <button
+            class="mini-tab"
+            :class="{ active: activeAuditTab === 'details' }"
+            @click="activeAuditTab = 'details'"
+          >
+            التفاصيل
+          </button>
+        </div>
+
+        <div class="mini-tab-body">
+          <div v-if="activeAuditTab === 'total'" class="stat-main">
+            {{ stats.auditingAndDataCount.totalCount }}
+          </div>
+
+          <div v-else class="mini-details">
+            <div>
+              <small>مدقق</small>
+              <strong>{{ stats.auditingAndDataCount.verifiedCount }}</strong>
+            </div>
+
+            <div>
+              <small>غير مدقق</small>
+              <strong>{{ stats.auditingAndDataCount.notVerifiedCount }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- الاسترجاع -->
+      <div class="icon-card text-center">
+        <i class="bi bi-arrow-counterclockwise"></i>
+        <h6>الاسترجاع</h6>
+        <span>{{ stats.returnTransactionsCount }}</span>
+      </div>
+    </div>
+  </div>
 
       <!-- Chart Row -->
       <div class="charts-box mt-5 p-4 border rounded-4">
@@ -122,7 +236,7 @@
         </div>
       </div>
     </div>
-  </div>
+
 
   <!-- Track Result Modal -->
   <div class="modal fade" ref="trackModalEl" tabindex="-1">
@@ -413,6 +527,10 @@ import {
 } from "@/services/dashboard.service.js";
 import { successAlert, errorAlert, warningAlert } from "@/utils/alert.js";
 
+const activeMarginTab = ref("total");
+const activeLandaTab = ref("total");
+const activeAuditTab = ref("total");
+
 const loading = ref(true);
 let chart = null;
 
@@ -669,3 +787,6 @@ onMounted(async () => {
   loading.value = false;
 });
 </script>
+
+
+

@@ -110,7 +110,6 @@
                     <span></span>
                   </label>
                 </td>
-                <!-- رقم تسلسلي -->
                 <td>{{ (page - 1) * pageSize + i + 1 }}</td>
                 <td>
                   <div class="injured-cell">
@@ -301,7 +300,10 @@
   </div>
 
   <!-- Pagination -->
-  <nav class="circle-pagination d-flex justify-content-center mt-4">
+  <nav
+    ref="paginationRef"
+    class="circle-pagination d-flex justify-content-center mt-4"
+  >
     <button
       class="page-btn"
       :disabled="page === 1"
@@ -311,9 +313,9 @@
     </button>
 
     <button
-      class="page-number"
       v-for="p in visiblePages"
       :key="p"
+      class="page-number"
       :class="{ active: p === page }"
       @click="changePage(p)"
     >
@@ -919,7 +921,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from "vue";
+import { ref, reactive, onMounted, computed ,nextTick} from "vue";
 import bootstrap from "bootstrap/dist/js/bootstrap.bundle";
 import { Modal } from "bootstrap";
 import { useRoute } from "vue-router";
@@ -954,19 +956,26 @@ const pageSize = 10;
 const totalPages = ref(1);
 
 const visiblePages = computed(() => {
-  const pages = [];
-  let start = page.value - 1;
-  if (start < 1) start = 1;
+  const total = totalPages.value;
+  const current = page.value;
 
-  let end = start + 2;
-  if (end > totalPages.value) {
-    end = totalPages.value;
-    start = Math.max(1, end - 2);
+  if (total <= 5) {
+    return Array.from({ length: total }, (_, i) => i + 1);
   }
+  const pages = new Set();
 
-  for (let i = start; i <= end; i++) pages.push(i);
-  return pages;
+  pages.add(1);
+
+  for (let i = current - 1; i <= current + 1; i++) {
+    if (i > 1 && i < total) {
+      pages.add(i);
+    }
+  }
+  pages.add(total);
+
+  return [...pages].sort((a, b) => a - b);
 });
+
 
 const exportTypeOptions = [
   { label: "لا يوجد", value: 0 },
@@ -1170,9 +1179,22 @@ const transfer = async () => {
 };
 
 const closeTransfer = () => transferModal.hide();
-const changePage = (p) => {
+
+const changePage = async (p) => {
+  if (p < 1 || p > totalPages.value) return;
   page.value = p;
-  load();
+
+  await load();
+  await focusPagination();
+};
+
+const paginationRef = ref(null);
+const focusPagination = async () => {
+  await nextTick();
+  paginationRef.value?.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
 };
 
 const loadViewData = async (marginNoteId) => {

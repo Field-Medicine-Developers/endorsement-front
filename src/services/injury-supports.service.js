@@ -17,8 +17,9 @@ export const deleteInjurySupport = (id) => {
 };
 
 
-export const getIncomings = () =>
-  api.get("/Incomings");
+export const getIncomings = (params) =>
+  api.get("/Incomings", { params });
+
 
 
 export const getFormations = () =>

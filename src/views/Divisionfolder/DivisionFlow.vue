@@ -88,8 +88,8 @@
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
                 <th>عدد الكتاب</th>
-                <th>هامش مدير القسم</th>
                 <th>الموضوع</th>
+                <th>هامش مدير القسم</th>
                 <th>المحتوى</th>
                 <th>هامش مسوؤل الشعبة</th>
                 <th>الإجراءات</th>
@@ -134,6 +134,7 @@
                 <td>{{ item.incomingBookNumber }}</td>
                 <td>{{ formatDate(item.incomingDate) }}</td>
                 <td>{{ item.bookCount ?? "-" }}</td>
+                <td>{{ item.subject ?? "—" }}</td>
                 <td>
                   <button
                     class="btn btn-search btn-sm"
@@ -146,16 +147,16 @@
                     }})
                   </button>
                 </td>
-
+               
                 <!-- الموضوع -->
-                <td>
+                <!-- <td>
                   <button
                     class="btn btn-search btn-sm"
                     @click="openTextModal('الموضوع', item.subject)"
                   >
                     عرض الموضوع ({{ item.subject ? 1 : 0 }})
                   </button>
-                </td>
+                </td> -->
 
                 <!-- المحتوى -->
                 <td>
@@ -246,7 +247,10 @@
       </div>
     </div>
   </div>
-  <nav class="circle-pagination d-flex justify-content-center mt-4">
+  <nav
+    ref="paginationRef"
+    class="circle-pagination d-flex justify-content-center mt-4"
+  >
     <button
       class="page-btn"
       :disabled="page === 1"
@@ -641,7 +645,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from "vue";
+import { ref, reactive, onMounted, computed, nextTick } from "vue";
 import {
   getMarginNotesDivision,
   addMarginNoteDivision,
@@ -945,29 +949,38 @@ const bulkTransferFunc = async () => {
 };
 
 const visiblePages = computed(() => {
-  const pages = [];
-  const maxVisible = 3;
-
-  let start = page.value - 1;
-  if (start < 1) start = 1;
-
-  let end = start + maxVisible - 1;
-  if (end > totalPages.value) {
-    end = totalPages.value;
-    start = Math.max(1, end - maxVisible + 1);
+  const total = totalPages.value;
+  const current = page.value;
+  if (total <= 5) {
+    return Array.from({ length: total }, (_, i) => i + 1);
   }
-
-  for (let i = start; i <= end; i++) {
-    pages.push(i);
+  const pages = new Set();
+  pages.add(1);
+  for (let i = current - 1; i <= current + 1; i++) {
+    if (i > 1 && i < total) {
+      pages.add(i);
+    }
   }
+  pages.add(total);
 
-  return pages;
+  return [...pages].sort((a, b) => a - b);
 });
 
-const changePage = (p) => {
+const changePage = async (p) => {
   if (p < 1 || p > totalPages.value) return;
   page.value = p;
-  load();
+
+  await load();
+  await focusPagination();
+};
+
+const paginationRef = ref(null);
+const focusPagination = async () => {
+  await nextTick();
+  paginationRef.value?.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
 };
 
 const close = () => modal.hide();

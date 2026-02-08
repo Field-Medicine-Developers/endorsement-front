@@ -79,6 +79,7 @@
                 </th> -->
                 <th>#</th>
                 <th>اسم الجريح</th>
+                <th>النوع</th>
                 <th>عدد الوارد</th>
                 <th>تاريخ الوارد</th>
                 <th>عدد الكتاب</th>
@@ -125,6 +126,7 @@
                     </div>
                   </div>
                 </td>
+                <td>{{ typeNameText(inc.typeName) }}</td>
                 <td>{{ inc.incomingBookNumber }}</td>
                 <td>{{ formatDate(inc.incomingDate) }}</td>
                 <td>{{ inc.bookCount ?? "—" }}</td>
@@ -134,14 +136,15 @@
                   <small class="text-muted"> {{ inc.formationName }}</small>
                 </td>
                 <!-- الموضوع -->
-                <td>
+                <td>{{ inc.subject ?? "—" }}</td>
+                <!-- <td>
                   <button
                     class="btn btn-search btn-sm"
                     @click="openTextModal('الموضوع', inc.subject)"
                   >
                     عرض الموضوع ({{ inc.subject ? 1 : 0 }})
                   </button>
-                </td>
+                </td> -->
 
                 <!-- المحتوى -->
                 <td>
@@ -406,6 +409,21 @@
               </div>
 
               <div class="col-md-6">
+  <label class="form-label">نوع صاحب المعاملة</label>
+  <div class="custom-vue-select-container">
+    <VueSelect
+      v-model="form.typeName"
+      :options="typeNameOptions"
+      label="label"
+      :reduce="o => o.value"
+      placeholder="اختر النوع..."
+      clearable
+    />
+  </div>
+</div>
+
+
+              <div class="col-md-6">
                 <label class="form-label">القيادة</label>
                 <div class="custom-vue-select-container">
                   <VueSelect
@@ -580,6 +598,21 @@
               <label class="form-label">اسم الجريح</label>
               <input v-model="filters.injuredName" class="form-control" />
             </div>
+
+            <div class="col-md-6">
+  <label class="form-label">نوع صاحب المعاملة</label>
+  <div class="custom-vue-select-container">
+    <VueSelect
+      v-model="filters.typeName"
+      :options="typeNameOptions"
+      label="label"
+      :reduce="o => o.value"
+      placeholder="الكل"
+      clearable
+    />
+  </div>
+</div>
+
 
             <!-- <div class="col-md-6">
               <label class="form-label">رقم الجريح (ID)</label>
@@ -802,6 +835,16 @@
                 </span>
               </div>
             </div>
+
+            <div class="col-md-6">
+              <label class="form-label">نوع صاحب المعاملة</label>
+              <input
+                class="form-control"
+                :value="view.typeName === 1 ? 'جريح' : 'منتسب'"
+                disabled
+              />
+            </div>
+
 
             <div class="col-md-6">
               <label class="form-label">التشكيل</label>
@@ -1112,17 +1155,26 @@ import { uploadIncomingArchive } from "@/services/incoming-archive.service.js";
 const router = useRouter();
 /* Pagination */
 const visiblePages = computed(() => {
-  const pages = [];
-  let start = page.value - 1;
-  if (start < 1) start = 1;
-  let end = start + 2;
-  if (end > totalPages.value) {
-    end = totalPages.value;
-    start = Math.max(1, end - 2);
+  const total = totalPages.value;
+  const current = page.value;
+
+  if (total <= 5) {
+    return Array.from({ length: total }, (_, i) => i + 1);
   }
-  for (let i = start; i <= end; i++) pages.push(i);
-  return pages;
+  const pages = new Set();
+
+  pages.add(1);
+
+  for (let i = current - 1; i <= current + 1; i++) {
+    if (i > 1 && i < total) {
+      pages.add(i);
+    }
+  }
+  pages.add(total);
+
+  return [...pages].sort((a, b) => a - b);
 });
+
 
 const formations = ref([]);
 const incomingList = ref([]);
@@ -1149,6 +1201,7 @@ const filters = reactive({
   medicalAccessories: null,
   incomingDateFrom: "",
   incomingDateTo: "",
+  typeName: null,
 });
 
 /* Reset Filters */
@@ -1168,6 +1221,7 @@ const resetFilters = () => {
   filters.medicalAccessories = null;
   filters.incomingDateFrom = "";
   filters.incomingDateTo = "";
+  filters.typeName = null;
   page.value = 1;
   load();
 };
@@ -1182,6 +1236,11 @@ const medicalAccessoriesOptions = [
 const typeIncomingOptions = [
   { label: "عام", value: 1 },
   { label: "سري", value: 2 },
+];
+
+const typeNameOptions = [
+  { label: "جريح", value: 1 },
+  { label: "منتسب", value: 2 },
 ];
 
 const tempName = ref("");
@@ -1227,6 +1286,7 @@ const load = async () => {
       medicalAccessories: filters.medicalAccessories ?? null,
       incomingDateFrom: filters.incomingDateFrom || null,
       incomingDateTo: filters.incomingDateTo || null,
+      typeName: filters.typeName ?? null,
     });
     incomingList.value = res.data.data;
     totalPages.value = res.data.pagination.totalPages;
@@ -1296,6 +1356,7 @@ const form = reactive({
   bookCount: "",
   bookDate: null,
   typeIncoming: 1,
+  typeName: 1, 
 });
 console.log(commands.value);
 
@@ -1305,6 +1366,7 @@ const openEdit = (item) => {
   editMode.value = true;
   form.id = item.id;
   form.injuredNames = item.injuredNames || [];
+  form.typeName = item.typeName ?? 1;
   form.formationId = item.formationId;
   form.commandId = item.commandId;
   form.incomingBookNumber = item.incomingBookNumber;
@@ -1566,7 +1628,7 @@ const openView = (inc) => {
   view.bookCount = inc.bookCount;
   view.bookDate = inc.bookDate;
   view.medicalAccessories = inc.medicalAccessories;
-
+  view.typeName = inc.typeName;
   modalView.show();
 };
 const closeView = () => modalView.hide();
@@ -1690,6 +1752,15 @@ const medicalAccessoriesText = (value) => {
   };
   return arr.map((x) => map[x] ?? "غير معروف").join(" , ");
 };
+
+
+
+const typeNameText = (v) => {
+  if (v === 1) return "جريح";
+  if (v === 2) return "منتسب";
+  return "—";
+};
+
 
 const loadCommands = async () => {
   const res = await getCommands();

@@ -17,26 +17,25 @@
     <!-- <button class="btn btn-primary" @click="openAdd">إضافة صادر جديد</button> -->
   </div>
 
-   <!-- Search -->
-   <div class="card shadow-sm border-0 mb-3 p-3">
+  <!-- Search -->
+  <div class="card shadow-sm border-0 mb-3 p-3">
     <div class="row g-3">
       <div class="col-md-6">
-  <input
-    v-model="filters.exportNumber"
-    class="form-control"
-    placeholder="بحث عن رقم الصادر..."
-    @keyup.enter="load"
-  />
-</div>
+        <input
+          v-model="filters.exportNumber"
+          class="form-control"
+          placeholder="بحث عن رقم الصادر..."
+          @keyup.enter="load"
+        />
+      </div>
 
-<div class="col-md-6 d-flex justify-content-end gap-2 align-items-end">
-  <button class="btn-search" @click="load">بحث</button>
-  <button class="btn-advanced" @click="openAdvancedSearchModal">
-    بحث متقدم
-  </button>
-  <button class="btn-advanced" @click="reset">إعادة تعيين</button>
-</div>
-
+      <div class="col-md-6 d-flex justify-content-end gap-2 align-items-end">
+        <button class="btn-search" @click="load">بحث</button>
+        <button class="btn-advanced" @click="openAdvancedSearchModal">
+          بحث متقدم
+        </button>
+        <button class="btn-advanced" @click="reset">إعادة تعيين</button>
+      </div>
     </div>
   </div>
 
@@ -142,7 +141,10 @@
   </div>
 
   <!-- Pagination -->
-  <nav class="circle-pagination d-flex justify-content-center mt-4">
+  <nav
+    ref="paginationRef"
+    class="circle-pagination d-flex justify-content-center mt-4"
+  >
     <button
       class="page-btn"
       :disabled="page === 1"
@@ -152,9 +154,9 @@
     </button>
 
     <button
-      class="page-number"
       v-for="p in visiblePages"
       :key="p"
+      class="page-number"
       :class="{ active: p === page }"
       @click="changePage(p)"
     >
@@ -382,67 +384,84 @@
     </div>
   </div>
 
-    <!-- Advanced Search Modal -->
-<div class="modal fade" tabindex="-1" ref="advancedSearchModal">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title fw-bold">بحث متقدم</h5>
-      </div>
+  <!-- Advanced Search Modal -->
+  <div class="modal fade" tabindex="-1" ref="advancedSearchModal">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">بحث متقدم</h5>
+        </div>
 
-      <div class="modal-body">
-        <div class="row g-3">
-          <!-- رقم الصادر -->
-          <div class="col-md-6">
-            <label class="form-label">رقم الصادر</label>
-            <input
-              v-model="filters.exportNumber"
-              class="form-control"
-              placeholder="أدخل رقم الصادر..."
-            />
-          </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <!-- رقم الصادر -->
+            <div class="col-md-6">
+              <label class="form-label">رقم الصادر</label>
+              <input
+                v-model="filters.exportNumber"
+                class="form-control"
+                placeholder="أدخل رقم الصادر..."
+              />
+            </div>
 
-          <!-- تاريخ الصادر -->
-          <div class="col-md-6">
-            <label class="form-label">تاريخ الصادر</label>
-            <input
-              v-model="filters.exportDate"
-              type="date"
-              class="form-control"
-            />
-          </div>
+            <!-- تاريخ الصادر -->
+            <div class="col-md-6">
+              <label class="form-label">تاريخ الصادر</label>
+              <input
+                v-model="filters.exportDate"
+                type="date"
+                class="form-control"
+              />
+            </div>
 
-          <!-- الجهة المرسل إليها -->
-          <div class="col-md-12">
-            <label class="form-label">الجهة المرسل إليها</label>
-            <input
-              v-model="filters.destinationDepartment"
-              class="form-control"
-              placeholder="أدخل اسم الجهة..."
-            />
+            <!-- الجهة المرسل إليها -->
+            <div class="col-md-6">
+              <label class="form-label">الجهة المرسل إليها</label>
+              <input
+                v-model="filters.destinationDepartment"
+                class="form-control"
+                placeholder="أدخل اسم الجهة..."
+              />
+            </div>
+
+            <!-- الموضوع -->
+            <div class="col-md-6">
+              <label class="form-label">الموضوع</label>
+              <input
+                v-model="filters.subject"
+                class="form-control"
+                placeholder="أدخل الموضوع..."
+              />
+            </div>
+
+            <!-- المحتوى -->
+            <div class="col-md-6">
+              <label class="form-label">المحتوى</label>
+              <input
+                v-model="filters.content"
+                class="form-control"
+                placeholder="أدخل جزء من المحتوى..."
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="modal-footer">
-        <button class="btn btn-light" @click="closeAdvancedSearchModal">
-          إغلاق
-        </button>
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeAdvancedSearchModal">
+            إغلاق
+          </button>
 
-        <button
-          class="btn btn-primary"
-          @click="applyAdvancedSearch"
-        >
-          بحث
-        </button>
+          <button class="btn btn-primary" @click="applyAdvancedSearch">
+            بحث
+          </button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from "vue";
+import { ref, reactive, onMounted, computed , nextTick } from "vue";
 import * as bootstrap from "bootstrap";
 import {
   getExportsSecret,
@@ -466,18 +485,21 @@ const pageSize = 10;
 const totalPages = ref(1);
 
 const visiblePages = computed(() => {
-  const pages = [];
-  let start = page.value - 1;
-  if (start < 1) start = 1;
-
-  let end = start + 2;
-  if (end > totalPages.value) {
-    end = totalPages.value;
-    start = Math.max(1, end - 2);
+  const total = totalPages.value;
+  const current = page.value;
+  if (total <= 5) {
+    return Array.from({ length: total }, (_, i) => i + 1);
   }
+  const pages = new Set();
+  pages.add(1);
+  for (let i = current - 1; i <= current + 1; i++) {
+    if (i > 1 && i < total) {
+      pages.add(i);
+    }
+  }
+  pages.add(total);
 
-  for (let i = start; i <= end; i++) pages.push(i);
-  return pages;
+  return [...pages].sort((a, b) => a - b);
 });
 
 // Form
@@ -494,8 +516,9 @@ const filters = reactive({
   exportNumber: "",
   exportDate: "",
   destinationDepartment: "",
+  subject: "",
+  content: "",
 });
-
 
 // Modals
 const modalEl = ref(null);
@@ -511,23 +534,26 @@ const archiveFiles = ref([]);
 const currentExportId = ref("");
 const archiveInputs = ref([{ files: [] }]);
 
-
 // ========== functions ==========
 const load = async () => {
   loading.value = true;
 
   try {
     const res = await getExportsSecret({
-  pageNumber: page.value,
-  pageSize,
-  exportNumber: filters.exportNumber || null,
-  exportDate: filters.exportDate ? new Date(filters.exportDate).toISOString() : null,
-  destinationDepartment: filters.destinationDepartment || null,
-});
+      pageNumber: page.value,
+      pageSize,
+      exportNumber: filters.exportNumber || null,
+      exportDate: filters.exportDate
+        ? new Date(filters.exportDate).toISOString()
+        : null,
+      destinationDepartment: filters.destinationDepartment || null,
+      subject: filters.subject || null,
+      content: filters.content || null,
+    });
 
-list.value = res.data?.data ?? [];  // ✅ هنا التعديل
+    list.value = res.data?.data ?? [];
 
-totalPages.value = res.data?.pagination?.totalPages || 1;
+    totalPages.value = res.data?.pagination?.totalPages || 1;
   } catch (e) {
     console.error(e);
     errorAlert("حدث خطأ أثناء تحميل البيانات");
@@ -548,7 +574,7 @@ const closeAdvancedSearchModal = () => {
 };
 
 const applyAdvancedSearch = () => {
-  page.value = 1; // يرجع لأول صفحة
+  page.value = 1;
   closeAdvancedSearchModal();
   load();
 };
@@ -557,10 +583,11 @@ const reset = () => {
   filters.exportNumber = "";
   filters.exportDate = "";
   filters.destinationDepartment = "";
+  filters.subject = "";
+  filters.content = "";
   page.value = 1;
   load();
 };
-
 
 const openAdd = () => {
   isEdit.value = false;
@@ -623,13 +650,23 @@ const remove = async (id) => {
   }
 };
 
-const changePage = (newPage) => {
-  if (newPage >= 1 && newPage <= totalPages.value && newPage !== page.value) {
-    page.value = newPage;
-    load();
-  }
+// ====== Pagination ======
+const changePage = async (p) => {
+  if (p < 1 || p > totalPages.value) return;
+  page.value = p;
+
+  await load();
+  await focusPagination();
 };
 
+const paginationRef = ref(null);
+const focusPagination = async () => {
+  await nextTick();
+  paginationRef.value?.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
+};
 // ===== Archive =====
 const openArchive = (item) => {
   currentExportId.value = item.id;
@@ -729,7 +766,6 @@ onMounted(() => {
   });
   load();
 });
-
 </script>
 
 <style scoped>

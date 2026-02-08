@@ -19,48 +19,45 @@
   </div>
 
   <div class="stats-row">
+    <div class="stats-box stat-blue">
+      <div class="text">
+        <span class="title">عدد المعاملات</span>
+        <strong>{{ stats.totalCount }}</strong>
+      </div>
+      <i class="bi bi-file-earmark-text icon"></i>
+    </div>
+    <div class="stats-box stat-blue">
+      <div class="text">
+        <span class="title">حكومي</span>
+        <strong>{{ stats.governmentCount }}</strong>
+      </div>
+      <i class="bi bi-building icon"></i>
+    </div>
 
-<div class="stats-box stat-blue">
-  <div class="text">
-    <span class="title">عدد المعاملات</span>
-    <strong>{{ stats.totalCount }}</strong>
+    <div class="stats-box stat-purple">
+      <div class="text">
+        <span class="title">ميداني</span>
+        <strong>{{ stats.fieldCount }}</strong>
+      </div>
+      <i class="bi bi-compass icon"></i>
+    </div>
+
+    <div class="stats-box stat-green">
+      <div class="text">
+        <span class="title">مرضى</span>
+        <strong>{{ stats.injuredCount }}</strong>
+      </div>
+      <i class="bi bi-person-check icon"></i>
+    </div>
+
+    <div class="stats-box stat-dark">
+      <div class="text">
+        <span class="title">جرحى</span>
+        <strong>{{ stats.patientCount }}</strong>
+      </div>
+      <i class="bi bi-heart-pulse icon"></i>
+    </div>
   </div>
-  <i class="bi bi-file-earmark-text icon"></i>
-</div>
-<div class="stats-box stat-blue">
-  <div class="text">
-    <span class="title">حكومي</span>
-    <strong>{{ stats.governmentCount }}</strong>
-  </div>
-  <i class="bi bi-building icon"></i>
-</div>
-
-<div class="stats-box stat-purple">
-  <div class="text">
-    <span class="title">ميداني</span>
-    <strong>{{ stats.fieldCount }}</strong>
-  </div>
-  <i class="bi bi-compass icon"></i>
-</div>
-
-<div class="stats-box stat-green">
-  <div class="text">
-    <span class="title">مرضى</span>
-    <strong>{{ stats.patientCount }}</strong>
-  </div>
-  <i class="bi bi-person-check icon"></i>
-</div>
-
-<div class="stats-box stat-dark">
-  <div class="text">
-    <span class="title">جرحى</span>
-    <strong>{{ stats.injuredCount }}</strong>
-  </div>
-  <i class="bi bi-heart-pulse icon"></i>
-</div>
-
-</div>
-
 
   <!-- Search Bar -->
   <div class="card shadow-sm border-0 mb-3 p-3">
@@ -70,7 +67,7 @@
           v-model="filters.injuredName"
           class="form-control"
           placeholder="بحث باسم الجريح..."
-         @keyup.enter="load"
+          @keyup.enter="load"
         />
       </div>
 
@@ -84,21 +81,20 @@
   </div>
 
   <!-- Table -->
+
   <div class="card shadow-sm border-0 mb-4">
     <div class="card-header custom-card-header">
-      <h5 class="mb-0 fw-bold primary">قائمة معاملات التدقيق</h5>
+      <h5 class="mb-0 fw-bold primary">قائمة الوارد</h5>
     </div>
 
     <div class="card-body">
-      <div v-if="loading" class="spinner-wrapper">
+      <div v-if="loading" class="spinner-overlay">
         <div class="spinner"></div>
       </div>
 
-      <div v-else class="card inner-card">
+      <div class="card inner-card">
         <div class="table-responsive">
-          <table
-            class="table custom-table align-middle text-center mb-0 truncate-table"
-          >
+          <table class="table custom-table align-middle text-center mb-0">
             <thead>
               <tr>
                 <th>#</th>
@@ -111,7 +107,7 @@
                 <th>رقم الكتاب</th>
                 <th>تاريخ الحادث</th>
                 <th>محل الحادث</th>
-                <th> مكان ونوع الاصابة في</th>
+                <th>مكان ونوع الاصابة في</th>
                 <th>التشكيل</th>
                 <th>السنة</th>
                 <!-- <th>الحالة النهائية</th> -->
@@ -131,10 +127,10 @@
             <tbody>
               <tr v-for="(item, idx) in list" :key="item.id">
                 <td>{{ (page - 1) * pageSize + idx + 1 }}</td>
-                <td class="text-truncate" style="max-width: 180px">
+                <td class="text-truncate">
                   {{ item.injuredName }}
                 </td>
-                <td class="text-truncate" style="max-width: 180px">
+                <td class="text-truncate">
                   {{ item.motherName }}
                 </td>
 
@@ -150,7 +146,10 @@
                 <td>{{ item.accidentPlace }}</td>
                 <td>{{ item.injuryPlace }}</td>
 
-                <td>{{ item.formationName }}</td>
+                <td>
+                  <div class="fw-bold">{{ item.commandName || "—" }}</div>
+                  <small class="text-muted"> {{ item.formationName }}</small>
+                </td>
                 <td>{{ item.year }}</td>
 
                 <!-- <td>{{ item.finalStatus ?? "—" }}</td> -->
@@ -167,13 +166,13 @@
                   </span>
                 </td> -->
                 <td>
-                  <span :class="yesNoDisplay(item.supportiveStance).class">
+                  <span :class="yesNoDisplay(item.status).class">
                     <i
                       :class="`bi ${
-                        yesNoDisplay(item.supportiveStance).icon
+                        yesNoDisplay(item.status).icon
                       } me-1`"
                     ></i>
-                    {{ yesNoDisplay(item.supportiveStance).text }}
+                    {{ yesNoDisplay(item.status).text }}
                   </span>
                 </td>
 
@@ -225,7 +224,8 @@
                       </svg>
                     </button>
                     <button
-  c                   class="button-archive"
+                      c
+                      class="button-archive"
                       title="عرض المرفقات"
                       @click="openArchive(item)"
                     >
@@ -239,7 +239,6 @@
                         />
                       </svg>
                     </button>
-
                   </div>
                 </td>
               </tr>
@@ -304,13 +303,13 @@
 
                 <div class="custom-vue-select-container">
                   <VueSelect
-                    v-model="form.injuredPersonId"
+                    v-model="selectedInjured"
                     :options="incomings"
                     label="label"
-                    :reduce="(o) => o.value"
                     searchable
+                    :filterable="false"
                     placeholder="ابحث عن الجريح…"
-                    @option:selected="onInjuredSelected"
+                    @search="onSearchInjured"
                   />
                 </div>
               </div>
@@ -415,7 +414,11 @@
               </div>
               <div class="col-md-6">
                 <label class="form-label">رقم الصادر</label>
-                <input v-model="form.issueNumber" class="form-control" />
+                <input
+                  v-model="form.issueNumber"
+                  type="number"
+                  class="form-control"
+                />
               </div>
 
               <div class="col-md-6">
@@ -509,58 +512,58 @@
     </div>
   </div>
   <!-- Archive Modal -->
-<div class="modal fade" ref="archiveModalEl" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title fw-bold primary">
-          <i class="bi bi-folder2-open me-1"></i>
-          مرفقات الوارد
-        </h5>
-      </div>
-
-      <div class="modal-body">
-        <div
-          v-if="archiveFiles.length === 0"
-          class="text-muted text-center py-4"
-        >
-          <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-          لا توجد مرفقات
+  <div class="modal fade" ref="archiveModalEl" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">
+            <i class="bi bi-folder2-open me-1"></i>
+            مرفقات الوارد
+          </h5>
         </div>
 
-        <div v-else class="list-group">
-          <button
-            v-for="(file, i) in archiveFiles"
-            :key="i"
-            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-            @click="openFile(file.fileFullUrl)"
+        <div class="modal-body">
+          <div
+            v-if="archiveFiles.length === 0"
+            class="text-muted text-center py-4"
           >
-            <span>{{ file.fileName }}</span>
-            <i class="bi bi-box-arrow-up-right"></i>
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            لا توجد مرفقات
+          </div>
+
+          <div v-else class="list-group">
+            <button
+              v-for="(file, i) in archiveFiles"
+              :key="i"
+              class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+              @click="openFile(file.fileFullUrl)"
+            >
+              <span>{{ file.fileName }}</span>
+              <i class="bi bi-box-arrow-up-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeArchive">إغلاق</button>
+          <button class="btn btn-primary" @click="openUpload">
+            إضافة مرفقات
           </button>
         </div>
       </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-light" @click="closeArchive">إغلاق</button>
-        <button class="btn btn-primary" @click="openUpload">
-          إضافة مرفقات
-        </button>
-      </div>
     </div>
   </div>
-</div>
 
-<!-- Upload Modal -->
-<div class="modal fade" ref="uploadModalEl" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title fw-bold primary">رفع مرفقات</h5>
-      </div>
+  <!-- Upload Modal -->
+  <div class="modal fade" ref="uploadModalEl" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold primary">رفع مرفقات</h5>
+        </div>
 
-      <div class="modal-body">
-        <div
+        <div class="modal-body">
+          <div
             v-for="(item, index) in archiveInputs"
             :key="index"
             class="d-flex gap-2 mb-2"
@@ -581,22 +584,18 @@
             </button>
           </div>
 
-         <button class="btn btn-search w-100 mt-3" 
-            @click="addArchiveInput"
-          >
+          <button class="btn btn-search w-100 mt-3" @click="addArchiveInput">
             <i class="bi bi-plus-lg me-1"></i>
             إضافة مرفق آخر
           </button>
         </div>
-      <div class="modal-footer">
-        <button class="btn btn-light" @click="closeUpload">إلغاء</button>
-        <button class="btn btn-primary" @click="upload">
-          رفع
-        </button>
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeUpload">إلغاء</button>
+          <button class="btn btn-primary" @click="upload">رفع</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 </template>
 
 <script setup>
@@ -615,6 +614,7 @@ import {
   getFormations,
 } from "@/services/injury-supports.service.js";
 import { uploadIncomingArchive } from "@/services/incoming-archive.service";
+
 const injuryTypeOptions = [
   { value: 0, label: "حكومي" },
   { value: 1, label: "ميداني" },
@@ -680,9 +680,15 @@ let uploadModal = null;
 
 const archiveFiles = ref([]);
 const currentIncomingId = ref(null);
+const selectedInjured = ref(null);
 const incomings = ref([]);
 const formations = ref([]);
 const formationsSelect = ref([]);
+import { watch } from "vue";
+
+watch(selectedInjured, (val) => {
+  form.injuredPersonId = val?.value || "";
+});
 
 const form = reactive({
   id: "",
@@ -734,9 +740,7 @@ const qrModalEl = ref(null);
 let qrModal = null;
 const selectedQR = ref("");
 
-const archiveInputs = ref([
-  { files: [] },
-]);
+const archiveInputs = ref([{ files: [] }]);
 
 const formatDate = (d) => {
   if (!d) return "-";
@@ -790,8 +794,8 @@ const load = async () => {
     const resp = res.data;
     list.value = resp.data || [];
     totalPages.value = resp.pagination?.totalPages || 1;
-      //  Counters
-      if (resp.additionalData) {
+    //  Counters
+    if (resp.additionalData) {
       Object.assign(stats, resp.additionalData);
     }
     if (resp.pagination) {
@@ -816,20 +820,60 @@ const stats = reactive({
 
 const loadIncomings = async () => {
   try {
-    const res = await getIncomings();
-    const data = res.data.data || [];
-    allIncomingsRaw.value = data;
+    const res = await getIncomings({
+      pageNumber: 1,
+      pageSize: 10,
+    });
+
+    const data = res.data?.data || [];
+
     incomings.value = data.flatMap((x) =>
-      x.injuredPersonIds.map((pid, index) => ({
+      (x.injuredPersonIds || []).map((pid, index) => ({
         value: pid,
-        label: x.injuredNames[index],
+        label: x.injuredNames?.[index] || "—",
       }))
     );
-    return incomings.value;
   } catch (e) {
     console.error("خطأ تحميل الجرحى", e);
-    return [];
   }
+};
+
+let searchTimeout = null;
+
+const onSearchInjured = (search) => {
+  clearTimeout(searchTimeout);
+
+  searchTimeout = setTimeout(async () => {
+    try {
+      const res = await getIncomings({
+        pageNumber: 1,
+        pageSize: 50,
+        injuredName: search || null,
+      });
+
+      const data = res.data?.data || [];
+
+      incomings.value = data.flatMap((x) =>
+        (x.injuredPersonIds || []).map((pid, index) => ({
+          value: pid,
+          label: x.injuredNames?.[index] || "—",
+        }))
+      );
+      if (
+        form.injuredPersonId &&
+        !incomings.value.some((x) => x.value === form.injuredPersonId)
+      ) {
+        incomings.value.unshift({
+          value: form.injuredPersonId,
+          label:
+            incomings.value.find((x) => x.value === form.injuredPersonId)
+              ?.label || "—",
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, 300);
 };
 
 const getInjuredPersonIdForSupport = (support) => {
@@ -874,16 +918,23 @@ const openAdd = async () => {
 
 const openEdit = async (item) => {
   editMode.value = true;
+
   await loadIncomings();
-  const injuredPersonId = getInjuredPersonIdForSupport(item);
+
+  // رجّع الاسم من نفس JSON
+  selectedInjured.value = {
+    label: item.injuredName,
+    value: null   // لا يوجد ID في هذا API
+  };
+
   Object.assign(form, {
     id: item.id,
-    injuredPersonId: item.injuredPersonId,
+    // لا يوجد injuredPersonId في هذا الجيسون
     motherName: item.motherName,
     birthDate: item.birthDate?.substring(0, 10) || "",
     phoneNumber: item.phoneNumber,
     injuryType: item.injuryType,
-    accidentDate: item.accidentDate?.substring(0, 16) || "",
+    accidentDate: item.accidentDate?.substring(0, 10) || "",
     bookNumber: item.bookNumber,
     accidentPlace: item.accidentPlace,
     injuryPlace: item.injuryPlace,
@@ -898,50 +949,72 @@ const openEdit = async (item) => {
     centralNumber: item.centralNumber,
     dateCentrality: item.dateCentrality?.substring(0, 10) || "",
   });
+
   modal.show();
 };
 
-const save = async () => {
-  if (!form.injuredPersonId) {
-    return errorAlert("يرجى اختيار اسم الجريح");
-  }
-  const body = {
-    injuredPersonId: form.injuredPersonId,
-    motherName: form.motherName,
-    birthDate: form.birthDate,
-    phoneNumber: form.phoneNumber,
-    injuryType: form.injuryType,
-    accidentDate: form.accidentDate,
-    bookNumber: form.bookNumber,
-    accidentPlace: form.accidentPlace,
-    injuryPlace: form.injuryPlace,
-    formationId: form.formationId,
-    status: form.status,
-    year: form.year,
-    emergencyCard: form.emergencyCard,
-    supportiveStance: form.supportiveStance,
-    issueNumber: form.issueNumber,
-    issueDate: form.issueDate,
-    supportingCentralism: form.supportingCentralism,
-    centralNumber: form.centralNumber,
-    dateCentrality: form.dateCentrality,
-  };
 
-  try {
-    if (!editMode.value) {
-      await addInjurySupport(body);
-      successAlert("تمت الإضافة بنجاح");
-    } else {
-      await updateInjurySupport(form.id, body);
-      successAlert("تم حفظ التعديلات");
+const save = async () => {
+
+const body = editMode.value
+  ? {
+      // ✅ للتعديل فقط
+      injuredName: selectedInjured.value?.label || "",
+
+      motherName: form.motherName,
+      birthDate: form.birthDate,
+      phoneNumber: form.phoneNumber,
+      injuryType: form.injuryType,
+      accidentDate: form.accidentDate,
+      bookNumber: form.bookNumber,
+      accidentPlace: form.accidentPlace,
+      injuryPlace: form.injuryPlace,
+      formationId: form.formationId,
+      status: form.status,
+      year: form.year
     }
-    modal.hide();
-    load();
-  } catch (e) {
-    console.error(e);
-    errorAlert("فشل الحفظ");
+  : {
+      // ✅ للإضافة فقط
+      injuredPersonId: form.injuredPersonId,
+
+      motherName: form.motherName,
+      birthDate: form.birthDate,
+      phoneNumber: form.phoneNumber,
+      injuryType: form.injuryType,
+      accidentDate: form.accidentDate,
+      bookNumber: form.bookNumber,
+      accidentPlace: form.accidentPlace,
+      injuryPlace: form.injuryPlace,
+      formationId: form.formationId,
+      status: form.status,
+      year: form.year,
+      emergencyCard: form.emergencyCard,
+      supportiveStance: form.supportiveStance,
+      issueNumber: form.issueNumber,
+      issueDate: form.issueDate,
+      supportingCentralism: form.supportingCentralism,
+      centralNumber: form.centralNumber,
+      dateCentrality: form.dateCentrality
+    };
+
+try {
+  if (!editMode.value) {
+    await addInjurySupport(body);
+    successAlert("تمت الإضافة بنجاح");
+  } else {
+    await updateInjurySupport(form.id, body);
+    successAlert("تم حفظ التعديلات");
   }
+
+  modal.hide();
+  load();
+
+} catch (e) {
+  console.error(e);
+  errorAlert("فشل الحفظ");
+}
 };
+
 
 const removeItem = async (id) => {
   const c = await confirmDelete("هل أنت متأكد من الحذف؟");
@@ -1056,15 +1129,12 @@ const upload = async () => {
     return errorAlert("المعاملة غير محددة");
   }
   // جمع كل الملفات من جميع inputs
-  const allFiles = archiveInputs.value.flatMap(x => x.files);
+  const allFiles = archiveInputs.value.flatMap((x) => x.files);
   if (allFiles.length === 0) {
     return errorAlert("يرجى اختيار ملف واحد على الأقل");
   }
   try {
-    const res = await uploadIncomingArchive(
-      currentIncomingId.value,
-      allFiles
-    );
+    const res = await uploadIncomingArchive(currentIncomingId.value, allFiles);
     successAlert("تم رفع المرفقات بنجاح");
     archiveFiles.value.push(...(res.data.data || []));
 
@@ -1077,7 +1147,6 @@ const upload = async () => {
     errorAlert("فشل رفع المرفقات");
   }
 };
-
 
 const addArchiveInput = () => {
   archiveInputs.value.push({ files: [] });

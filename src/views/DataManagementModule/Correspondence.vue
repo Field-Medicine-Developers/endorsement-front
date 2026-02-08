@@ -18,7 +18,7 @@
   </div>
 
   <!-- Search Bar -->
-   <div class="card shadow-sm border-0 mb-3 p-3">
+  <div class="card shadow-sm border-0 mb-3 p-3">
     <div class="row g-3 align-items-end">
       <!-- بحث سريع بالاسم فقط -->
       <div class="col-md-6">
@@ -107,8 +107,8 @@
                     {{ m.formationName || "—" }}</small
                   >
                 </td>
-                   <!-- الهوامش -->
-                   <td>
+                <!-- الهوامش -->
+                <td>
                   <button
                     class="btn btn-search btn-sm"
                     @click="openManagerNotes(m.managerNotes || [])"
@@ -350,8 +350,8 @@
     </div>
   </div>
 
-    <!-- Advanced Search Modal -->
-    <div class="modal fade" tabindex="-1" ref="advancedModal">
+  <!-- Advanced Search Modal -->
+  <div class="modal fade" tabindex="-1" ref="advancedModal">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
@@ -360,15 +360,14 @@
 
         <div class="modal-body">
           <div class="row g-3">
-
             <div class="col-md-6">
-  <label class="form-label">اسم الجريح</label>
-  <input
-    type="text"
-    v-model="filters.injuredName"
-    class="form-control"
-  />
-</div>
+              <label class="form-label">اسم الجريح</label>
+              <input
+                type="text"
+                v-model="filters.injuredName"
+                class="form-control"
+              />
+            </div>
 
             <div class="col-md-6">
               <label class="form-label">رقم الوارد</label>
@@ -466,8 +465,8 @@
     </div>
   </div>
 
-    <!-- Manager Notes Modal -->
-    <div class="modal fade" tabindex="-1" ref="managerNotesModalEl">
+  <!-- Manager Notes Modal -->
+  <div class="modal fade" tabindex="-1" ref="managerNotesModalEl">
     <div
       class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"
     >
@@ -520,7 +519,7 @@ import {
   changeLandaStatus,
 } from "@/services/Data-management.service.js";
 import { successAlert, errorAlert } from "@/utils/alert.js";
-import { getFormations,getCommands} from "@/services/formations.service.js";
+import { getFormations, getCommands } from "@/services/formations.service.js";
 const list = ref([]);
 const loading = ref(false);
 
@@ -529,47 +528,43 @@ const pageSize = 10;
 const totalPages = ref(1);
 
 const filters = reactive({
-
-injuredName: "",
-
-formationId: null,
-commandId: null,
-
-bookCount: null,
-bookDate: null,
-
-incomingBookNumber: null,
-incomingDate: null,
-
-subject: "",
-content: "",
+  injuredName: "",
+  formationId: null,
+  commandId: null,
+  bookCount: null,
+  bookDate: null,
+  incomingBookNumber: null,
+  incomingDate: null,
+  subject: "",
+  content: "",
 });
-
 
 const visiblePages = computed(() => {
-  const arr = [];
-  let start = page.value - 1;
-  if (start < 1) start = 1;
+  const total = totalPages.value;
+  const current = page.value;
 
-  let end = start + 2;
-  if (end > totalPages.value) {
-    end = totalPages.value;
-    start = Math.max(1, end - 2);
+  if (total <= 5) {
+    return Array.from({ length: total }, (_, i) => i + 1);
   }
+  const pages = new Set();
 
-  for (let i = start; i <= end; i++) arr.push(i);
-  return arr;
+  pages.add(1);
+
+  for (let i = current - 1; i <= current + 1; i++) {
+    if (i > 1 && i < total) {
+      pages.add(i);
+    }
+  }
+  pages.add(total);
+
+  return [...pages].sort((a, b) => a - b);
 });
-
-
-
 
 const load = async () => {
   loading.value = true;
 
   try {
     const res = await getLandaTransfers({
-
       // ====== Pagination
       pageNumber: page.value,
       pageSize,
@@ -598,9 +593,7 @@ const load = async () => {
       ...item,
 
       // توحيد بسيط فقط حتى لا يظهر undefined بالواجهة
-      injuredNames: Array.isArray(item.injuredNames)
-        ? item.injuredNames
-        : [],
+      injuredNames: Array.isArray(item.injuredNames) ? item.injuredNames : [],
 
       subject: item.subject ?? "",
       content: item.content ?? "",
@@ -612,7 +605,6 @@ const load = async () => {
     }));
 
     totalPages.value = res?.data?.pagination?.totalPages ?? 1;
-
   } catch (e) {
     console.error(e);
     errorAlert("فشل في جلب البيانات");
@@ -626,13 +618,12 @@ const load = async () => {
 const formations = ref([]);
 const commands = ref([]);
 
-
 const loadFormations = async () => {
   try {
     const res = await getFormations();
-    formations.value = (res?.data?.data || []).map(f => ({
+    formations.value = (res?.data?.data || []).map((f) => ({
       id: f.id,
-      name: f.name
+      name: f.name,
     }));
   } catch {
     formations.value = [];
@@ -642,30 +633,28 @@ const loadFormations = async () => {
 const loadCommands = async () => {
   try {
     const res = await getCommands();
-    commands.value = (res?.data?.data || []).map(c => ({
+    commands.value = (res?.data?.data || []).map((c) => ({
       value: c.id,
-      label: c.name
+      label: c.name,
     }));
   } catch {
     commands.value = [];
   }
 };
 
-
 const resetFilters = () => {
-filters.injuredName = "";
-filters.formationId = null;
-filters.commandId = null;
-filters.bookCount = null;
-filters.bookDate = null;
-filters.incomingBookNumber = null;
-filters.incomingDate = null;
-filters.subject = "";
-filters.content = "";
-page.value = 1;
-load();
+  filters.injuredName = "";
+  filters.formationId = null;
+  filters.commandId = null;
+  filters.bookCount = null;
+  filters.bookDate = null;
+  filters.incomingBookNumber = null;
+  filters.incomingDate = null;
+  filters.subject = "";
+  filters.content = "";
+  page.value = 1;
+  load();
 };
-
 
 const changePage = (p) => {
   page.value = p;
@@ -787,7 +776,6 @@ const closeTextModal = () => {
   textModalInstance.hide();
 };
 
-
 const advancedModal = ref(null);
 let modalAdvancedInstance = null;
 
@@ -808,12 +796,10 @@ const applyAdvanced = () => {
   closeAdvanced();
 };
 
-
 const searchQuick = () => {
   page.value = 1;
   load();
 };
-
 
 // ==========  managerNotesModal ==========
 const selectedManagerNotes = ref([]);
@@ -827,7 +813,6 @@ const openManagerNotes = (notes = []) => {
 const closeManagerNotes = () => {
   managerNotesModal.hide();
 };
-
 
 const formatDate = (d) => {
   if (!d) return "-";

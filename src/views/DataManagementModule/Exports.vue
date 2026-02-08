@@ -142,7 +142,10 @@
   </div>
 
   <!-- Pagination -->
-  <nav class="circle-pagination d-flex justify-content-center mt-4">
+  <nav
+    ref="paginationRef"
+    class="circle-pagination d-flex justify-content-center mt-4"
+  >
     <button
       class="page-btn"
       :disabled="page === 1"
@@ -152,9 +155,9 @@
     </button>
 
     <button
-      class="page-number"
       v-for="p in visiblePages"
       :key="p"
+      class="page-number"
       :class="{ active: p === page }"
       @click="changePage(p)"
     >
@@ -384,11 +387,13 @@
           <div class="row g-3">
             <!-- رقم الصادر -->
             <div class="col-md-6">
-              <label class="form-label">رقم الصادر</label>
+              <label class="form-label"> رقم الصادر </label>
+              <span class="text-danger">*</span>
+
               <input
-                v-model="filters.exportNumber"
+                v-model="form.exportNumber"
                 class="form-control"
-                placeholder="أدخل رقم الصادر..."
+                required
               />
             </div>
 
@@ -403,12 +408,32 @@
             </div>
 
             <!-- الجهة المرسل إليها -->
-            <div class="col-md-12">
+            <div class="col-md-6">
               <label class="form-label">الجهة المرسل إليها</label>
               <input
                 v-model="filters.destinationDepartment"
                 class="form-control"
                 placeholder="أدخل اسم الجهة..."
+              />
+            </div>
+
+            <!-- الموضوع -->
+            <div class="col-md-6">
+              <label class="form-label">الموضوع</label>
+              <input
+                v-model="filters.subject"
+                class="form-control"
+                placeholder="أدخل الموضوع..."
+              />
+            </div>
+
+            <!-- المحتوى -->
+            <div class="col-md-6">
+              <label class="form-label">المحتوى</label>
+              <input
+                v-model="filters.content"
+                class="form-control"
+                placeholder="أدخل جزء من المحتوى..."
               />
             </div>
           </div>
@@ -429,7 +454,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from "vue";
+import { ref, reactive, onMounted, computed ,nextTick} from "vue";
 import * as bootstrap from "bootstrap";
 import {
   getExports,
@@ -452,19 +477,26 @@ const pageSize = 10;
 const totalPages = ref(1);
 
 const visiblePages = computed(() => {
-  const pages = [];
-  let start = page.value - 1;
-  if (start < 1) start = 1;
+  const total = totalPages.value;
+  const current = page.value;
 
-  let end = start + 2;
-  if (end > totalPages.value) {
-    end = totalPages.value;
-    start = Math.max(1, end - 2);
+  if (total <= 5) {
+    return Array.from({ length: total }, (_, i) => i + 1);
   }
+  const pages = new Set();
 
-  for (let i = start; i <= end; i++) pages.push(i);
-  return pages;
+  pages.add(1);
+
+  for (let i = current - 1; i <= current + 1; i++) {
+    if (i > 1 && i < total) {
+      pages.add(i);
+    }
+  }
+  pages.add(total);
+
+  return [...pages].sort((a, b) => a - b);
 });
+
 
 // ===== Archive functionality =====
 const archiveModalEl = ref(null);
@@ -489,6 +521,8 @@ const filters = reactive({
   exportNumber: "",
   exportDate: "",
   destinationDepartment: "",
+  subject: "",
+  content: "",
 });
 
 const advancedSearchModal = ref(null);
@@ -510,6 +544,8 @@ const load = async () => {
         ? new Date(filters.exportDate).toISOString()
         : null,
       destinationDepartment: filters.destinationDepartment || null,
+      subject: filters.subject || null,
+      content: filters.content || null,
     });
     list.value = res.data.data ?? [];
     totalPages.value = res.data.pagination?.totalPages || 1;
@@ -539,6 +575,8 @@ const reset = () => {
   filters.exportNumber = "";
   filters.exportDate = "";
   filters.destinationDepartment = "";
+  filters.subject = "";
+  filters.content = "";
   page.value = 1;
   load();
 };
@@ -573,8 +611,12 @@ const closeModal = () => {
 
 // ====== Save ======
 const save = async () => {
-  if (isSaving.value) return;
+  if (!form.value.exportNumber || !form.value.exportNumber.trim()) {
+    errorAlert("رقم الصادر مطلوب");
+    return;
+  }
 
+  if (isSaving.value) return;
   isSaving.value = true;
 
   try {
@@ -612,11 +654,21 @@ const remove = async (id) => {
 };
 
 // ====== Pagination ======
-const changePage = (newPage) => {
-  if (newPage >= 1 && newPage <= totalPages.value && newPage !== page.value) {
-    page.value = newPage;
-    load();
-  }
+const changePage = async (p) => {
+  if (p < 1 || p > totalPages.value) return;
+  page.value = p;
+
+  await load();
+  await focusPagination();
+};
+
+const paginationRef = ref(null);
+const focusPagination = async () => {
+  await nextTick();
+  paginationRef.value?.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
 };
 
 const currentIncomingId = ref("");

@@ -17,6 +17,29 @@
     </div>
   </div>
 
+  <!-- Search Bar -->
+<div class="card shadow-sm border-0 mb-3 p-3">
+  <div class="row g-3">
+    <div class="col-md-6">
+      <input
+        v-model="filters.injuredName"
+        class="form-control"
+        placeholder="بحث باسم الجريح..."
+        @keyup.enter="applySearch"
+      />
+    </div>
+
+    <div class="col-md-6 d-flex justify-content-end gap-2 align-items-end">
+      <button class="btn-search" @click="applySearch">بحث</button>
+      <button class="btn-advanced" @click="openAdvanced">بحث متقدم</button>
+      <button class="btn-advanced" @click="resetFilters">
+        إعادة تعيين
+      </button>
+    </div>
+  </div>
+</div>
+
+
   <!-- Table Card -->
   <div class="card shadow-sm border-0 mb-4">
     <div class="card-header custom-card-header">
@@ -36,8 +59,11 @@
               <tr>
                 <th>#</th>
                 <th>أسماء الجرحى</th>
+                <!-- <th>النوع</th> -->
                 <th>عدد الوارد</th>
                 <th>تاريخ الوارد</th>
+                <th>عدد الكتاب</th>
+                <th>تاريخ الكتاب</th>
                 <th>الشعبة المستلمة</th>
                 <th>الحالة</th>
               </tr>
@@ -68,7 +94,7 @@
 
                   <span v-else>—</span>
                 </td>
-
+                <!-- <td>{{ typeNameText(x.typeName) }}</td> -->
                 <td>{{ x.incoming?.incomingBookNumber ?? "—" }}</td>
 
                 <td>
@@ -78,6 +104,9 @@
                       : "—"
                   }}
                 </td>
+
+                <td>{{ x.bookCount ?? "—" }}</td>
+                <td>{{ formatDate(x.bookDate) }}</td>
 
                 <td class="fw-bold">{{ x.departmentName || "—" }}</td>
 
@@ -170,6 +199,91 @@
       </div>
     </div>
   </div>
+
+  <!-- Advanced Search Modal -->
+<div class="modal fade" ref="advancedModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold primary">بحث متقدم</h5>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+
+          <!-- عدد الوارد -->
+          <div class="col-md-6">
+            <label class="form-label">عدد الوارد</label>
+            <input
+              v-model.number="filters.incomingBookNumber"
+              type="number"
+              class="form-control"
+            />
+          </div>
+
+          <!-- عدد الكتاب -->
+          <div class="col-md-6">
+            <label class="form-label">عدد الكتاب</label>
+            <input
+              v-model.number="filters.bookCount"
+              type="number"
+              class="form-control"
+            />
+          </div>
+
+          <!-- تاريخ الكتاب -->
+          <div class="col-md-6">
+            <label class="form-label">تاريخ الكتاب</label>
+            <input
+              v-model="filters.bookDate"
+              type="date"
+              class="form-control"
+            />
+          </div>
+
+          <!-- نوع صاحب المعاملة -->
+          <!-- <div class="col-md-6">
+            <label class="form-label">نوع صاحب المعاملة</label>
+            <select v-model.number="filters.typeName" class="form-select">
+              <option :value="null">الكل</option>
+              <option :value="1">جريح</option>
+              <option :value="2">منتسب</option>
+            </select>
+          </div> -->
+
+          <!-- من تاريخ الوارد -->
+          <div class="col-md-6">
+            <label class="form-label">من تاريخ الوارد</label>
+            <input
+              v-model="filters.incomingDateFrom"
+              type="date"
+              class="form-control"
+            />
+          </div>
+
+          <!-- الى تاريخ الوارد -->
+          <div class="col-md-6">
+            <label class="form-label">إلى تاريخ الوارد</label>
+            <input
+              v-model="filters.incomingDateTo"
+              type="date"
+              class="form-control"
+            />
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-light" @click="closeAdvanced">إغلاق</button>
+        <button class="btn btn-add" @click="applyAdvanced">بحث</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 </template>
 
 <script setup>
@@ -196,19 +310,26 @@ const paginationRef = ref(null);
 // Pagination
 // ==============================
 const visiblePages = computed(() => {
-  const pages = [];
-  let start = page.value - 1;
-  if (start < 1) start = 1;
+  const total = totalPages.value;
+  const current = page.value;
 
-  let end = start + 2;
-  if (end > totalPages.value) {
-    end = totalPages.value;
-    start = Math.max(1, end - 2);
+  if (total <= 5) {
+    return Array.from({ length: total }, (_, i) => i + 1);
   }
+  const pages = new Set();
 
-  for (let i = start; i <= end; i++) pages.push(i);
-  return pages;
+  pages.add(1);
+
+  for (let i = current - 1; i <= current + 1; i++) {
+    if (i > 1 && i < total) {
+      pages.add(i);
+    }
+  }
+  pages.add(total);
+
+  return [...pages].sort((a, b) => a - b);
 });
+
 
 const focusPagination = async () => {
   await nextTick();
@@ -258,11 +379,21 @@ const loadTransfers = async () => {
     const res = await getIncomingTransfers({
       pageNumber: page.value,
       pageSize,
+
+      injuredName: filters.value.injuredName || null,
+      incomingBookNumber: filters.value.incomingBookNumber ?? null,
+      bookCount: filters.value.bookCount ?? null,
+      bookDate: filters.value.bookDate || null,
+      incomingDateFrom: filters.value.incomingDateFrom || null,
+      incomingDateTo: filters.value.incomingDateTo || null,
+      typeName: filters.value.typeName ?? null,
     });
 
     const list = res.data.data || [];
     totalPages.value = res.data.pagination?.totalPages || 1;
+
     const incomingsMap = await loadAllIncomingsMap();
+
     transfers.value = list.map((t) => ({
       ...t,
       incoming: incomingsMap.get(t.incomingId) || null,
@@ -274,6 +405,7 @@ const loadTransfers = async () => {
     loading.value = false;
   }
 };
+
 
 // ==============================
 // Change Page
@@ -302,11 +434,58 @@ const closeNamesModal = () => {
   namesModalInstance?.hide();
 };
 
+const filters = ref({
+  injuredName: "",
+  incomingBookNumber: null,
+  bookCount: null,
+  bookDate: "",
+  incomingDateFrom: "",
+  incomingDateTo: "",
+  typeName: null,
+});
+
+const advancedModal = ref(null);
+let modalAdv = null;
+
+const openAdvanced = () => modalAdv.show();
+const closeAdvanced = () => modalAdv.hide();
+const applySearch = () => {
+  page.value = 1;
+  loadTransfers();
+};
+
+const applyAdvanced = () => {
+  modalAdv.hide();
+  page.value = 1;
+  loadTransfers();
+};
+
+
+const resetFilters = () => {
+  filters.value.injuredName = "";
+  filters.value.incomingBookNumber = null;
+  filters.value.bookCount = null;
+  filters.value.bookDate = "";
+  filters.value.incomingDateFrom = "";
+  filters.value.incomingDateTo = "";
+  filters.value.typeName = null;
+
+  page.value = 1;
+  loadTransfers();
+};
+
+const typeNameText = (v) => {
+  if (v === 1) return "جريح";
+  if (v === 2) return "منتسب";
+  return "—";
+};
+
 // ==============================
 // Mounted
 // ==============================
 onMounted(() => {
   loadTransfers();
   namesModalInstance = new Modal(namesModal.value);
+  modalAdv = new Modal(advancedModal.value);
 });
 </script>

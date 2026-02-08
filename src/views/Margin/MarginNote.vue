@@ -121,8 +121,10 @@
                 </td>
 
                 <td>
-                  <div class="fw-bold">{{ m.command.name || "—" }}</div>
-                  <small class="text-muted"> {{ m.formation.name }}</small>
+                  <div class="fw-bold">{{ m.command?.name || "—" }}</div>
+                  <small class="text-muted">{{
+                    m.formation?.name || "—"
+                  }}</small>
                 </td>
 
                 <td>{{ m.incomingBookNumber }}</td>
@@ -964,6 +966,7 @@ const openAdd = (incomingIdFromRow) => {
 
 const openEdit = (row) => {
   editMode.value = true;
+  incomingId.value = row.incomingId;
   resetForm();
   form.managerNotes = row.managerNotes?.length
     ? row.managerNotes.map((n) => ({
@@ -979,7 +982,6 @@ const isSaving = ref(false);
 
 const save = async () => {
   if (isSaving.value) return;
-
   if (!incomingId.value) {
     errorAlert("بيانات الوارد غير موجودة");
     return;
@@ -1005,9 +1007,12 @@ const save = async () => {
 
   try {
     await addMarginNote(data);
+
     successAlert("تمت إضافة الهوامش بنجاح");
     modal.hide();
+    incomingId.value = null;
     load();
+
   } catch (error) {
     console.error(error);
     errorAlert("فشل الحفظ");
@@ -1029,6 +1034,7 @@ const remove = async (id) => {
   }
 };
 
+
 const addManagerNote = () => {
   form.managerNotes.push({
     managerNote: "",
@@ -1036,9 +1042,11 @@ const addManagerNote = () => {
   });
 };
 
+
 const removeManagerNote = (index) => {
   form.managerNotes.splice(index, 1);
 };
+
 
 // ===== Transfer Functions =====
 const openTransfer = (row) => {
@@ -1105,6 +1113,7 @@ const openBulkTransfer = async () => {
   bulkTransferModal.show();
 };
 
+
 const bulkTransfer = async () => {
   if (bulkTransferLoading.value) return;
 
@@ -1112,9 +1121,7 @@ const bulkTransfer = async () => {
     errorAlert("يرجى اختيار القسم");
     return;
   }
-
   bulkTransferLoading.value = true;
-
   try {
     // Process each selected item individually using the existing transfer function
     const successfulTransfers = [];
