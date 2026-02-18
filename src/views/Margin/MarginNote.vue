@@ -80,7 +80,8 @@
                 </th>
                 <th>#</th>
                 <th>تاريح استلام المعاملة</th>
-                <th>أسماء الجرحى</th>
+                <th>الاسم</th>
+                <th>النوع</th>
                 <th>القيادة / التشكيل</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
@@ -119,7 +120,7 @@
                     </div>
                   </div>
                 </td>
-
+                <td>{{ typeNameText(m.typeName) }}</td>
                 <td>
                   <div class="fw-bold">{{ m.command?.name || "—" }}</div>
                   <small class="text-muted">{{
@@ -810,6 +811,14 @@ const departments = ref([]);
 const selectedDepartmentIds = ref([]);
 const selectAll = ref(false);
 
+const typeNameText = (v) => {
+  if (v === 1) return "جريح";
+  if (v === 2) return "منتسب";
+  if (v === 3) return "مريض";
+  if (v === 4) return "كتاب رسمي";
+  return "—";
+};
+
 // ===== Transfer Form =====
 const transferForm = reactive({
   marginNoteId: "",
@@ -870,11 +879,9 @@ const load = async () => {
 
 const changePage = async (p) => {
   if (p < 1 || p > totalPages.value) return;
-
   page.value = p;
-
-  await load(); // انتظر التحميل يخلص
-  await focusPagination(); // رجع التركيز للباجنيشن
+  await load(); 
+  await focusPagination(); 
 };
 
 const paginationRef = ref(null);

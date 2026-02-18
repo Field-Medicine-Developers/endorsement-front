@@ -55,7 +55,8 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>اسم الجريح</th>
+                <th>الاسم</th>
+                <th>النوع</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
                 <th>عدد الكتاب</th>
@@ -83,7 +84,7 @@
                   </div>
                   <span v-if="!m.injuredNames?.length">—</span>
                 </td>
-
+                <td>{{ typeNameText(m.typeIncoming) }}</td>
                 <td>{{ m.incomingBookNumber ?? "-" }}</td>
                 <td>{{ formatDate(m.incomingDate) }}</td>
                 <td>{{ m.bookCount ?? "-" }}</td>
@@ -503,6 +504,14 @@ const focusPagination = async () => {
     behavior: "smooth",
     block: "center",
   });
+};
+
+const typeNameText = (v) => {
+  if (v === 1) return "جريح";
+  if (v === 2) return "منتسب";
+  if (v === 3) return "مريض";
+  if (v === 4) return "كتاب رسمي";
+  return "—";
 };
 
 const filters = reactive({

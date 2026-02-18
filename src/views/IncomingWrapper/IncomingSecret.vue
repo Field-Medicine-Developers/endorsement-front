@@ -78,7 +78,7 @@
                   </label>
                 </th> -->
                 <th>#</th>
-                <th>اسم الجريح</th>
+                <th>الاسم</th>
                 <th>النوع</th>
                 <th>عدد الوارد</th>
                 <th>تاريخ الوارد</th>
@@ -409,19 +409,18 @@
               </div>
 
               <div class="col-md-6">
-  <label class="form-label">نوع صاحب المعاملة</label>
-  <div class="custom-vue-select-container">
-    <VueSelect
-      v-model="form.typeName"
-      :options="typeNameOptions"
-      label="label"
-      :reduce="o => o.value"
-      placeholder="اختر النوع..."
-      clearable
-    />
-  </div>
-</div>
-
+                <label class="form-label">نوع صاحب المعاملة</label>
+                <div class="custom-vue-select-container">
+                  <VueSelect
+                    v-model="form.typeName"
+                    :options="typeNameOptions"
+                    label="label"
+                    :reduce="(o) => o.value"
+                    placeholder="اختر النوع..."
+                    clearable
+                  />
+                </div>
+              </div>
 
               <div class="col-md-6">
                 <label class="form-label">القيادة</label>
@@ -600,19 +599,18 @@
             </div>
 
             <div class="col-md-6">
-  <label class="form-label">نوع صاحب المعاملة</label>
-  <div class="custom-vue-select-container">
-    <VueSelect
-      v-model="filters.typeName"
-      :options="typeNameOptions"
-      label="label"
-      :reduce="o => o.value"
-      placeholder="الكل"
-      clearable
-    />
-  </div>
-</div>
-
+              <label class="form-label">نوع صاحب المعاملة</label>
+              <div class="custom-vue-select-container">
+                <VueSelect
+                  v-model="filters.typeName"
+                  :options="typeNameOptions"
+                  label="label"
+                  :reduce="(o) => o.value"
+                  placeholder="الكل"
+                  clearable
+                />
+              </div>
+            </div>
 
             <!-- <div class="col-md-6">
               <label class="form-label">رقم الجريح (ID)</label>
@@ -840,11 +838,20 @@
               <label class="form-label">نوع صاحب المعاملة</label>
               <input
                 class="form-control"
-                :value="view.typeName === 1 ? 'جريح' : 'منتسب'"
+                :value="
+                  view.typeName === 1
+                    ? 'جريح'
+                    : view.typeName === 2
+                    ? 'منتسب'
+                    : view.typeName === 3
+                    ? 'مريض'
+                    : view.typeName === 4
+                    ? 'كتاب رسمي'
+                    : ''
+                "
                 disabled
               />
             </div>
-
 
             <div class="col-md-6">
               <label class="form-label">التشكيل</label>
@@ -1175,7 +1182,6 @@ const visiblePages = computed(() => {
   return [...pages].sort((a, b) => a - b);
 });
 
-
 const formations = ref([]);
 const incomingList = ref([]);
 const loading = ref(false);
@@ -1241,6 +1247,8 @@ const typeIncomingOptions = [
 const typeNameOptions = [
   { label: "جريح", value: 1 },
   { label: "منتسب", value: 2 },
+  { label: "مريض", value: 3 },
+  { label: "كتاب رسمي", value: 4 },
 ];
 
 const tempName = ref("");
@@ -1356,7 +1364,7 @@ const form = reactive({
   bookCount: "",
   bookDate: null,
   typeIncoming: 1,
-  typeName: 1, 
+  typeName: 1,
 });
 console.log(commands.value);
 
@@ -1753,14 +1761,13 @@ const medicalAccessoriesText = (value) => {
   return arr.map((x) => map[x] ?? "غير معروف").join(" , ");
 };
 
-
-
 const typeNameText = (v) => {
   if (v === 1) return "جريح";
   if (v === 2) return "منتسب";
+  if (v === 3) return "مريض";
+  if (v === 4) return "كتاب رسمي";
   return "—";
 };
-
 
 const loadCommands = async () => {
   const res = await getCommands();

@@ -130,7 +130,8 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>أسماء الجرحى</th>
+                <th>الاسم</th>
+                <th>النوع</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
                 <th>عدد الكتاب</th>
@@ -160,8 +161,8 @@
               <tr v-for="(item, idx) in list" :key="item.id">
                 <td>{{ (page - 1) * pageSize + idx + 1 }}</td>
                 <!-- أسماء الجرحى -->
-
                 <td>{{ item.injuredName }}</td>
+                <td>{{ typeNameText(item.typeName) }}</td>
                 <td>{{ item.incomingBookNumber || "-" }}</td>
                 <td>{{ formatDate(item.incomingDate) }}</td>
                 <td>{{ item.bookCount || "-" }}</td>
@@ -1533,6 +1534,15 @@ const actionTypeOptions = [
   { value: ActionTypeEnum.Send, label: "إرسال" },
   { value: ActionTypeEnum.Transfer, label: "ترحيل" },
 ];
+
+const typeNameText = (v) => {
+  if (v === 1) return "جريح";
+  if (v === 2) return "منتسب";
+  if (v === 3) return "مريض";
+  if (v === 4) return "كتاب رسمي";
+  return "—";
+};
+
 
 const getDefaultForm = () => ({
   id: "",

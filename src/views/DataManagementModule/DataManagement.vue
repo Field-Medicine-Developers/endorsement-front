@@ -79,18 +79,16 @@
                   </label>
                 </th>
                 <th>#</th>
-                <th>أسماء الجرحى</th>
+                <th>الاسم</th>
+                <th>النوع</th>
+                <th>القيادة / التشكيل</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
                 <th>رقم الكتاب</th>
                 <th>تاريخ الكتاب</th>
-                <!-- <th>تاريخ الإدخال</th> -->
-                <th>حالة المعاملة</th>
+                <th>المحتوى</th>
                 <th>هامش مسؤول الشعبة</th>
                 <th>هامش المدير القسم</th>
-                <!-- <th>تاريخ الاستلام</th> -->
-                <!-- <th>سبب الرفض</th> -->
-                <!-- <th>تاريخ الرفض</th> -->
                 <th>رقم المذكرة</th>
                 <th>تاريخ المذكرة</th>
                 <th>نوع الصادر</th>
@@ -126,26 +124,25 @@
                     </div>
                   </div>
                 </td>
-
+                <td>{{ typeNameText(m.typeName) }}</td>
+                <td>
+                  <div class="fw-bold">{{ m.commandName|| "—" }}</div>
+                  <small class="text-muted">
+                    {{ m.formationName || "—" }}</small
+                  >
+                </td>
                 <!-- incoming -->
                 <td>{{ m.incomingBookNumber ?? "-" }}</td>
                 <td>{{ formatDate(m.incomingDate) }}</td>
                 <td>{{ m.bookCount ?? "-" }}</td>
                 <td>{{ formatDate(m.bookDate) }}</td>
-                <!-- createdAt -->
-                <!-- <td>{{ formatDate(m.createdAt) }}</td> -->
                 <td>
-                  <span v-if="m.status === 0" class="badge bg-secondary">
-                    <i class="bi bi-hourglass-split"></i> قيد الانتظار
-                  </span>
-
-                  <span v-else-if="m.status === 1" class="badge bg-success">
-                    <i class="bi bi-check-circle-fill"></i> مقبول
-                  </span>
-
-                  <span v-else-if="m.status === 2" class="badge bg-danger">
-                    <i class="bi bi-x-circle-fill"></i> مرفوض
-                  </span>
+                  <button
+                    class="btn btn-search btn-sm"
+                    @click="openTextModal('المحتوى', m.content)"
+                  >
+                    عرض المحتوى ({{ m.content ? 1 : 0 }})
+                  </button>
                 </td>
                 <td>
                   <button
@@ -163,12 +160,6 @@
                     عرض الهوامش ({{ m.managerNotes?.length || 0 }})
                   </button>
                 </td>
-
-                <!-- تواريخ إضافية -->
-                <!-- <td>{{ formatDate(m.receiveDate) }}</td> -->
-                <!-- <td>{{ m.rejectionReason ?? "-" }}</td> -->
-                <!-- <td>{{ formatDate(m.rejectionDate) }}</td> -->
-
                 <!-- memo -->
                 <td>{{ m.memoNumber }}</td>
                 <td>{{ formatDate(m.memoDate) }}</td>
@@ -918,6 +909,31 @@
       </div>
     </div>
   </div>
+
+    <!-- Text Modal -->
+    <div class="modal fade" tabindex="-1" ref="textModalEl">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">
+            {{ textModal.title }}
+          </h5>
+        </div>
+
+        <div class="modal-body">
+          <div v-if="textModal.value" class="note-box">
+            {{ textModal.value }}
+          </div>
+
+          <p v-else class="text-muted text-center">لا توجد بيانات</p>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-light" @click="closeTextModal">إغلاق</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -982,6 +998,14 @@ const exportTypeOptions = [
   { label: "صادر داخلي", value: 1 },
   { label: "صادر خارجي", value: 2 },
 ];
+
+const typeNameText = (v) => {
+  if (v === 1) return "جريح";
+  if (v === 2) return "منتسب";
+  if (v === 3) return "مريض";
+  if (v === 4) return "كتاب رسمي";
+  return "—";
+};
 
 // ===== مودالات =====
 const modalEl = ref(null);
@@ -1085,6 +1109,28 @@ const openEdit = (row) => {
   form.hasOriginalFile = row.hasOriginalFile;
   form.isExport = row.isExport ?? 0;
   modal.show();
+};
+
+// ===============================
+// Text Modal
+// ===============================
+
+const textModalEl = ref(null);
+let textModalInstance = null;
+
+const textModal = reactive({
+  title: "",
+  value: "",
+});
+
+const openTextModal = (title, value) => {
+  textModal.title = title;
+  textModal.value = value || "";
+  textModalInstance.show();
+};
+
+const closeTextModal = () => {
+  textModalInstance.hide();
 };
 
 const isSaving = ref(false);
@@ -1534,6 +1580,7 @@ onMounted(() => {
   namesModal = new Modal(namesModalEl.value);
   managerNotesModal = new Modal(managerNotesModalEl.value);
   divisionNoteModal = new Modal(divisionNoteModalEl.value);
+  textModalInstance = new Modal(textModalEl.value);
   load();
   loadDepartments();
 });

@@ -89,7 +89,7 @@ const handleLogin = async () => {
     router.push("/flow");
     break;
   case 3:
-    router.push("/division-flow");
+    router.push("/data-management");
     break;
   case 4:
     router.push("/injury-supports");

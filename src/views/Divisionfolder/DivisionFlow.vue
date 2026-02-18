@@ -83,7 +83,8 @@
                   </label>
                 </th>
                 <th>#</th>
-                <th>اسم الجريح</th>
+                <th>الاسم</th>
+                <th>النوع</th>
                 <th>موضوع الوارد</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
@@ -126,10 +127,9 @@
                       عرض الكل ({{ item.injuredNames.length }})
                     </div>
                   </div>
-
                   <span v-else class="text-muted">—</span>
                 </td>
-
+                <td>{{ typeNameText(item.marginNote?.typeName) }}</td>
                 <td>{{ item.subject || "-" }}</td>
                 <td>{{ item.incomingBookNumber }}</td>
                 <td>{{ formatDate(item.incomingDate) }}</td>
@@ -686,6 +686,15 @@ let advancedSearchModalInstance = null;
 // Add state for bulk selection
 const selectedDepartmentIds = ref([]);
 const selectAll = ref(false);
+
+const typeNameText = (v) => {
+  if (v === 1) return "جريح";
+  if (v === 2) return "منتسب";
+  if (v === 3) return "مريض";
+  if (v === 4) return "كتاب رسمي";
+  return "—";
+};
+
 
 /* ---------------- Load Data ------------------ */
 const load = async () => {
