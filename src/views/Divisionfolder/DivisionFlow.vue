@@ -85,10 +85,10 @@
                 <th>#</th>
                 <th>الاسم</th>
                 <th>النوع</th>
-                <th>موضوع الوارد</th>
                 <th>رقم الوارد</th>
                 <th>تاريخ الوارد</th>
                 <th>عدد الكتاب</th>
+                <th>تاريخ الكتاب</th>
                 <th>الموضوع</th>
                 <th>هامش مدير القسم</th>
                 <th>المحتوى</th>
@@ -130,10 +130,10 @@
                   <span v-else class="text-muted">—</span>
                 </td>
                 <td>{{ typeNameText(item.marginNote?.typeName) }}</td>
-                <td>{{ item.subject || "-" }}</td>
                 <td>{{ item.incomingBookNumber }}</td>
                 <td>{{ formatDate(item.incomingDate) }}</td>
                 <td>{{ item.bookCount ?? "-" }}</td>
+                <td>{{ formatDate(item.bookDate) }}</td>
                 <td>{{ item.subject ?? "—" }}</td>
                 <td>
                   <button

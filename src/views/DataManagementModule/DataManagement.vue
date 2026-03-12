@@ -86,12 +86,14 @@
                 <th>تاريخ الوارد</th>
                 <th>رقم الكتاب</th>
                 <th>تاريخ الكتاب</th>
+                <th>الموضوع</th>
                 <th>المحتوى</th>
                 <th>هامش مسؤول الشعبة</th>
                 <th>هامش المدير القسم</th>
                 <th>رقم المذكرة</th>
                 <th>تاريخ المذكرة</th>
                 <th>نوع الصادر</th>
+                <th>حالة الإنجاز</th>
                 <th>الإجراءات</th>
               </tr>
             </thead>
@@ -126,7 +128,7 @@
                 </td>
                 <td>{{ typeNameText(m.typeName) }}</td>
                 <td>
-                  <div class="fw-bold">{{ m.commandName|| "—" }}</div>
+                  <div class="fw-bold">{{ m.commandName || "—" }}</div>
                   <small class="text-muted">
                     {{ m.formationName || "—" }}</small
                   >
@@ -136,6 +138,7 @@
                 <td>{{ formatDate(m.incomingDate) }}</td>
                 <td>{{ m.bookCount ?? "-" }}</td>
                 <td>{{ formatDate(m.bookDate) }}</td>
+                <td>{{ m.subject ?? "-" }}</td>
                 <td>
                   <button
                     class="btn btn-search btn-sm"
@@ -183,6 +186,35 @@
                     }}
                   </span>
                 </td>
+
+                <td>
+  <div class="achieved-cell">
+    <button
+      class="achieved-toggle"
+      :class="{
+        'is-achieved': m.isAchieved,
+        'is-pending': !m.isAchieved,
+        'is-loading': achievedLoadingIds.includes(m.id),
+      }"
+      :disabled="achievedLoadingIds.includes(m.id)"
+      @click="toggleAchieved(m)"
+    >
+      <span class="toggle-track">
+        <span class="toggle-thumb"></span>
+      </span>
+
+      <span class="toggle-label">
+        {{
+          achievedLoadingIds.includes(m.id)
+            ? "جارٍ التحديث..."
+            : m.isAchieved
+            ? "منجز"
+            : "غير منجز"
+        }}
+      </span>
+    </button>
+  </div>
+</td>
 
                 <td>
                   <div class="d-flex justify-content-center gap-2">
@@ -367,24 +399,6 @@
                   />
                 </div>
               </div>
-
-              <!-- <div class="col-md-6">
-                <label class="form-label">هل يوجد ملف أصل؟</label>
-
-                <div class="custom-vue-select-container">
-                  <VueSelect
-                    v-model="form.hasOriginalFile"
-                    :options="[
-                      { label: 'نعم', value: true },
-                      { label: 'لا', value: false },
-                    ]"
-                    label="label"
-                    :reduce="(opt) => opt.value"
-                    searchable
-                    placeholder="اختر..."
-                  />
-                </div>
-              </div> -->
             </div>
           </div>
 
@@ -618,6 +632,110 @@
               <input v-model="filters.bookCount" class="form-control" />
             </div>
 
+            <div class="col-md-6">
+              <label class="form-label">رقم الوارد</label>
+              <input
+                type="number"
+                v-model.number="filters.incomingBookNumber"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">تاريخ الوارد</label>
+              <input
+                type="date"
+                v-model="filters.incomingDate"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">هامش مدير القسم</label>
+              <input
+                type="text"
+                v-model.number="filters.marginNoteId"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">تاريخ الكتاب</label>
+              <input
+                type="date"
+                v-model="filters.bookDate"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">الموضوع</label>
+              <input
+                type="text"
+                v-model="filters.subject"
+                class="form-control"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">المحتوى</label>
+              <input
+                type="text"
+                v-model="filters.content"
+                class="form-control"
+              />
+            </div>
+
+            <!-- Command -->
+            <div class="col-md-6">
+              <div class="custom-vue-select-container">
+                <label class="form-label">القيادة</label>
+                <VueSelect
+                  v-model="filters.commandId"
+                  :options="commands"
+                  label="label"
+                  :reduce="(o) => o.value"
+                  placeholder="الكل"
+                  clearable
+                  searchable
+                />
+              </div>
+            </div>
+
+            <!-- Formation -->
+            <div class="col-md-6">
+              <div class="custom-vue-select-container">
+                <label class="form-label">التشكيل</label>
+                <VueSelect
+                  v-model="filters.formationId"
+                  :options="formations"
+                  label="name"
+                  :reduce="(o) => o.id"
+                  placeholder="الكل"
+                  clearable
+                  searchable
+                />
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="custom-vue-select-container">
+                <label class="form-label">النوع</label>
+
+                <VueSelect
+                  v-model="filters.typeName"
+                  :options="[
+                    { label: 'جريح', value: 1 },
+                    { label: 'منتسب', value: 2 },
+                    { label: 'مريض', value: 3 },
+                    { label: 'كتاب رسمي', value: 4 },
+                  ]"
+                  label="label"
+                  :reduce="(o) => o.value"
+                  placeholder="الكل"
+                  clearable
+                />
+              </div>
+            </div>
             <div class="col-md-6">
               <label class="form-label">من تاريخ المذكرة</label>
               <input
@@ -910,8 +1028,8 @@
     </div>
   </div>
 
-    <!-- Text Modal -->
-    <div class="modal fade" tabindex="-1" ref="textModalEl">
+  <!-- Text Modal -->
+  <div class="modal fade" tabindex="-1" ref="textModalEl">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <div class="modal-header">
@@ -937,7 +1055,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed ,nextTick} from "vue";
+import { ref, reactive, onMounted, computed, nextTick } from "vue";
 import bootstrap from "bootstrap/dist/js/bootstrap.bundle";
 import { Modal } from "bootstrap";
 import { useRoute } from "vue-router";
@@ -949,6 +1067,7 @@ import {
   deleteLanda,
   transferLanda,
   getLandaViwe,
+  updateLandaAchieved
 } from "@/services/Data-management.service.js";
 import { getDepartments } from "@/services/departments.service.js";
 import {
@@ -961,6 +1080,7 @@ import {
   uploadIncomingArchive,
   getIncomingArchive,
 } from "@/services/incoming-archive.service.js";
+import { getFormations, getCommands } from "@/services/formations.service.js";
 
 const route = useRoute();
 const list = ref([]);
@@ -970,6 +1090,9 @@ const loading = ref(false);
 const page = ref(1);
 const pageSize = 10;
 const totalPages = ref(1);
+
+const commands = ref([]);
+const formations = ref([]);
 
 const visiblePages = computed(() => {
   const total = totalPages.value;
@@ -991,7 +1114,6 @@ const visiblePages = computed(() => {
 
   return [...pages].sort((a, b) => a - b);
 });
-
 
 const exportTypeOptions = [
   { label: "لا يوجد", value: 0 },
@@ -1019,6 +1141,10 @@ const editMode = ref(false);
 // ===== Selection state for bulk operations =====
 const selectedDepartmentIds = ref([]);
 const selectAll = ref(false);
+
+
+// ===== تغيير الحالة ====
+const achievedLoadingIds = ref([]);
 
 // ===== فورم الإضافة/التعديل =====
 const form = reactive({
@@ -1064,6 +1190,12 @@ const load = async () => {
       bookCount: filters.bookCount || null,
       memoDateFrom: filters.memoDateFrom || null,
       memoDateTo: filters.memoDateTo || null,
+      content: filters.content || null,
+      subject: filters.subject || null,
+      formationId: filters.formationId || null,
+      commandId: filters.commandId || null,
+      typeName: filters.typeName || null,
+      marginNoteId: filters.marginNoteId || null,
       hasOriginalFile: hasOriginal,
       createdByUserId: filters.createdByUserId || null,
     });
@@ -1258,16 +1390,13 @@ const openView = (row) => {
     viewItem.memoNumber = row.memoNumber ?? "—";
     viewItem.memoDate = row.memoDate ?? null;
     viewItem.isExport = row.isExport ?? 0;
-
     viewItem.subject = row.subject ?? "—";
     viewItem.content = row.content ?? "—";
-
     incomingView.incomingBookNumber = row.incomingBookNumber ?? "—";
     incomingView.incomingDate = row.incomingDate ?? null;
     incomingView.injuredNames = Array.isArray(row.injuredNames)
       ? row.injuredNames
       : [];
-
     viewItem.createdByUserName = row.createdByUserName ?? "—";
     viewItem.createdAt = row.createdAt ?? null;
 
@@ -1310,6 +1439,9 @@ const filters = reactive({
   memoDateTo: "",
   hasOriginalFile: "",
   createdByUserId: "",
+  commandId: null,
+  formationId: null,
+  typeName: null,
 });
 
 const advancedModal = ref(null);
@@ -1342,6 +1474,11 @@ const resetFilters = () => {
     createdAtTo: "",
     memoNumber: "",
     memoDateFrom: "",
+    content: "",
+    subject: "",
+    commandId: null,
+    formationId: null,
+    typeName: null,
     memoDateTo: "",
     hasOriginalFile: "",
   });
@@ -1428,6 +1565,35 @@ const bulkTransferFunc = async () => {
     errorAlert("فشل الترحيل");
   } finally {
     bulkTransferLoading.value = false;
+  }
+};
+
+const toggleAchieved = async (row) => {
+  if (!row?.id) return;
+
+  const currentValue = row.isAchieved === true || row.isAchieved === 1;
+  const newValue = !currentValue;
+
+  try {
+    achievedLoadingIds.value.push(row.id);
+
+    const res = await updateLandaAchieved(row.id, newValue);
+
+    row.isAchieved = res?.data?.data?.isAchieved ?? (newValue ? 1 : 0);
+
+    successAlert(
+      newValue ? "تم تحويل الحالة إلى منجز" : "تم تحويل الحالة إلى غير منجز"
+    );
+  } catch (e) {
+    console.error("FULL ERROR:", e);
+    console.error("STATUS:", e?.response?.status);
+    console.error("DATA:", e?.response?.data);
+
+    errorAlert(e?.response?.data?.message || "فشل تحديث حالة الإنجاز");
+  } finally {
+    achievedLoadingIds.value = achievedLoadingIds.value.filter(
+      (id) => id !== row.id
+    );
   }
 };
 
@@ -1570,6 +1736,33 @@ const closeDivisionNoteModal = () => {
   divisionNoteModal.hide();
 };
 
+const loadCommands = async () => {
+  try {
+    const res = await getCommands({
+      pageNumber: 1,
+      pageSize: 1000,
+    });
+    commands.value = res.data.data.map((x) => ({
+      label: x.name,
+      value: x.id,
+    }));
+  } catch (e) {
+    console.error("Error loading commands", e);
+  }
+};
+
+const loadFormations = async () => {
+  try {
+    const res = await getFormations({
+      pageNumber: 1,
+      pageSize: 1000,
+    });
+    formations.value = res.data.data;
+  } catch (e) {
+    console.error("Error loading formations", e);
+  }
+};
+
 onMounted(() => {
   modal = new Modal(modalEl.value);
   transferModal = new Modal(transferModalEl.value);
@@ -1583,5 +1776,7 @@ onMounted(() => {
   textModalInstance = new Modal(textModalEl.value);
   load();
   loadDepartments();
+  loadCommands();
+  loadFormations();
 });
 </script>

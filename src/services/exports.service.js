@@ -34,4 +34,5 @@ export const uploadExportArchive = (exportId, files) => {
 export const getExportArchive = (exportId) =>
   api.get("/Landa/exports/archives", { params: { exportId } });
 
-
+export const getLastExportNumbers = () =>
+  api.get("/Landa/exports/last-numbers");

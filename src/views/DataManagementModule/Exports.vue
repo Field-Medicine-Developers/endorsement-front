@@ -178,11 +178,36 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <!-- Header -->
-        <div class="modal-header">
-          <h5 class="modal-title fw-bold primary">
-            {{ isEdit ? "تعديل صادر" : "إضافة صادر جديد" }}
-          </h5>
-        </div>
+        <div class="modal-header d-flex justify-content-between align-items-center">
+
+<!-- العنوان (يبقى كما هو) -->
+<h5 class="modal-title fw-bold primary mb-0">
+
+  {{ isEdit ? "تعديل صادر" : "إضافة صادر جديد" }}
+
+</h5>
+
+
+<!-- العدد في الجهة المقابلة -->
+<div class="export-number-display">
+
+  <div class="label">
+
+    {{ form.typeExport === 1 ? " رقم عام" : " رقم سري" }}
+
+  </div>
+
+  <div class="number">
+
+    {{ form.typeExport === 1
+    ? lastGeneralNumber
+    : extractNumber(lastSecretNumber)
+}}
+  </div>
+
+</div>
+
+</div>
 
         <!-- Body -->
         <div class="modal-body">
@@ -454,13 +479,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed ,nextTick} from "vue";
+import { ref, reactive, onMounted, computed, nextTick } from "vue";
 import * as bootstrap from "bootstrap";
 import {
   getExports,
   createExport,
   updateExport,
   deleteExport,
+  getLastExportNumbers,
 } from "@/services/exports.service";
 import { uploadIncomingArchive } from "@/services/incoming-archive.service.js";
 import { successAlert, errorAlert, confirmDelete } from "@/utils/alert.js";
@@ -496,7 +522,6 @@ const visiblePages = computed(() => {
 
   return [...pages].sort((a, b) => a - b);
 });
-
 
 // ===== Archive functionality =====
 const archiveModalEl = ref(null);
@@ -582,10 +607,11 @@ const reset = () => {
 };
 
 // ====== Add ======
-const openAdd = () => {
+const openAdd = async () => {
   isEdit.value = false;
   currentId.value = null;
   resetForm();
+  await loadLastExportNumber();
   modalInstance.show();
 };
 
@@ -757,6 +783,19 @@ const formatDate = (d) => {
   return `${year}/${month}/${day}`;
 };
 
+const lastGeneralNumber = ref("");
+const lastSecretNumber = ref("");
+
+const loadLastExportNumber = async () => {
+  const res = await getLastExportNumbers();
+  lastGeneralNumber.value = res.data.data.lastGeneralExportNumber;
+  lastSecretNumber.value = res.data.data.lastSecretExportNumber;
+};
+
+const extractNumber = (value) => {
+if (!value) return "-";
+return value.toString().replace(/[^\d]/g, "");
+};
 onMounted(() => {
   modalInstance = new bootstrap.Modal(modalEl.value, {
     backdrop: "static",

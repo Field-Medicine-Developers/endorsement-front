@@ -839,7 +839,6 @@ const bulkTransferLoading = ref(false);
 // ===== Download data =====
 const load = async () => {
   loading.value = true;
-
   try {
     const res = await getMarginNotes({
       pageNumber: page.value,
@@ -857,10 +856,6 @@ const load = async () => {
     });
 
     list.value = res.data.data.map((item) => {
-      // console.log("Incoming ID:", item.incomingId);
-      // console.log("Manager Notes:", item.managerNotes);
-      // console.log("Incoming Data Full:", item);
-
       return {
         ...item,
         managerNotes: item.managerNotes || [],
@@ -897,7 +892,7 @@ const focusPagination = async () => {
 const buildVisiblePages = () => {
   const total = totalPages.value;
   const current = page.value;
-  const range = 2; // عدد الصفحات يمين ويسار
+  const range = 2; 
   const start = Math.max(1, current - range);
   const end = Math.min(total, current + range);
 

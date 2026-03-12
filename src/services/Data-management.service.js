@@ -52,3 +52,9 @@ export const getLandaTransfers = (params) => {
 export const changeLandaStatus = (data) => {
   return axios.post("/Landa/change-status", data);
 };
+
+export const updateLandaAchieved = (id, isAchieved) => {
+  return axios.put(`/Landa/${id}/achieved`, {
+    isAchieved,
+  });
+};

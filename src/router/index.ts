@@ -85,7 +85,7 @@ export const routes = [
         path: "",
         name: "هامش مسؤول الشعبة",
         component: () =>
-          import("@/views/Divisionfolder/DivisionTabs.vue"),
+          import("@/views/Divisionfolder/DivisionFlow.vue"),
       },
     ],
   },

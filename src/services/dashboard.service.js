@@ -1,8 +1,8 @@
 import api from "./services.js";
 
 /* Dashboard */
-export const getDashboardStats = () => {
-  return api.get("/Dashboard");
+export const getDashboardStats = (params) => {
+  return api.get("/Dashboard", { params });
 };
 
 /*  Incoming Tracking */
