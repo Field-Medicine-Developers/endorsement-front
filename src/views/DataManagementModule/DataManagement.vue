@@ -1083,6 +1083,8 @@ import {
 import { getFormations, getCommands } from "@/services/formations.service.js";
 
 const route = useRoute();
+// const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+// const currentDepartmentId = userData?.departmentId || null;
 const list = ref([]);
 const loading = ref(false);
 
@@ -1184,6 +1186,7 @@ const load = async () => {
     const res = await getLanda({
       pageNumber: page.value,
       pageSize,
+      // departmentId: currentDepartmentId || null,
       injuredName: filters.injuredName || null,
       marginNoteId: filters.marginNoteId || null,
       memoNumber: filters.memoNumber || null,

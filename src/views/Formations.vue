@@ -160,6 +160,7 @@
         </div>
 
         <form @submit.prevent="save">
+          <div class="modal-body">
           <label class="form-label">القيادة</label>
           <div class="custom-vue-select-container mb-3">
             <VueSelect
@@ -173,9 +174,9 @@
             />
           </div>
 
-          <div class="modal-body">
+          
             <label class="form-label">اسم التشكيل</label>
-            <input v-model="form.name" class="form-control" required />
+            <input v-model="form.name" class="form-control" placeholder="أدخل التشكيل" required />
           </div>
 
           <div class="modal-footer">

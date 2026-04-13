@@ -454,7 +454,7 @@
                 <label class="form-label">عدد الوارد</label>
                 <input
                   v-model.number="form.incomingBookNumber"
-                  type="number"
+                  type="text"
                   class="form-control"
                   required
                 />
@@ -658,7 +658,7 @@
               <label class="form-label">عدد الوارد</label>
               <input
                 v-model.number="filters.incomingBookNumber"
-                type="number"
+                type="text"
                 class="form-control"
               />
             </div>
@@ -1355,7 +1355,7 @@ const form = reactive({
   injuredNames: [],
   formationId: null,
   commandId: null,
-  incomingBookNumber: null,
+  incomingBookNumber: "",
   incomingDate: "",
   subject: "",
   content: "",

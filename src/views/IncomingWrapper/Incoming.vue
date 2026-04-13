@@ -453,8 +453,8 @@
               <div class="col-md-6">
                 <label class="form-label">عدد الوارد</label>
                 <input
-                  v-model.number="form.incomingBookNumber"
-                  type="number"
+                v-model="form.incomingBookNumber"
+                type="text"
                   class="form-control"
                   required
                 />
@@ -1368,7 +1368,7 @@ const form = reactive({
   injuredNames: [],
   formationId: null,
   commandId: null,
-  incomingBookNumber: null,
+  incomingBookNumber: "",
   incomingDate: "",
   subject: "",
   content: "",
@@ -1425,17 +1425,22 @@ const openEdit = async (item) => {
 const isSaving = ref(false);
 const save = async () => {
   if (isSaving.value) return;
+
   normalizeBookDate();
+  normalizeIncomingDate();
+
   if (!form.bookDate) {
     errorAlert("يرجى إدخال تاريخ الكتاب بصيغة صحيحة (يوم / شهر / سنة)");
     return;
   }
+
   if (!form.incomingDate) {
     errorAlert("يرجى إدخال تاريخ الوارد بصيغة صحيحة (يوم / شهر / سنة)");
     return;
   }
-  if (!form.bookDate) {
-    errorAlert("يرجى إدخال تاريخ الكتاب بشكل صحيح قبل الحفظ");
+
+  if (!form.incomingBookNumber || !String(form.incomingBookNumber).trim()) {
+    errorAlert("يرجى إدخال عدد الوارد");
     return;
   }
 
@@ -1443,9 +1448,22 @@ const save = async () => {
 
   try {
     const payload = {
-      ...form,
+      injuredNames: form.injuredNames || [],
+      formationId: form.formationId ?? null,
+      commandId: form.commandId ?? null,
+      incomingBookNumber: String(form.incomingBookNumber).trim(),
+      incomingDate: form.incomingDate,
+      subject: form.subject || "",
+      content: form.content || "",
+      departmentIds: form.departmentIds || [],
+      medicalAccessories: form.medicalAccessories || [],
+      bookCount: form.bookCount ?? null,
       bookDate: form.bookDate,
+      typeIncoming: form.typeIncoming ?? 1,
+      typeName: form.typeName ?? 1,
     };
+
+    console.log("payload before send", payload);
 
     if (!editMode.value) {
       await addIncoming(payload);
@@ -1459,7 +1477,11 @@ const save = async () => {
     await load();
   } catch (e) {
     console.error("خطأ بالحفظ", e);
-    errorAlert("فشل الحفظ");
+    errorAlert(
+      e?.response?.data?.message ||
+        e?.response?.data?.title ||
+        "فشل الحفظ"
+    );
   } finally {
     isSaving.value = false;
   }

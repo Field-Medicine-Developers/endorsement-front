@@ -199,10 +199,14 @@
                 <i class="bi bi-inbox"></i>
               </div>
               <div class="incoming-total-content">
-  <span class="incoming-total-label">الوارد الكلي</span>
-  <h3 class="incoming-total-number">{{ stats.totalIncomingsCount }}</h3>
-  <small class="incoming-total-note">إجمالي المعاملات الواردة</small>
-</div>
+                <span class="incoming-total-label">الوارد الكلي</span>
+                <h3 class="incoming-total-number">
+                  {{ stats.totalIncomingsCount }}
+                </h3>
+                <small class="incoming-total-note"
+                  >إجمالي المعاملات الواردة</small
+                >
+              </div>
             </div>
 
             <div class="soft-card summary-card reveal-card">
@@ -368,7 +372,7 @@
                   <i class="bi bi-circle"></i>
                 </span>
                 <div class="item-content">
-                  <small>الافتراضي</small>
+                  <small>قيد الأجراء</small>
                   <strong>{{ stats.finalStatusTypeCount.defaultCount }}</strong>
                 </div>
               </div>
@@ -519,128 +523,33 @@
         </section>
       </Transition>
       <!-- زر : الهامش الإداري -->
- <section v-if="activeSection === 'margin'" class="dashboard-section">
-  <div class="row g-3 align-items-stretch">
-    <div class="col-lg-6 col-12">
-      <div class="soft-card progress-card h-100">
-        <div class="section-head mb-3">
-          <div>
-            <h5>الهامش الإداري</h5>
-            <p>حالة إنجاز الملاحظات الإدارية</p>
-          </div>
-        </div>
-
-        <div class="progress-info">
-          <div>
-            <span>منجز</span>
-            <strong>{{ stats.marginNotesCount.withMarginNotesCount }}</strong>
-          </div>
-          <div>
-            <span>غير منجز</span>
-            <strong>{{ stats.marginNotesCount.withoutMarginNotesCount }}</strong>
-          </div>
-          <div>
-            <span>الإجمالي</span>
-            <strong>{{ stats.marginNotesCount.totalCount }}</strong>
-          </div>
-        </div>
-
-        <div class="modern-progress">
-          <div
-            class="modern-progress-bar"
-            :style="{
-              width:
-                getPercent(
-                  stats.marginNotesCount.withMarginNotesCount,
-                  stats.marginNotesCount.totalCount
-                ) + '%',
-            }"
-          ></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-lg-6 col-12">
-      <div class="soft-card analytics-card h-100">
-        <div class="section-head">
-          <div>
-            <h5>الهامش الإداري</h5>
-            <p>عرض بياني لحالة الإنجاز</p>
-          </div>
-        </div>
-
-        <div class="chart-wrap small-chart-wrap">
-          <canvas id="marginChart"></canvas>
-        </div>
-
-        <div class="mini-legend custom-legend">
-          <div><span class="dot dot-1"></span> منجز</div>
-          <div><span class="dot dot-3"></span> غير منجز</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-<Transition name="section-fade" mode="out-in">
-      <!--  زر: شعبة الإدارة -->
-      <section v-if="activeSection === 'landa'" class="dashboard-section">
-        <div class="summary-grid three-cols">
-          <div class="soft-card summary-card reveal-card">
-            <div class="summary-icon">
-              <i class="bi bi-diagram-3"></i>
-            </div>
-            <div class="summary-content">
-              <span class="summary-label">الصادر الداخلي</span>
-              <h3>{{ stats.landaIsExportCount.internalExportCount }}</h3>
-              <small>عدد الصادر الداخلي</small>
-            </div>
-          </div>
-
-          <div class="soft-card summary-card reveal-card">
-            <div class="summary-icon">
-              <i class="bi bi-box-arrow-up-left"></i>
-            </div>
-            <div class="summary-content">
-              <span class="summary-label">الصادر الخارجي</span>
-              <h3>{{ stats.landaIsExportCount.externalExportCount }}</h3>
-              <small>عدد الصادر الخارجي</small>
-            </div>
-          </div>
-
-          <div class="soft-card summary-card reveal-card">
-            <div class="summary-icon">
-              <i class="bi bi-life-preserver"></i>
-            </div>
-            <div class="summary-content">
-              <span class="summary-label">إسناد الإصابات</span>
-              <h3>{{ stats.injurySupportsCount }}</h3>
-              <small>إجمالي الإسنادات</small>
-            </div>
-          </div>
-        </div>
-
+      <section v-if="activeSection === 'margin'" class="dashboard-section">
         <div class="row g-3 align-items-stretch">
           <div class="col-lg-6 col-12">
-            <div class="soft-card progress-card h-100 reveal-card">
+            <div class="soft-card progress-card h-100">
               <div class="section-head mb-3">
                 <div>
-                  <h5>شعبة الإدارة</h5>
-                  <p>الإنجاز داخل الشعبة</p>
+                  <h5>الهامش الإداري</h5>
+                  <p>حالة إنجاز الملاحظات الإدارية</p>
                 </div>
               </div>
 
               <div class="progress-info">
                 <div>
                   <span>منجز</span>
-                  <strong>{{ stats.landaCount.achievedCount }}</strong>
+                  <strong>{{
+                    stats.marginNotesCount.withMarginNotesCount
+                  }}</strong>
                 </div>
                 <div>
                   <span>غير منجز</span>
-                  <strong>{{ stats.landaCount.notAchievedCount }}</strong>
+                  <strong>{{
+                    stats.marginNotesCount.withoutMarginNotesCount
+                  }}</strong>
                 </div>
                 <div>
                   <span>الإجمالي</span>
-                  <strong>{{ stats.landaCount.totalCount }}</strong>
+                  <strong>{{ stats.marginNotesCount.totalCount }}</strong>
                 </div>
               </div>
 
@@ -650,8 +559,8 @@
                   :style="{
                     width:
                       getPercent(
-                        stats.landaCount.achievedCount,
-                        stats.landaCount.totalCount
+                        stats.marginNotesCount.withMarginNotesCount,
+                        stats.marginNotesCount.totalCount
                       ) + '%',
                   }"
                 ></div>
@@ -663,19 +572,122 @@
             <div class="soft-card analytics-card h-100">
               <div class="section-head">
                 <div>
-                  <h5>شعبة الإدارة</h5>
-                  <p>عرض بياني لحالة الإنجاز والصادر</p>
+                  <h5>الهامش الإداري</h5>
+                  <p>عرض بياني لحالة الإنجاز</p>
                 </div>
               </div>
 
-              <div class="chart-wrap chart-bar-wrap">
-                <canvas id="landaChart"></canvas>
+              <div class="chart-wrap small-chart-wrap">
+                <canvas id="marginChart"></canvas>
+              </div>
+
+              <div class="mini-legend custom-legend">
+                <div><span class="dot dot-1"></span> منجز</div>
+                <div><span class="dot dot-3"></span> غير منجز</div>
               </div>
             </div>
           </div>
         </div>
       </section>
-    </Transition>
+      <Transition name="section-fade" mode="out-in">
+        <!--  زر: شعبة الإدارة -->
+        <section v-if="activeSection === 'landa'" class="dashboard-section">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="soft-card summary-card reveal-card h-100">
+                <div class="summary-icon">
+                  <i class="bi bi-diagram-3"></i>
+                </div>
+                <div class="summary-content">
+                  <span class="summary-label">الصادر العام</span>
+                  <h3>{{ stats.landaIsExportCount.internalExportCount }}</h3>
+                  <small>عدد الصادر العام</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-6">
+              <div class="soft-card summary-card reveal-card h-100">
+                <div class="summary-icon">
+                  <i class="bi bi-box-arrow-up-left"></i>
+                </div>
+                <div class="summary-content">
+                  <span class="summary-label">الصادر السري</span>
+                  <h3>{{ stats.landaIsExportCount.externalExportCount }}</h3>
+                  <small>عدد السري الخارجي</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- <div class="soft-card summary-card reveal-card">
+            <div class="summary-icon">
+              <i class="bi bi-life-preserver"></i>
+            </div>
+            <div class="summary-content">
+              <span class="summary-label">إسناد الإصابات</span>
+              <h3>{{ stats.injurySupportsCount }}</h3>
+              <small>إجمالي الإسنادات</small>
+            </div>
+          </div> -->
+          </div>
+
+          <div class="row g-3 align-items-stretch">
+            <div class="col-lg-6 col-12">
+              <div class="soft-card progress-card h-100 reveal-card">
+                <div class="section-head mb-3">
+                  <div>
+                    <h5>شعبة الإدارة</h5>
+                    <p>الإنجاز داخل الشعبة</p>
+                  </div>
+                </div>
+
+                <div class="progress-info">
+                  <div>
+                    <span>منجز</span>
+                    <strong>{{ stats.landaCount.achievedCount }}</strong>
+                  </div>
+                  <div>
+                    <span>غير منجز</span>
+                    <strong>{{ stats.landaCount.notAchievedCount }}</strong>
+                  </div>
+                  <div>
+                    <span>الإجمالي</span>
+                    <strong>{{ stats.landaCount.totalCount }}</strong>
+                  </div>
+                </div>
+
+                <div class="modern-progress">
+                  <div
+                    class="modern-progress-bar"
+                    :style="{
+                      width:
+                        getPercent(
+                          stats.landaCount.achievedCount,
+                          stats.landaCount.totalCount
+                        ) + '%',
+                    }"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-6 col-12">
+              <div class="soft-card analytics-card h-100">
+                <div class="section-head">
+                  <div>
+                    <h5>شعبة الإدارة</h5>
+                    <p>عرض بياني لحالة الإنجاز والصادر</p>
+                  </div>
+                </div>
+
+                <div class="chart-wrap chart-bar-wrap">
+                  <canvas id="landaChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </Transition>
       <!-- زر الإحصائيات العامة -->
       <section
         v-if="activeSection === 'generalStats'"
@@ -847,15 +859,14 @@
               </ul>
             </div>
           </div>
-              <div class="modal-footer">
-                <button
-                  type="button"
-                  class="btn btn-light"
-                  @click="closeTrackModal"
-                >
-                  إغلاق
-                </button>
-              
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-light"
+              @click="closeTrackModal"
+            >
+              إغلاق
+            </button>
           </div>
         </div>
       </div>
@@ -957,114 +968,114 @@
 
     <!-- Print Area -->
     <div id="print-area" class="print-report">
-  <div class="print-header">
-    <h1> إحصائيات الإنجاز</h1>
-    <p v-if="achievementFilter.year">لسنة {{ achievementFilter.year }}</p>
-  </div>
+      <div class="print-header">
+        <h1>إحصائيات الإنجاز</h1>
+        <p v-if="achievementFilter.year">لسنة {{ achievementFilter.year }}</p>
+      </div>
 
-  <div class="print-summary-cards">
-    <div class="print-summary-card">
-      <span>عدد الوارد</span>
-      <strong>{{ achievements.incomingCount }}</strong>
-    </div>
+      <div class="print-summary-cards">
+        <div class="print-summary-card">
+          <span>عدد الوارد</span>
+          <strong>{{ achievements.incomingCount }}</strong>
+        </div>
 
-    <div class="print-summary-card">
-      <span>إجمالي أنواع الوارد</span>
-      <strong>{{ achievements.incomingTypeTotalCount }}</strong>
-    </div>
+        <div class="print-summary-card">
+          <span>إجمالي أنواع الوارد</span>
+          <strong>{{ achievements.incomingTypeTotalCount }}</strong>
+        </div>
 
-    <div class="print-summary-card ">
-      <span>إرسال الرازي</span>
-      <strong>{{ achievements.finalStatusSendingAlRaziCount }}</strong>
-    </div>
-  </div>
+        <div class="print-summary-card">
+          <span>إرسال الرازي</span>
+          <strong>{{ achievements.finalStatusSendingAlRaziCount }}</strong>
+        </div>
+      </div>
 
-  <div class="print-grid-two">
-    <div class="print-section-box">
-      <h3>الحالات النهائية</h3>
-      <table class="print-table-modern">
-        <tbody>
-          <tr>
-            <td>المصادقة</td>
-            <td>{{ achievements.finalStatusAuthenticationCount }}</td>
-          </tr>
-          <tr>
-            <td>الاسترجاع</td>
-            <td>{{ achievements.finalStatusReturnCount }}</td>
-          </tr>
-          <tr>
-            <td>مكتب المعاون</td>
-            <td>{{ achievements.finalStatusDeputyOfficeCount }}</td>
-          </tr>
-          <tr>
-            <td>إرسال الرازي</td>
-            <td>{{ achievements.finalStatusSendingAlRaziCount }}</td>
-          </tr>
-          <tr>
-            <td>صحة الإصدار</td>
-            <td>{{ achievements.finalStatusHealthOfIssuanceCount }}</td>
-          </tr>
-          <tr>
-            <td>الأولويات</td>
-            <td>{{ achievements.finalStatusRequestPrioritiesCount }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <div class="print-grid-two">
+        <div class="print-section-box">
+          <h3>الحالات النهائية</h3>
+          <table class="print-table-modern">
+            <tbody>
+              <tr>
+                <td>المصادقة</td>
+                <td>{{ achievements.finalStatusAuthenticationCount }}</td>
+              </tr>
+              <tr>
+                <td>الاسترجاع</td>
+                <td>{{ achievements.finalStatusReturnCount }}</td>
+              </tr>
+              <tr>
+                <td>مكتب المعاون</td>
+                <td>{{ achievements.finalStatusDeputyOfficeCount }}</td>
+              </tr>
+              <tr>
+                <td>إرسال الرازي</td>
+                <td>{{ achievements.finalStatusSendingAlRaziCount }}</td>
+              </tr>
+              <tr>
+                <td>صحة الإصدار</td>
+                <td>{{ achievements.finalStatusHealthOfIssuanceCount }}</td>
+              </tr>
+              <tr>
+                <td>الأولويات</td>
+                <td>{{ achievements.finalStatusRequestPrioritiesCount }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-    <div class="print-section-box">
-      <h3>أنواع الوارد</h3>
-      <table class="print-table-modern">
-        <tbody>
-          <tr>
-            <td>جريح</td>
-            <td>{{ achievements.incomingInjuredCount }}</td>
-          </tr>
-          <tr>
-            <td>منتسب</td>
-            <td>{{ achievements.incomingEmployCount }}</td>
-          </tr>
-          <tr>
-            <td>مريض</td>
-            <td>{{ achievements.incomingSickCount }}</td>
-          </tr>
-          <tr>
-            <td>كتاب رسمي</td>
-            <td>{{ achievements.incomingFormalBookCount }}</td>
-          </tr>
-          <tr class="section-total">
-            <td>المجموع</td>
-            <td>{{ achievements.incomingTypeTotalCount }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+        <div class="print-section-box">
+          <h3>أنواع الوارد</h3>
+          <table class="print-table-modern">
+            <tbody>
+              <tr>
+                <td>جريح</td>
+                <td>{{ achievements.incomingInjuredCount }}</td>
+              </tr>
+              <tr>
+                <td>منتسب</td>
+                <td>{{ achievements.incomingEmployCount }}</td>
+              </tr>
+              <tr>
+                <td>مريض</td>
+                <td>{{ achievements.incomingSickCount }}</td>
+              </tr>
+              <tr>
+                <td>كتاب رسمي</td>
+                <td>{{ achievements.incomingFormalBookCount }}</td>
+              </tr>
+              <tr class="section-total">
+                <td>المجموع</td>
+                <td>{{ achievements.incomingTypeTotalCount }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-  <div class="print-section-box mt-print">
-    <h3>تفاصيل إضافية</h3>
-    <table class="print-table-modern">
-      <tbody>
-        <tr>
-          <td>الاسترجاع</td>
-          <td>{{ achievements.isReturnCount }}</td>
-        </tr>
-        <tr>
-          <td>الاعتذارات</td>
-          <td>{{ achievements.apologyCount }}</td>
-        </tr>
-        <tr>
-          <td>المرضى</td>
-          <td>{{ achievements.patientCount }}</td>
-        </tr>
-        <!-- <tr class="section-total final-total-row">
+      <div class="print-section-box mt-print">
+        <h3>تفاصيل إضافية</h3>
+        <table class="print-table-modern">
+          <tbody>
+            <tr>
+              <td>الاسترجاع</td>
+              <td>{{ achievements.isReturnCount }}</td>
+            </tr>
+            <tr>
+              <td>الاعتذارات</td>
+              <td>{{ achievements.apologyCount }}</td>
+            </tr>
+            <tr>
+              <td>المرضى</td>
+              <td>{{ achievements.patientCount }}</td>
+            </tr>
+            <!-- <tr class="section-total final-total-row">
           <td>العدد الكلي</td>
           <td>{{ achievements.totalCount }}</td>
         </tr> -->
-      </tbody>
-    </table>
-  </div>
-</div>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -1383,7 +1394,7 @@ const renderFinalStatusChart = () => {
     type: "bar",
     data: {
       labels: [
-        "الافتراضي",
+        "قيد الأجراء",
         "مكتب المعاون",
         "إرسال الرازي",
         "صحة الإصدار",
@@ -1868,8 +1879,7 @@ onMounted(async () => {
 
 .btn-search:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow:
-    0 12px 24px rgba(18, 177, 209, 0.22),
+  box-shadow: 0 12px 24px rgba(18, 177, 209, 0.22),
     0 6px 12px rgba(18, 177, 209, 0.12);
   background: linear-gradient(135deg, #18a7c3, #128faa);
   filter: brightness(1.03);
@@ -1924,8 +1934,6 @@ onMounted(async () => {
   border-radius: 16px;
 }
 
-
-
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -1963,12 +1971,8 @@ onMounted(async () => {
   font-weight: 800;
   font-size: 0.96rem;
   border: 1px solid rgba(18, 177, 209, 0.1);
-  transition:
-    transform 0.28s ease,
-    background 0.28s ease,
-    color 0.28s ease,
-    box-shadow 0.28s ease,
-    border-color 0.28s ease;
+  transition: transform 0.28s ease, background 0.28s ease, color 0.28s ease,
+    box-shadow 0.28s ease, border-color 0.28s ease;
   overflow: hidden;
 }
 
@@ -2003,8 +2007,7 @@ onMounted(async () => {
   color: #fff;
   border-color: transparent;
   transform: translateY(-4px);
-  box-shadow:
-    0 14px 24px rgba(18, 177, 209, 0.22),
+  box-shadow: 0 14px 24px rgba(18, 177, 209, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 

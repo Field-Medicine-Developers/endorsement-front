@@ -413,10 +413,10 @@
             <!-- رقم الصادر -->
             <div class="col-md-6">
               <label class="form-label"> رقم الصادر </label>
-              <span class="text-danger">*</span>
+              <!-- <span class="text-danger">*</span> -->
 
               <input
-                v-model="form.exportNumber"
+                v-model="filters.exportNumber"
                 class="form-control"
                 required
               />
