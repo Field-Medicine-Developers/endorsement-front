@@ -242,7 +242,7 @@
 
                 <td>
                   <!-- <span class="badge badge-main"> -->
-                    {{ item.finalPosition || "-" }}
+                  {{ item.finalPosition || "-" }}
                   <!-- </span> -->
                 </td>
 
@@ -1432,8 +1432,6 @@ import { uploadIncomingArchive } from "@/services/incoming-archive.service.js";
 import { getFormations, getCommands } from "@/services/formations.service.js";
 import { nextTick } from "vue";
 
-
-
 const route = useRoute();
 const incomingIdFromRoute = route.query.injuredPersonIds || null;
 const list = ref([]);
@@ -1543,7 +1541,6 @@ const typeNameText = (v) => {
   return "—";
 };
 
-
 const getDefaultForm = () => ({
   id: "",
   incomingId: "",
@@ -1618,7 +1615,6 @@ const visiblePages = computed(() => {
   return [...pages].sort((a, b) => a - b);
 });
 
-
 const departments = ref([]);
 const departmentsSelect = ref([]);
 const modalEl = ref(null);
@@ -1662,14 +1658,25 @@ const load = async () => {
     const res = await getAuditingAndData(params);
     const rawList = res.data.data ?? [];
 
-    list.value = rawList.map((item) => ({
-      ...item,
-      injuredName: item.injuredPersonName || "-",
-      managerNotes: item.managerNotes || [],
-      verificationStatus:
-        item.verificationStatus ?? item.verificationStatusType ?? 0,
-      finalStatus: item.finalStatus ?? item.finalStatusType ?? 0,
-    }));
+    list.value = rawList.map((item) => {
+      const sameIncoming = rawList.find(
+        (x) => x.incomingId === item.incomingId && x.transactionReceiveDate
+      );
+
+      return {
+        ...item,
+        injuredName: item.injuredPersonName || "-",
+        managerNotes: item.managerNotes || [],
+        verificationStatus:
+          item.verificationStatus ?? item.verificationStatusType ?? 0,
+        finalStatus: item.finalStatus ?? item.finalStatusType ?? 0,
+        transactionReceiveDate:
+          item.transactionReceiveDate ||
+          item.incomingReceiveDate ||
+          sameIncoming?.transactionReceiveDate ||
+          null,
+      };
+    });
     totalPages.value = res.data.pagination?.totalPages ?? 1;
   } catch (e) {
     console.error(e);
