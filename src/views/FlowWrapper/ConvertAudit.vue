@@ -23,7 +23,7 @@
         <input
           v-model="filters.injuredName"
           class="form-control"
-          placeholder="بحث باسم الجريح..."
+          placeholder="بحث عن الاسم ..."
           @keyup.enter="searchQuick"
         />
       </div>
@@ -791,6 +791,11 @@ const formatDate = (d) => {
     2,
     "0"
   )}/${String(dt.getDate()).padStart(2, "0")}`;
+};
+
+const searchQuick = () => {
+  page.value = 1;
+  load();
 };
 
 // ========== INIT ==========

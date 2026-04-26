@@ -558,7 +558,7 @@
 
               <div
                 class="col-md-6"
-                v-if="form.finalStatus !== FinalStatusType.Apology"
+                v-if="form.finalStatus !== FinalStatusType.Return"
               >
                 <label class="form-label">هل مسترجع ؟</label>
                 <div class="custom-vue-select-container mb-3">
@@ -574,7 +574,7 @@
 
               <div
                 class="col-md-6"
-                v-if="form.finalStatus === FinalStatusType.Apology"
+                v-if="form.finalStatus === FinalStatusType.Return"
               >
                 <label class="form-label">تاريخ الاسترجاع</label>
                 <input
@@ -850,7 +850,7 @@
 
             <div
               class="col-md-6"
-              v-if="selected.finalStatus === FinalStatusType.Apology"
+              v-if="selected.finalStatus === FinalStatusType.Return"
             >
               <label class="form-label">المواقف النهائي</label>
               <input
@@ -1462,13 +1462,15 @@ const filters = reactive({
 
 /* ---------------- ENUMS ---------------- */
 const FinalStatusType = {
-  Defult: 0,
-  Completed: 1, // مكتب السيد المعاون
+  Default: 0,
+  DeputyOffice: 1, // مكتب المعاون
   SendingAlRazi: 2, // إرسال الرازي
   HealthOfIssuance: 3, // صحة صدور
   RequestPriorities: 4, // طلب أوليات
   Authentication: 5, // المصادقة
-  Apology: 6, // استرجاع
+  Return: 6, // استرجاع
+  AuthorizedAuthentication: 7, // مصادقة مخول
+  Apology: 8, // اعتذار
 };
 
 const VerificationStatus = {
@@ -1478,13 +1480,15 @@ const VerificationStatus = {
 };
 
 const finalStatusOptions = [
-  { value: FinalStatusType.Defult, label: "بدون" },
-  { value: FinalStatusType.Completed, label: "مكتب السيد المعاون" },
+  { value: FinalStatusType.Default, label: "بدون" },
+  { value: FinalStatusType.DeputyOffice, label: "مكتب المعاون" },
   { value: FinalStatusType.SendingAlRazi, label: "إرسال الرازي" },
   { value: FinalStatusType.HealthOfIssuance, label: "صحة صدور" },
   { value: FinalStatusType.RequestPriorities, label: "طلب أوليات" },
-  { value: FinalStatusType.Authentication, label: "المصادقة" },
-  { value: FinalStatusType.Apology, label: "استرجاع" },
+  { value: FinalStatusType.Authentication, label: "مصادقة" },
+  { value: FinalStatusType.Return, label: "استرجاع" },
+  { value: FinalStatusType.AuthorizedAuthentication, label: "مصادقة مخول" },
+  { value: FinalStatusType.Apology, label: "اعتذار" },
 ];
 
 const verificationStatusOptions = [
@@ -2302,7 +2306,7 @@ watch(
 watch(
   () => form.finalStatus,
   (val) => {
-    if (val === FinalStatusType.Apology) {
+    if (val === FinalStatusType.Return) {
       form.isReturn = 1;
       if (!form.receiveDate) form.receiveDate = today();
     } else {
