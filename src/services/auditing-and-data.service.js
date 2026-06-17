@@ -13,7 +13,6 @@ export const getAuditingAndData = (params = {}) => {
         if (value === null || value === undefined || value === "") return;
 
         if (Array.isArray(value)) {
-          // ✅ مهم: بدون []
           value.forEach((v) => q.append(key, v));
         } else {
           q.append(key, value);

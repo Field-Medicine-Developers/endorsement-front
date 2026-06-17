@@ -3040,6 +3040,30 @@ onMounted(async () => {
   transition: all 0.28s ease;
   border: 1px solid rgba(18, 177, 209, 0.08);
   overflow: hidden;
+  opacity: 0;
+  transform: translateY(-6px);
+  animation: dashboardTabReveal 0.52s cubic-bezier(0.22, 1, 0.36, 1)
+    forwards;
+}
+
+.dashboard-tabs button:nth-child(1) {
+  animation-delay: 0.06s;
+}
+
+.dashboard-tabs button:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.dashboard-tabs button:nth-child(3) {
+  animation-delay: 0.18s;
+}
+
+.dashboard-tabs button:nth-child(4) {
+  animation-delay: 0.24s;
+}
+
+.dashboard-tabs button:nth-child(5) {
+  animation-delay: 0.3s;
 }
 
 .dashboard-tabs button:hover {
@@ -3064,6 +3088,19 @@ onMounted(async () => {
 
 .dashboard-tabs button:active {
   transform: scale(0.98);
+}
+
+@keyframes dashboardTabReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
 }
 
 @media (max-width: 768px) {
@@ -3098,6 +3135,14 @@ onMounted(async () => {
 .section-fade-leave-to {
   opacity: 0;
   transform: translateY(-8px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-tabs button {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
 }
 
 /* انميشن الكاردات نفسها */

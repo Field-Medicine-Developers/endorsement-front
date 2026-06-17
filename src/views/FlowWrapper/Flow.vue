@@ -1073,6 +1073,7 @@
                   placeholder="الكل"
                   clearable
                   searchable
+                  :disabled="!filters.commandId"
                 />
               </div>
             </div>
@@ -1471,6 +1472,7 @@ const FinalStatusType = {
   Return: 6, // استرجاع
   AuthorizedAuthentication: 7, // مصادقة مخول
   Apology: 8, // اعتذار
+  officeOfTheDirectorOfTheDiectorate: 9, // مكتب السيد مدير المديرية
 };
 
 const VerificationStatus = {
@@ -1489,6 +1491,7 @@ const finalStatusOptions = [
   { value: FinalStatusType.Return, label: "استرجاع" },
   { value: FinalStatusType.AuthorizedAuthentication, label: "مصادقة مخول" },
   { value: FinalStatusType.Apology, label: "اعتذار" },
+  { value: FinalStatusType.officeOfTheDirectorOfTheDiectorate, label: "مكتب السيد مدير المديرية" },
 ];
 
 const verificationStatusOptions = [
@@ -1580,13 +1583,36 @@ const loadCommands = async () => {
 const formations = ref([]);
 
 const loadFormations = async () => {
-  const res = await getFormations({
-    pageNumber: 1,
-    pageSize: 5000, // خليها رقم كبير حسب بياناتك
-  });
+  try {
+    const res = await getFormations({
+      pageNumber: 1,
+      pageSize: 200,
+    });
 
-  formations.value = res.data.data || [];
+    formations.value = res.data.data || [];
+  } catch (e) {
+    console.error(e);
+    formations.value = [];
+  }
 };
+
+watch(
+  () => filters.commandId,
+  (commandId) => {
+    filters.formationId = null;
+
+    if (!commandId) {
+      formations.value = [];
+      return;
+    }
+
+    const selectedCommand = commands.value.find(
+      (c) => c.value === commandId
+    );
+
+    formations.value = selectedCommand?.formations ?? [];
+  }
+);
 
 // ===== Pagination =====
 const page = ref(1);
@@ -1705,6 +1731,8 @@ const resetFilters = () => {
     subject: "",
     content: "",
     marginNote: "",
+    formationId: null,
+    commandId: null,
     marginNoteDivisions: "",
   });
   load();

@@ -375,38 +375,50 @@
                 </div>
               </div>
 
+              <label class="form-label">أسماء الجرحى</label>
+
               <div class="col-12">
-                <label class="form-label">أسماء الجرحى</label>
+  <label class="form-label">أسماء الجرحى</label>
 
-                <div class="tag-box">
-                  <div class="tags">
-                    <span
-                      v-for="(name, i) in form.injuredNames"
-                      :key="i"
-                      class="tag"
-                    >
-                      {{ name }}
-                      <span class="remove" @click="removeTag(i)">×</span>
-                    </span>
+  <div class="tag-box">
+    <div class="tags">
+      <span
+        v-for="(name, i) in form.injuredNames"
+        :key="i"
+        class="tag"
+        :class="{ editing: editingNameIndex === i }"
+      >
+      <input
+  v-if="editingNameIndex === i"
+  v-model="form.injuredNames[i]"
+  class="tag-edit-input"
+  :style="{ width: Math.max(form.injuredNames[i].length * 14, 160) + 'px' }"
+  @keyup.enter="editingNameIndex = null"
+  @blur="editingNameIndex = null"
+/>
 
-                    <input
-                      ref="inputRef"
-                      v-model="tempName"
-                      @keydown.enter.stop.prevent="manualAddTag"
-                      class="tag-input-field"
-                      placeholder="اكتب اسم الجريح..."
-                    />
-                  </div>
+        <span v-else @click.stop="editingNameIndex = i">
+          {{ name }}
+        </span>
 
-                  <button
-                    type="button"
-                    class="tag-add-btn"
-                    @click="manualAddTag"
-                  >
-                    <i class="bi bi-plus-lg"></i>
-                  </button>
-                </div>
-              </div>
+        <span class="remove" @click.stop="removeTag(i)">×</span>
+      </span>
+
+      <input
+        ref="inputRef"
+        v-model="tempName"
+        @keydown.enter.stop.prevent="manualAddTag"
+        class="tag-input-field"
+        placeholder="اكتب اسم الجريح..."
+      />
+    </div>
+
+    <button type="button" class="tag-add-btn" @click="manualAddTag">
+      <i class="bi bi-plus-lg"></i>
+    </button>
+  </div>
+
+</div>
 
               <div class="col-md-6">
                 <label class="form-label">نوع صاحب المعاملة</label>
@@ -707,12 +719,13 @@
               <div class="custom-vue-select-container">
                 <VueSelect
                   v-model="filters.formationId"
-                  :options="formations"
+                  :options="advancedFormations"
                   label="name"
                   :reduce="(f) => f.id"
                   placeholder="اختر التشكيل..."
                   searchable
                   clearable
+                  :disabled="!filters.commandId"
                 />
               </div>
             </div>
@@ -1260,13 +1273,13 @@ const addTag = (newTag) => {
   form.injuredNames.push(newTag);
 };
 
-const manualAddTag = async () => {
-  if (!tempName.value.trim()) return;
-  addTag(tempName.value);
-  tempName.value = "";
-  await nextTick();
-  inputRef.value?.focus();
-};
+// const manualAddTag = async () => {
+//   if (!tempName.value.trim()) return;
+//   addTag(tempName.value);
+//   tempName.value = "";
+//   await nextTick();
+//   inputRef.value?.focus();
+// };
 
 const removeTag = (index) => {
   form.injuredNames.splice(index, 1);
@@ -1331,6 +1344,7 @@ const loadDepartments = async () => {
   }
 };
 
+
 /* Load Formations */
 const loadFormations = async () => {
   try {
@@ -1370,13 +1384,14 @@ console.log(commands.value);
 
 const openAdd = () => ((editMode.value = false), reset(), modal.show());
 
-const openEdit = (item) => {
+const openEdit = async (item) => {
   editMode.value = true;
   form.id = item.id;
   form.injuredNames = item.injuredNames || [];
   form.typeName = item.typeName ?? 1;
-  form.formationId = item.formationId;
-  form.commandId = item.commandId;
+  form.commandId = item.commandId || null;
+  await nextTick();
+  form.formationId = item.formationId || null;
   form.incomingBookNumber = item.incomingBookNumber;
   form.typeIncoming = item.typeIncoming ?? 1;
   form.incomingDate = item.incomingDate
@@ -1391,7 +1406,11 @@ const openEdit = (item) => {
   form.subject = item.subject;
   form.content = item.content;
   form.departmentIds = item.departmentIds || [];
-  form.medicalAccessories = item.medicalAccessories;
+  form.medicalAccessories = Array.isArray(item.medicalAccessories)
+    ? item.medicalAccessories
+    : item.medicalAccessories != null
+    ? [item.medicalAccessories]
+    : [];
   form.bookCount = item.bookCount;
   form.bookDate = item.bookDate ? item.bookDate.split("T")[0] : null;
   bookDateText.value = form.bookDate
@@ -1403,20 +1422,52 @@ const openEdit = (item) => {
   modal.show();
 };
 
+
+const editingNameIndex = ref(null);
+
+const editTag = async (index) => {
+  editingNameIndex.value = index;
+  tempName.value = form.injuredNames[index] || "";
+
+  await nextTick();
+  inputRef.value?.focus();
+};
+
+const manualAddTag = async () => {
+  const name = tempName.value.trim();
+  if (!name) return;
+
+  if (editingNameIndex.value !== null) {
+    form.injuredNames[editingNameIndex.value] = name;
+    editingNameIndex.value = null;
+  } else {
+    form.injuredNames.push(name);
+  }
+
+  tempName.value = "";
+  await nextTick();
+  inputRef.value?.focus();
+};
+
+
 const isSaving = ref(false);
 const save = async () => {
   if (isSaving.value) return;
   normalizeBookDate();
+  normalizeIncomingDate();
+
   if (!form.bookDate) {
     errorAlert("يرجى إدخال تاريخ الكتاب بصيغة صحيحة (يوم / شهر / سنة)");
     return;
   }
+
   if (!form.incomingDate) {
     errorAlert("يرجى إدخال تاريخ الوارد بصيغة صحيحة (يوم / شهر / سنة)");
     return;
   }
-  if (!form.bookDate) {
-    errorAlert("يرجى إدخال تاريخ الكتاب بشكل صحيح قبل الحفظ");
+
+  if (!form.incomingBookNumber || !String(form.incomingBookNumber).trim()) {
+    errorAlert("يرجى إدخال عدد الوارد");
     return;
   }
 
@@ -1424,8 +1475,19 @@ const save = async () => {
 
   try {
     const payload = {
-      ...form,
+      injuredNames: form.injuredNames || [],
+      formationId: form.formationId ?? null,
+      commandId: form.commandId ?? null,
+      incomingBookNumber: String(form.incomingBookNumber).trim(),
+      incomingDate: form.incomingDate,
+      subject: form.subject || "",
+      content: form.content || "",
+      departmentIds: form.departmentIds || [],
+      medicalAccessories: form.medicalAccessories || [],
+      bookCount: form.bookCount ?? null,
       bookDate: form.bookDate,
+      typeIncoming: form.typeIncoming ?? 2,
+      typeName: form.typeName ?? 1,
     };
 
     if (!editMode.value) {
@@ -1771,13 +1833,14 @@ const typeNameText = (v) => {
 
 const loadCommands = async () => {
   const res = await getCommands();
-  console.log("Commands response:", res.data);
+  // console.log("Commands response:", res.data);
   commands.value = res.data.data.map((c) => ({
     label: c.name,
     value: c.id,
     formations: c.formations,
   }));
 };
+
 
 watch(
   () => form.commandId,
@@ -1790,6 +1853,25 @@ watch(
     const selectedCommand = commands.value.find((c) => c.value === commandId);
     formations.value = selectedCommand?.formations ?? [];
     form.formationId = null;
+  }
+);
+const advancedFormations = ref([]);
+
+watch(
+  () => filters.commandId,
+  (commandId) => {
+    filters.formationId = null;
+
+    if (!commandId) {
+      advancedFormations.value = [];
+      return;
+    }
+
+    const selectedCommand = commands.value.find(
+      (c) => c.value === commandId
+    );
+
+    advancedFormations.value = selectedCommand?.formations ?? [];
   }
 );
 

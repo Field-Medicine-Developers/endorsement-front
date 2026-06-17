@@ -451,6 +451,7 @@
                   placeholder="الكل"
                   clearable
                   searchable
+                  :disabled="!filters.commandId"
                 />
               </div>
             </div>
@@ -508,7 +509,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from "vue";
+import { ref, reactive, onMounted, computed, watch } from "vue";
 import { Modal } from "bootstrap";
 import VueSelect from "vue3-select";
 import "vue3-select/dist/vue3-select.css";
@@ -620,22 +621,43 @@ const commands = ref([]);
 
 const loadFormations = async () => {
   try {
-    const res = await getFormations();
-    formations.value = (res?.data?.data || []).map((f) => ({
-      id: f.id,
-      name: f.name,
-    }));
+    const res = await getFormations({
+      pageNumber: 1,
+      pageSize: 200,
+    });
+
+    formations.value = res.data.data || [];
   } catch {
     formations.value = [];
   }
 };
 
+watch(
+  () => filters.commandId,
+  (commandId) => {
+    if (!commandId) {
+      formations.value = [];
+      filters.formationId = null;
+      return;
+    }
+
+    const selectedCommand = commands.value.find(
+      (c) => c.value === commandId
+    );
+
+    formations.value = selectedCommand?.formations ?? [];
+    filters.formationId = null;
+  }
+);
+
 const loadCommands = async () => {
   try {
     const res = await getCommands();
+
     commands.value = (res?.data?.data || []).map((c) => ({
       value: c.id,
       label: c.name,
+      formations: c.formations || [],
     }));
   } catch {
     commands.value = [];

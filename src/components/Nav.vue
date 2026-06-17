@@ -30,8 +30,9 @@
         <ul class="navbar-nav gap-1">
           <li
             class="nav-item text-uppercase fw-semibold"
-            v-for="route in visibleRoutes"
+            v-for="(route, index) in visibleRoutes"
             :key="route.path"
+            :style="{ '--nav-index': index }"
           >
             <router-link
               :to="route.path"

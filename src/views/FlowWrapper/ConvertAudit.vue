@@ -470,6 +470,7 @@
                   placeholder="الكل"
                   clearable
                   searchable
+                  :disabled="!filters.commandId"
                 />
               </div>
             </div>
@@ -486,7 +487,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed,nextTick } from "vue";
+import { ref, reactive, onMounted, computed, nextTick, watch } from "vue";
 import { Modal } from "bootstrap";
 import VueSelect from "vue3-select";
 import "vue3-select/dist/vue3-select.css";
@@ -557,11 +558,12 @@ const load = async () => {
 
 const loadFormations = async () => {
   try {
-    const res = await getFormations();
-    formations.value = (res?.data?.data || []).map((f) => ({
-      id: f.id,
-      name: f.name,
-    }));
+    const res = await getFormations({
+      pageNumber: 1,
+      pageSize: 200,
+    });
+
+    formations.value = res.data.data || [];
   } catch {
     formations.value = [];
   }
@@ -570,14 +572,18 @@ const loadFormations = async () => {
 const loadCommands = async () => {
   try {
     const res = await getCommands();
+
     commands.value = (res?.data?.data || []).map((c) => ({
       value: c.id,
       label: c.name,
+      formations: c.formations || [],
     }));
   } catch {
     commands.value = [];
   }
 };
+
+
 
 const approvingId = ref(null);
 const rejectingId = ref(null);
@@ -797,6 +803,25 @@ const searchQuick = () => {
   page.value = 1;
   load();
 };
+
+watch(
+  () => filters.commandId,
+  (commandId) => {
+    if (!commandId) {
+      formations.value = [];
+      filters.formationId = null;
+      return;
+    }
+
+    const selectedCommand = commands.value.find(
+      (c) => c.value === commandId
+    );
+
+    formations.value = selectedCommand?.formations ?? [];
+    filters.formationId = null;
+  }
+);
+
 
 // ========== INIT ==========
 onMounted(() => {

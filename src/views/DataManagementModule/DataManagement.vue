@@ -714,6 +714,7 @@
                   placeholder="الكل"
                   clearable
                   searchable
+                  :disabled="!filters.commandId"
                 />
               </div>
             </div>
@@ -1055,7 +1056,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed, nextTick } from "vue";
+import { ref, reactive, onMounted, computed, nextTick , watch} from "vue";
 import bootstrap from "bootstrap/dist/js/bootstrap.bundle";
 import { Modal } from "bootstrap";
 import { useRoute } from "vue-router";
@@ -1095,6 +1096,7 @@ const totalPages = ref(1);
 
 const commands = ref([]);
 const formations = ref([]);
+const allFormations = ref([]);
 
 const visiblePages = computed(() => {
   const total = totalPages.value;
@@ -1741,13 +1743,12 @@ const closeDivisionNoteModal = () => {
 
 const loadCommands = async () => {
   try {
-    const res = await getCommands({
-      pageNumber: 1,
-      pageSize: 1000,
-    });
-    commands.value = res.data.data.map((x) => ({
-      label: x.name,
-      value: x.id,
+    const res = await getCommands();
+
+    commands.value = res.data.data.map((c) => ({
+      label: c.name,
+      value: c.id,
+      formations: c.formations,
     }));
   } catch (e) {
     console.error("Error loading commands", e);
@@ -1758,13 +1759,33 @@ const loadFormations = async () => {
   try {
     const res = await getFormations({
       pageNumber: 1,
-      pageSize: 1000,
+      pageSize: 200,
     });
+
     formations.value = res.data.data;
   } catch (e) {
     console.error("Error loading formations", e);
+    formations.value = [];
   }
 };
+
+watch(
+  () => filters.commandId,
+  (commandId) => {
+    if (!commandId) {
+      formations.value = [];
+      filters.formationId = null;
+      return;
+    }
+
+    const selectedCommand = commands.value.find(
+      (c) => c.value === commandId
+    );
+
+    formations.value = selectedCommand?.formations ?? [];
+    filters.formationId = null;
+  }
+);
 
 onMounted(() => {
   modal = new Modal(modalEl.value);

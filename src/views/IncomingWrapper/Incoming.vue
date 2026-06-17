@@ -381,13 +381,25 @@
                 <div class="tag-box">
                   <div class="tags">
                     <span
-                      v-for="(name, i) in form.injuredNames"
-                      :key="i"
-                      class="tag"
-                    >
-                      {{ name }}
-                      <span class="remove" @click="removeTag(i)">×</span>
-                    </span>
+  v-for="(name, i) in form.injuredNames"
+  :key="i"
+  class="tag"
+  :class="{ editing: editingNameIndex === i }"
+>
+<input
+  v-if="editingNameIndex === i"
+  v-model="form.injuredNames[i]"
+  class="tag-edit-input"
+  :style="{ width: Math.max(form.injuredNames[i].length * 14, 160) + 'px' }"
+  @keyup.enter="editingNameIndex = null"
+  @blur="editingNameIndex = null"
+/>
+  <span v-else @click.stop="editingNameIndex = i">
+    {{ name }}
+  </span>
+
+  <span class="remove" @click.stop="removeTag(i)">×</span>
+</span>
 
                     <input
                       ref="inputRef"
@@ -709,14 +721,15 @@
               <label class="form-label">التشكيل</label>
               <div class="custom-vue-select-container">
                 <VueSelect
-                  v-model="filters.formationId"
-                  :options="formations"
-                  label="name"
-                  :reduce="(f) => f.id"
-                  placeholder="اختر التشكيل..."
-                  searchable
-                  clearable
-                />
+  v-model="filters.formationId"
+  :options="advancedFormations"
+  label="name"
+  :reduce="(f) => f.id"
+  placeholder="اختر التشكيل..."
+  searchable
+  clearable
+  :disabled="!filters.commandId"
+/>
               </div>
             </div>
 
@@ -1273,13 +1286,13 @@ const addTag = (newTag) => {
   form.injuredNames.push(newTag);
 };
 
-const manualAddTag = async () => {
-  if (!tempName.value.trim()) return;
-  addTag(tempName.value);
-  tempName.value = "";
-  await nextTick();
-  inputRef.value?.focus();
-};
+// const manualAddTag = async () => {
+//   if (!tempName.value.trim()) return;
+//   addTag(tempName.value);
+//   tempName.value = "";
+//   await nextTick();
+//   inputRef.value?.focus();
+// };
 
 const removeTag = (index) => {
   form.injuredNames.splice(index, 1);
@@ -1420,6 +1433,32 @@ const openEdit = async (item) => {
     : "";
 
   modal.show();
+};
+
+const editingNameIndex = ref(null);
+
+const editTag = async (index) => {
+  editingNameIndex.value = index;
+  tempName.value = form.injuredNames[index] || "";
+
+  await nextTick();
+  inputRef.value?.focus();
+};
+
+const manualAddTag = async () => {
+  const name = tempName.value.trim();
+  if (!name) return;
+
+  if (editingNameIndex.value !== null) {
+    form.injuredNames[editingNameIndex.value] = name;
+    editingNameIndex.value = null;
+  } else {
+    form.injuredNames.push(name);
+  }
+
+  tempName.value = "";
+  await nextTick();
+  inputRef.value?.focus();
 };
 
 const isSaving = ref(false);
@@ -1833,7 +1872,25 @@ watch(
     form.formationId = null;
   }
 );
+const advancedFormations = ref([]);
 
+watch(
+  () => filters.commandId,
+  (commandId) => {
+    filters.formationId = null;
+
+    if (!commandId) {
+      advancedFormations.value = [];
+      return;
+    }
+
+    const selectedCommand = commands.value.find(
+      (c) => c.value === commandId
+    );
+
+    advancedFormations.value = selectedCommand?.formations ?? [];
+  }
+);
 const parseDateNoLeadingZero = (text) => {
   if (!text) return null;
 
