@@ -1,7 +1,13 @@
 /* -------------------------------------------------------------
 الخطوط والخلفية العامة
 ------------------------------------------------------------- */
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap');
+@font-face {
+  font-family: 'Cairo';
+  src: url('../fonts/Cairo-VariableFont.ttf') format('truetype');
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 body {
   font-family: 'Cairo', sans-serif;
