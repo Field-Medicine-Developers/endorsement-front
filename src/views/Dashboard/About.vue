@@ -458,6 +458,23 @@
                   }}</strong>
                 </div>
               </div>
+
+              <div class="final-status-item">
+                <span class="item-icon">
+                  <i class="bi bi-building"></i>
+                </span>
+
+                <div class="item-content">
+                  <small>مكتب مدير المديرية</small>
+
+                  <strong>
+                    {{
+                      stats.finalStatusTypeCount
+                        .officeOfTheDirectorOfTheDirectorateCount
+                    }}
+                  </strong>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1144,6 +1161,7 @@ const stats = ref({
     authenticationCount: 0,
     returnCount: 0,
     authorizedAuthenticationCount: 0,
+    officeOfTheDirectorOfTheDirectorateCount: 0,
   },
 });
 
@@ -3042,8 +3060,7 @@ onMounted(async () => {
   overflow: hidden;
   opacity: 0;
   transform: translateY(-6px);
-  animation: dashboardTabReveal 0.52s cubic-bezier(0.22, 1, 0.36, 1)
-    forwards;
+  animation: dashboardTabReveal 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .dashboard-tabs button:nth-child(1) {

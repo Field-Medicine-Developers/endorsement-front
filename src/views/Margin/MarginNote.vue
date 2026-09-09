@@ -120,7 +120,17 @@
                     </div>
                   </div>
                 </td>
-                <td>{{ typeNameText(m.typeName) }}</td>
+                <td>
+                  <div class="accessories-row">
+                    <span
+                      v-for="(x, typeIndex) in normalizeMultiValue(m.typeNames ?? m.typeName)"
+                      :key="typeIndex"
+                      class="accessory-badge"
+                    >
+                      {{ typeNameText(x) }}
+                    </span>
+                  </div>
+                </td>
                 <td>
                   <div class="fw-bold">{{ m.command?.name || "—" }}</div>
                   <small class="text-muted">{{
@@ -812,11 +822,25 @@ const selectedDepartmentIds = ref([]);
 const selectAll = ref(false);
 
 const typeNameText = (v) => {
-  if (v === 1) return "جريح";
-  if (v === 2) return "منتسب";
-  if (v === 3) return "مريض";
-  if (v === 4) return "كتاب رسمي";
-  return "—";
+  const arr = normalizeMultiValue(v);
+  if (arr.length === 0) return "—";
+
+  const map = {
+    1: "جريح",
+    2: "منتسب",
+    3: "مريض",
+    4: "كتاب رسمي",
+  };
+
+  return arr.map((x) => map[Number(x)] ?? "غير معروف").join(" , ");
+};
+
+const normalizeMultiValue = (value) => {
+  if (Array.isArray(value)) {
+    return value.filter((x) => x !== null && x !== undefined && x !== "");
+  }
+  if (value === null || value === undefined || value === "") return [];
+  return [value];
 };
 
 // ===== Transfer Form =====

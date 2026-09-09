@@ -126,7 +126,17 @@
                     </div>
                   </div>
                 </td>
-                <td>{{ typeNameText(inc.typeName) }}</td>
+                <td>
+                  <div class="accessories-row">
+                    <span
+                      v-for="(x, i) in normalizeMultiValue(inc.typeNames ?? inc.typeName)"
+                      :key="i"
+                      class="accessory-badge"
+                    >
+                      {{ typeNameText(x) }}
+                    </span>
+                  </div>
+                </td>
                 <td>{{ inc.incomingBookNumber }}</td>
                 <td>{{ formatDate(inc.incomingDate) }}</td>
                 <td>{{ inc.bookCount ?? "—" }}</td>
@@ -424,12 +434,15 @@
                 <label class="form-label">نوع صاحب المعاملة</label>
                 <div class="custom-vue-select-container">
                   <VueSelect
-                    v-model="form.typeName"
+                    v-model="form.typeNames"
                     :options="typeNameOptions"
                     label="label"
                     :reduce="(o) => o.value"
                     placeholder="اختر النوع..."
+                    searchable
                     clearable
+                    multiple
+                    :closeOnSelect="false"
                   />
                 </div>
               </div>
@@ -854,17 +867,7 @@
               <label class="form-label">نوع صاحب المعاملة</label>
               <input
                 class="form-control"
-                :value="
-                  view.typeName === 1
-                    ? 'جريح'
-                    : view.typeName === 2
-                    ? 'منتسب'
-                    : view.typeName === 3
-                    ? 'مريض'
-                    : view.typeName === 4
-                    ? 'كتاب رسمي'
-                    : ''
-                "
+                :value="typeNameText(view.typeNames ?? view.typeName)"
                 disabled
               />
             </div>
@@ -1390,7 +1393,7 @@ const form = reactive({
   bookCount: "",
   bookDate: null,
   typeIncoming: 1,
-  typeName: 1,
+  typeNames: [],
 });
 
 const openAdd = () => ((editMode.value = false), reset(), modal.show());
@@ -1400,7 +1403,7 @@ const openEdit = async (item) => {
 
   form.id = item.id;
   form.injuredNames = item.injuredNames || [];
-  form.typeName = item.typeName ?? 1;
+  form.typeNames = normalizeMultiValue(item.typeNames ?? item.typeName);
   form.commandId = item.commandId || null;
   await nextTick();
   form.formationId = item.formationId || null;
@@ -1499,7 +1502,7 @@ const save = async () => {
       bookCount: form.bookCount ?? null,
       bookDate: form.bookDate,
       typeIncoming: form.typeIncoming ?? 1,
-      typeName: form.typeName ?? 1,
+      typeNames: form.typeNames || [],
     };
 
     console.log("payload before send", payload);
@@ -1572,6 +1575,7 @@ const reset = () => {
   form.bookCount = "";
   form.bookDate = null;
   bookDateText.value = "";
+  form.typeNames = [];
 };
 
 const close = () => modal.hide();
@@ -1701,12 +1705,14 @@ const view = reactive({
   subject: "",
   content: "",
   departmentNames: [],
+  typeNames: [],
 });
 
 const openView = (inc) => {
   view.id = inc.id;
   view.injuredNames = inc.injuredNames || [];
   view.typeName = inc.typeName;
+  view.typeNames = inc.typeNames || [];
   view.formationName = inc.formationName;
   view.incomingBookNumber = inc.incomingBookNumber;
   view.incomingDate = inc.incomingDate;
@@ -1841,12 +1847,26 @@ const medicalAccessoriesText = (value) => {
   return arr.map((x) => map[x] ?? "غير معروف").join(" , ");
 };
 
+const normalizeMultiValue = (value) => {
+  if (Array.isArray(value)) {
+    return value.filter((x) => x !== null && x !== undefined && x !== "");
+  }
+  if (value === null || value === undefined || value === "") return [];
+  return [value];
+};
+
 const typeNameText = (v) => {
-  if (v === 1) return "جريح";
-  if (v === 2) return "منتسب";
-  if (v === 3) return "مريض";
-  if (v === 4) return "كتاب رسمي";
-  return "—";
+  const arr = normalizeMultiValue(v);
+  if (arr.length === 0) return "—";
+
+  const map = {
+    1: "جريح",
+    2: "منتسب",
+    3: "مريض",
+    4: "كتاب رسمي",
+  };
+
+  return arr.map((x) => map[Number(x)] ?? "غير معروف").join(" , ");
 };
 
 const loadCommands = async () => {
